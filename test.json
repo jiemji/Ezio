@@ -1,0 +1,12 @@
+[
+  [
+    {"libelle": "ID", "type": "question", "valeur": "001"},
+    {"libelle": "Nom du Client", "type": "question", "valeur": "Jean Dupont"},
+    {"libelle": "Commentaire", "type": "reponse", "valeur": "En attente"}
+  ],
+  [
+    {"libelle": "ID", "type": "question", "valeur": "002"},
+    {"libelle": "Nom du Client", "type": "question", "valeur": "Marie Curie"},
+    {"libelle": "Commentaire", "type": "reponse", "valeur": "Validé"}
+  ]
+]

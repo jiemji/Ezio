@@ -1,0 +1,89 @@
+:root {
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --primary-color: #2563eb;
+    --border-color: #e2e8f0;
+    --readonly-bg: #f8fafc;
+    --editable-bg: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+/* Distinction visuelle Question vs Réponse */
+.cell-question {
+    background-color: var(--readonly-bg);
+    color: #64748b;
+    font-style: italic;
+}
+
+.cell-reponse {
+    background-color: var(--editable-bg);
+}
+
+.cell-reponse input {
+    width: 100%;
+    border: 1px solid transparent;
+    padding: 8px;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+}
+
+.cell-reponse input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    background: #eff6ff;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+}
