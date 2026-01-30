@@ -1,89 +1,121 @@
 :root {
-    --bg-color: #f4f7f6;
-    --text-color: #333;
-    --primary-color: #2563eb;
-    --border-color: #e2e8f0;
-    --readonly-bg: #f8fafc;
-    --editable-bg: #ffffff;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --readonly: #f1f5f9;
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
-    color: var(--text-color);
+    color: var(--text-main);
     margin: 0;
-    padding: 20px;
+    line-height: 1.5;
 }
 
 header {
+    background: var(--card-bg);
+    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.table-responsive {
-    overflow-x: auto;
+h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+.subtitle { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+
+.controls { display: flex; gap: 1rem; align-items: center; }
+
+/* Boutons */
+.btn-primary, .btn-secondary {
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
     background: white;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { background: var(--readonly); }
+
+/* Table */
+main { padding: 2rem; }
+
+.table-responsive {
+    background: var(--card-bg);
     border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
-}
-
-th, td {
-    padding: 12px 15px;
     text-align: left;
-    border: 1px solid var(--border-color);
 }
 
 th {
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: 600;
+    background: var(--readonly);
+    padding: 1rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border);
 }
 
-/* Distinction visuelle Question vs Réponse */
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Cellules Question (Lecture seule) */
 .cell-question {
-    background-color: var(--readonly-bg);
-    color: #64748b;
-    font-style: italic;
+    background-color: var(--readonly);
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
-.cell-reponse {
-    background-color: var(--editable-bg);
-}
-
+/* Cellules Réponse (Modifiables) */
 .cell-reponse input {
     width: 100%;
-    border: 1px solid transparent;
-    padding: 8px;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    transition: border-color 0.2s;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 0.95rem;
 }
 
 .cell-reponse input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    background: #eff6ff;
+    outline: 2px solid var(--primary);
+    border-color: transparent;
 }
 
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.btn-primary:hover {
-    filter: brightness(1.1);
+.empty-state {
+    padding: 4rem;
+    text-align: center;
+    color: var(--text-muted);
 }

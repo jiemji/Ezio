@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdminForm - Éditeur de Formulaire JSON</title>
+    <title>AdminForm Expert - Éditeur de Données</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>AdminForm Expert</h1>
+        <div class="header-content">
+            <h1>AdminForm</h1>
+            <p class="subtitle">Gestionnaire de formulaires tabulaires</p>
+        </div>
         <div class="controls">
-            <input type="file" id="jsonInput" accept=".json">
-            <button id="exportBtn" class="btn-primary">Exporter les modifications</button>
+            <label for="jsonInput" class="btn-secondary">Charger JSON</label>
+            <input type="file" id="jsonInput" accept=".json" hidden>
+            <button id="exportBtn" class="btn-primary">Exporter JSON</button>
         </div>
     </header>
 
     <main id="app">
         <div id="tableContainer" class="table-responsive">
-            <p class="placeholder">Veuillez charger un fichier JSON pour commencer.</p>
+            <div class="empty-state">
+                <p>Aucune donnée chargée. Veuillez sélectionner un fichier JSON de référence.</p>
+            </div>
         </div>
     </main>
 

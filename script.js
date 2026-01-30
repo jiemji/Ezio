@@ -1,13 +1,25 @@
 /**
- * Logique de gestion du formulaire dynamique
- * Structure attendue : Array<{libelle: string, type: 'question'|'reponse', valeur: string}>[]
+ * AdminForm Expert - Logique Client-Side
  */
 
-let currentData = [];
+// État global de l'application
+let currentForm = {
+    columns: [],
+    rows: []
+};
 
-document.getElementById('jsonInput').addEventListener('change', handleFileUpload);
-document.getElementById('exportBtn').addEventListener('click', exportData);
+// Sélecteurs DOM
+const jsonInput = document.getElementById('jsonInput');
+const exportBtn = document.getElementById('exportBtn');
+const tableContainer = document.getElementById('tableContainer');
 
+// Listeners
+jsonInput.addEventListener('change', handleFileUpload);
+exportBtn.addEventListener('click', exportData);
+
+/**
+ * Gère le chargement et la lecture du fichier JSON
+ */
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -15,68 +27,96 @@ function handleFileUpload(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            currentData = JSON.parse(e.target.result);
-            renderTable(currentData);
+            const json = JSON.parse(e.target.result);
+            
+            // Validation basique de la structure optimisée
+            if (!json.columns || !json.rows) {
+                throw new Error("Format invalide : 'columns' ou 'rows' manquant.");
+            }
+
+            currentForm = json;
+            renderTable();
         } catch (err) {
-            alert("Erreur lors de la lecture du JSON. Vérifiez le format.");
+            alert("Erreur de format : " + err.message);
             console.error(err);
         }
     };
     reader.readAsText(file);
 }
 
-function renderTable(data) {
-    const container = document.getElementById('tableContainer');
-    if (!data.length) return;
+/**
+ * Génère le rendu HTML de la table à partir de l'état
+ */
+function renderTable() {
+    if (!currentForm.columns.length) return;
 
-    let html = `<table><thead><tr>`;
-    
-    // Génération des entêtes basées sur le premier objet
-    data[0].forEach(col => {
-        html += `<th>${col.libelle}</th>`;
-    });
-    html += `</tr></thead><tbody>`;
+    let html = `<table>
+        <thead>
+            <tr>
+                ${currentForm.columns.map(col => `<th>${col.label}</th>`).join('')}
+            </tr>
+        </thead>
+        <tbody>`;
 
-    // Génération des lignes
-    data.forEach((row, rowIndex) => {
+    currentForm.rows.forEach((row, rowIndex) => {
         html += `<tr>`;
-        row.forEach((col, colIndex) => {
-            const isQuestion = col.type === 'question';
-            const cellClass = isQuestion ? 'cell-question' : 'cell-reponse';
+        row.forEach((value, colIndex) => {
+            const config = currentForm.columns[colIndex];
+            const isQuestion = config.type === 'question';
             
-            html += `<td class="${cellClass}">`;
+            html += `<td class="${isQuestion ? 'cell-question' : 'cell-reponse'}">`;
+            
             if (isQuestion) {
-                html += col.valeur;
+                html += value;
             } else {
                 html += `<input type="text" 
-                                value="${col.valeur}" 
-                                onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">`;
+                                value="${escapeHtml(value)}" 
+                                data-row="${rowIndex}" 
+                                data-col="${colIndex}"
+                                oninput="updateValue(${rowIndex}, ${colIndex}, this.value)">`;
             }
+            
             html += `</td>`;
         });
         html += `</tr>`;
     });
 
     html += `</tbody></table>`;
-    container.innerHTML = html;
+    tableContainer.innerHTML = html;
 }
 
-// Mise à jour de la base de données en mémoire
+/**
+ * Met à jour l'état local lors de la saisie
+ */
 window.updateValue = (rowIndex, colIndex, newValue) => {
-    currentData[rowIndex][colIndex].valeur = newValue;
+    currentForm.rows[rowIndex][colIndex] = newValue;
 };
 
-// Exportation du fichier modifié
+/**
+ * Exporte l'état actuel en fichier JSON
+ */
 function exportData() {
-    if (currentData.length === 0) return;
-    
-    const dataStr = JSON.stringify(currentData, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
+    if (!currentForm.rows.length) {
+        alert("Aucune donnée à exporter.");
+        return;
+    }
+
+    const blob = new Blob([JSON.stringify(currentForm, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = "formulaire_modifie.json";
-    link.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `form_export_${new Date().getTime()}.json`;
+    a.click();
+    
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Utilitaire pour sécuriser l'affichage
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
