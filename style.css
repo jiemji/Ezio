@@ -2,9 +2,7 @@
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --primary: #2563eb;
-    --primary-hover: #1d4ed8;
     --ia-color: #059669;
-    --ia-hover: #047857;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --border: #e2e8f0;
@@ -12,11 +10,10 @@
 }
 
 body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
     margin: 0;
-    line-height: 1.5;
 }
 
 header {
@@ -26,62 +23,50 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
-h1 { margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-.badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; }
-.subtitle { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+.badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
 
 .controls { display: flex; gap: 1rem; }
 
 .btn-primary, .btn-secondary {
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
-    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    font-weight: 500;
 }
 
 .btn-primary { background: var(--primary); color: white; border: none; }
-.btn-secondary { background: white; color: var(--text-main); border: 1px solid var(--border); }
+.btn-secondary { background: white; border: 1px solid var(--border); }
 
-/* Table */
 main { padding: 2rem; }
-.table-responsive { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; }
+.table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; }
+
 table { width: 100%; border-collapse: collapse; }
-th { background: var(--readonly); padding: 1rem; font-size: 0.85rem; border-bottom: 2px solid var(--border); }
+th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); }
 td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
 
-/* Cellules Spécifiques */
 .cell-question { background-color: var(--readonly); color: var(--text-muted); }
 
-.cell-reponse input, .cell-ia input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 0.95rem;
-}
-
-/* IA Styling */
-.ia-wrapper { display: flex; gap: 8px; align-items: center; }
-.cell-ia input { background-color: #f0fdf4; border-style: dashed; }
+.ia-wrapper { display: flex; gap: 8px; }
+.ia-wrapper input { flex: 1; background-color: #f0fdf4; border: 1px dashed var(--ia-color); padding: 0.5rem; border-radius: 4px; }
 
 .btn-ia {
     background: var(--ia-color);
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 4px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.8rem;
-    transition: background 0.2s;
 }
 
-.btn-ia:hover { background: var(--ia-hover); }
-.btn-ia:disabled { background: #94a3b8; cursor: not-allowed; }
+.btn-ia:disabled { background: #94a3b8; }
+
+input[type="text"]:not([readonly]) {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
 
 .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }

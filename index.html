@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdminForm IA - Éditeur Augmenté</title>
+    <title>AdminForm IA - Expertise</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>AdminForm <span class="badge-ia">IA Inside</span></h1>
-            <p class="subtitle">Gestionnaire de formulaires avec assistance LLM</p>
+            <h1>AdminForm <span class="badge-ia">IA</span></h1>
+            <p class="subtitle">Éditeur de données agnostique</p>
         </div>
         <div class="controls">
             <label for="jsonInput" class="btn-secondary">Charger JSON</label>
@@ -22,11 +22,12 @@
     <main id="app">
         <div id="tableContainer" class="table-responsive">
             <div class="empty-state">
-                <p>Veuillez charger un fichier JSON comportant des colonnes de type "question", "reponse" ou "ia".</p>
+                <p>En attente de chargement de données...</p>
             </div>
         </div>
     </main>
 
+    <script src="api_ia.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
