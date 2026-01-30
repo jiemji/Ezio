@@ -1,18 +1,16 @@
 {
   "columns": [
-    { "id": "produit", "label": "Produit", "type": "question" },
-    { "id": "avis", "label": "Avis Client", "type": "question" },
+    { "id": "p", "label": "Produit", "type": "question" },
+    { "id": "d", "label": "Description", "type": "question" },
     { 
-      "id": "sentiment", 
-      "label": "Analyse Sentiment (IA)", 
-      "type": "ia",
-      "params": {
-        "requete": "Détermine si l'avis suivant est positif, négatif ou neutre. Réponds en un seul mot."
-      }
+      "id": "i", 
+      "label": "Résumé IA", 
+      "type": "ia", 
+      "params": { "requete": "Fais un résumé de 3 mots max." } 
     }
   ],
   "rows": [
-    ["iPhone 15", "Superbe téléphone, très rapide !", ""],
-    ["Chargeur USB", "Il a brûlé après deux jours d'utilisation.", ""]
+    ["Cafetière", "Une machine à café automatique avec broyeur de grains intégré.", ""],
+    ["Velo", "VTT tout terrain avec suspension avant et freins à disque.", ""]
   ]
 }

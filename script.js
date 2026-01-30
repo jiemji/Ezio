@@ -1,15 +1,15 @@
 /**
- * AdminForm Expert - Logique Client-Side avec Intégration IA
+ * AdminForm Expert - Logique avec Intégration IA
  */
 
-let currentForm = { columns: [], rows: [] };
-
-// CONFIGURATION IA (En dur pour le test)
+// CONFIGURATION API (Test)
 const IA_CONFIG = {
-    apiKey: "VOTRE_CLE_API_ICI",
-    model: "gpt-3.5-turbo", // ou "mixtral-8x7b-32768" pour Groq, etc.
+    apiKey: "VOTRE_CLE_API_ICI", 
+    model: "gpt-3.5-turbo",
     endpoint: "https://api.openai.com/v1/chat/completions"
 };
+
+let currentForm = { columns: [], rows: [] };
 
 const jsonInput = document.getElementById('jsonInput');
 const exportBtn = document.getElementById('exportBtn');
@@ -28,15 +28,14 @@ function handleFileUpload(event) {
             currentForm = JSON.parse(e.target.result);
             renderTable();
         } catch (err) {
-            alert("Erreur de format JSON.");
-            console.error(err);
+            alert("Erreur de parsing JSON.");
         }
     };
     reader.readAsText(file);
 }
 
 function renderTable() {
-    if (!currentForm.columns.length) return;
+    if (!currentForm.columns || !currentForm.rows) return;
 
     let html = `<table>
         <thead>
@@ -55,14 +54,14 @@ function renderTable() {
             else if (config.type === 'reponse') {
                 html += `<td class="cell-reponse">
                             <input type="text" value="${escapeHtml(value)}" 
-                            oninput="updateValue(${rowIndex}, ${colIndex}, this.value)">
+                            onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">
                          </td>`;
             }
             else if (config.type === 'ia') {
                 html += `<td class="cell-ia">
                             <div class="ia-wrapper">
-                                <input type="text" id="cell-${rowIndex}-${colIndex}" value="${escapeHtml(value)}" readonly>
-                                <button onclick="askIA(${rowIndex}, ${colIndex})" class="btn-ia">🪄 IA</button>
+                                <input type="text" id="ia-${rowIndex}-${colIndex}" value="${escapeHtml(value)}" readonly>
+                                <button onclick="askIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
                             </div>
                          </td>`;
             }
@@ -75,19 +74,19 @@ function renderTable() {
 }
 
 /**
- * Fonction d'appel au LLM
+ * Appel API LLM
  */
-async function askIA(rowIndex, colIndex) {
+async function askIA(rowIndex, colIndex, btnElement) {
     const config = currentForm.columns[colIndex];
     const promptBase = config.params?.requete || "Analyse ces données :";
     
-    // On récupère le contexte de la ligne (toutes les valeurs) pour aider l'IA
+    // Contexte : On envoie toutes les données de la ligne pour que l'IA comprenne le sujet
     const context = currentForm.rows[rowIndex].join(" | ");
-    const fullPrompt = `${promptBase}\nDonnées de contexte : ${context}`;
+    const fullPrompt = `Consigne: ${promptBase}\nDonnées: ${context}`;
 
-    const btn = event.target;
-    btn.innerText = "⏳...";
-    btn.disabled = true;
+    // UI Feedback
+    btnElement.innerText = "⏳";
+    btnElement.disabled = true;
 
     try {
         const response = await fetch(IA_CONFIG.endpoint, {
@@ -99,23 +98,25 @@ async function askIA(rowIndex, colIndex) {
             body: JSON.stringify({
                 model: IA_CONFIG.model,
                 messages: [{ role: "user", content: fullPrompt }],
-                temperature: 0.7
+                temperature: 0.3
             })
         });
+
+        if (!response.ok) throw new Error("Réponse API non valide");
 
         const data = await response.json();
         const aiResult = data.choices[0].message.content.trim();
 
-        // Mise à jour de l'état et du DOM
+        // Update État et DOM
         updateValue(rowIndex, colIndex, aiResult);
-        document.getElementById(`cell-${rowIndex}-${colIndex}`).value = aiResult;
+        document.getElementById(`ia-${rowIndex}-${colIndex}`).value = aiResult;
 
     } catch (error) {
         console.error("Erreur IA:", error);
-        alert("Erreur lors de l'appel à l'IA. Vérifiez votre clé API.");
+        alert("Erreur lors de l'appel à l'IA. Vérifiez la clé API et la connexion.");
     } finally {
-        btn.innerText = "🪄 IA";
-        btn.disabled = false;
+        btnElement.innerText = "🪄 IA";
+        btnElement.disabled = false;
     }
 }
 
@@ -124,11 +125,12 @@ window.updateValue = (rowIndex, colIndex, newValue) => {
 };
 
 function exportData() {
+    if (!currentForm.rows.length) return;
     const blob = new Blob([JSON.stringify(currentForm, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `export_ia_${new Date().getTime()}.json`;
+    a.download = `admin_export_ia.json`;
     a.click();
 }
 
