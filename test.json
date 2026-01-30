@@ -6,7 +6,7 @@
       "id": "i", 
       "label": "Résumé IA", 
       "type": "ia", 
-      "params": { "requete": "Fais un résumé de 3 mots max." } 
+      "params": { "requete": "Fais un résumé de 3 mots max. /no_think" } 
     }
   ],
   "rows": [

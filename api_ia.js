@@ -1,5 +1,5 @@
 /**
- * Service d'abstraction API IA - Mis à jour pour le format spécifique LM Studio
+ * Service d'abstraction API IA - Version Compatible (OpenAI, LM Studio, Reasoning Models)
  */
 const ApiService = {
     async fetchLLM(config, prompt) {
@@ -9,7 +9,7 @@ const ApiService = {
 
         switch (provider) {
             case 'lmstudio':
-                // On vérifie si l'URL se termine par /api/v1/chat pour utiliser le format spécifique
+                // Détection de l'endpoint spécifique LM Studio
                 if (config.endpoint.endsWith('/api/v1/chat')) {
                     return await this.lmStudioDirect(config, prompt);
                 }
@@ -28,7 +28,7 @@ const ApiService = {
     },
 
     /**
-     * Format spécifique LM Studio (basé sur ta documentation)
+     * Gestion spécifique pour LM Studio direct
      */
     async lmStudioDirect(config, prompt) {
         const headers = { 
@@ -38,31 +38,33 @@ const ApiService = {
 
         const body = {
             model: config.model,
-            input: prompt, // Syntaxe spécifique "input" au lieu de "messages"
-            temperature: config.temperature || 0,
+            input: prompt,
+            temperature: config.temperature || 0.7,
             context_length: config.context_length || 8000
         };
-
-        // Optionnel : Ajout des intégrations si présentes dans la config
+        
         if (config.integrations) body.integrations = config.integrations;
 
-        const response = await fetch(config.endpoint, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(body)
-        });
+        try {
+            const response = await fetch(config.endpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body)
+            });
 
-        if (!response.ok) throw new Error(`Erreur LM Studio Direct: ${response.status}`);
+            if (!response.ok) throw new Error(`Erreur LM Studio: ${response.status}`);
+            const data = await response.json();
+            
+            return this.extractContent(data);
 
-        const data = await response.json();
-        
-        // Attention : la structure de réponse peut varier, 
-        // généralement le texte est dans data.output ou data.content
-        return data.output || data.content || JSON.stringify(data);
+        } catch (error) {
+            console.error("Erreur Fetch LM Studio:", error);
+            throw error;
+        }
     },
 
     /**
-     * Standard OpenAI / Compatible (v1/chat/completions)
+     * Standard OpenAI (v1/chat/completions)
      */
     async standardChatCompletion(config, prompt) {
         const headers = { 
@@ -70,19 +72,71 @@ const ApiService = {
             'Authorization': `Bearer ${config.apiKey}`
         };
 
-        const response = await fetch(config.endpoint, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                model: config.model,
-                messages: [{ role: "user", content: prompt }],
-                temperature: config.temperature || 0.7
-            })
-        });
+        try {
+            const response = await fetch(config.endpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    model: config.model,
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: config.temperature || 0.7
+                })
+            });
 
-        if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
-        const data = await response.json();
-        return data.choices[0].message.content.trim();
+            if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
+            const data = await response.json();
+            
+            return this.extractContent(data);
+
+        } catch (error) {
+            if (error.message.includes('Failed to fetch')) {
+                throw new Error("Connexion refusée. Vérifiez que le serveur local est lancé.");
+            }
+            throw error;
+        }
+    },
+
+    /**
+     * Fonction de nettoyage intelligente
+     * Gère : OpenAI standard, LM Studio simple, et les modèles avec "reasoning" (tableau d'outputs)
+     */
+    extractContent(data) {
+        // 1. Cas Spécifique "Reasoning/Chain of Thought" (Votre cas actuel)
+        // Format: { output: [ {type: "reasoning", ...}, {type: "message", content: "..."} ] }
+        if (data.output && Array.isArray(data.output)) {
+            // On cherche l'élément qui est le message final
+            const finalMessage = data.output.find(item => item.type === 'message');
+            if (finalMessage && finalMessage.content) {
+                return finalMessage.content.trim();
+            }
+        }
+
+        // 2. Cas Standard OpenAI (choices -> message -> content)
+        if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
+            const firstChoice = data.choices[0];
+            if (firstChoice.message && firstChoice.message.content) {
+                return firstChoice.message.content.trim();
+            }
+        }
+
+        // 3. Cas LM Studio simple (content à la racine)
+        if (data.content && typeof data.content === 'string') {
+            return data.content.trim();
+        }
+
+        // 4. Cas Output simple (string)
+        if (data.output && typeof data.output === 'string') {
+            return data.output.trim();
+        }
+
+        // 5. Cas Message isolé
+        if (data.message && data.message.content) {
+            return data.message.content.trim();
+        }
+
+        // DEBUG : Si aucun format ne correspond
+        console.warn("Format inconnu :", data);
+        return JSON.stringify(data);
     }
 };
 
