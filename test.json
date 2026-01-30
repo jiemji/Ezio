@@ -1,16 +1,29 @@
 {
   "columns": [
-    { "id": "p", "label": "Produit", "type": "question" },
-    { "id": "d", "label": "Description", "type": "question" },
+    { "id": "nom_produit", "label": "Produit", "type": "question" },
+    { "id": "desc_technique", "label": "Specs Techniques", "type": "question" },
+    { "id": "prix_achat", "label": "Prix Achat", "type": "question" },
     { 
-      "id": "i", 
-      "label": "Résumé IA", 
-      "type": "ia", 
-      "params": { "requete": "Fais un résumé de 3 mots max. /no_think" } 
+      "id": "marketing_short", 
+      "label": "Slogan (IA)", 
+      "type": "ia",
+      "params": {
+        "requete": "Ecris un slogan court et accrocheur pour ce produit.",
+        "cibles": ["nom_produit"] 
+      }
+    },
+    { 
+      "id": "analyse_renta", 
+      "label": "Analyse Rentabilité (IA)", 
+      "type": "ia",
+      "params": {
+        "requete": "Analyse si ce produit est techniquement viable par rapport à son prix.",
+        "cibles": ["desc_technique", "prix_achat"]
+      }
     }
   ],
   "rows": [
-    ["Cafetière", "Une machine à café automatique avec broyeur de grains intégré.", ""],
-    ["Velo", "VTT tout terrain avec suspension avant et freins à disque.", ""]
+    ["SuperVelo 3000", "Cadre carbone, freins hydrauliques, dérailleur Elec", "2500€", "", ""],
+    ["Mug Basique", "Céramique blanche standard", "0.50€", "", ""]
   ]
 }
