@@ -1,11 +1,18 @@
 {
   "columns": [
-    { "id": "ref", "label": "Référence", "type": "question" },
-    { "id": "label", "label": "Libellé", "type": "question" },
-    { "id": "qty", "label": "Quantité", "type": "reponse" }
+    { "id": "produit", "label": "Produit", "type": "question" },
+    { "id": "avis", "label": "Avis Client", "type": "question" },
+    { 
+      "id": "sentiment", 
+      "label": "Analyse Sentiment (IA)", 
+      "type": "ia",
+      "params": {
+        "requete": "Détermine si l'avis suivant est positif, négatif ou neutre. Réponds en un seul mot."
+      }
+    }
   ],
   "rows": [
-    ["REF-001", "Pommes", "10"],
-    ["REF-002", "Oranges", "5"]
+    ["iPhone 15", "Superbe téléphone, très rapide !", ""],
+    ["Chargeur USB", "Il a brûlé après deux jours d'utilisation.", ""]
   ]
 }

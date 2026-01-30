@@ -1,121 +1,37 @@
-:root {
-    --bg-color: #f8fafc;
-    --card-bg: #ffffff;
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --readonly: #f1f5f9;
-}
+/* ... (garder le code précédent et ajouter) ... */
 
-body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    margin: 0;
-    line-height: 1.5;
-}
-
-header {
-    background: var(--card-bg);
-    padding: 1rem 2rem;
+.ia-wrapper {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    gap: 8px;
 }
 
-h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
-.subtitle { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
-
-.controls { display: flex; gap: 1rem; align-items: center; }
-
-/* Boutons */
-.btn-primary, .btn-secondary {
-    padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
+.ia-wrapper input {
+    flex-grow: 1;
+    background-color: #f0fdf4; /* Teinte verte légère pour distinguer l'IA */
+    border: 1px dashed #86efac;
 }
 
-.btn-primary {
-    background: var(--primary);
+.btn-ia {
+    background: #059669;
     color: white;
     border: none;
-}
-
-.btn-primary:hover { background: var(--primary-hover); }
-
-.btn-secondary {
-    background: white;
-    color: var(--text-main);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover { background: var(--readonly); }
-
-/* Table */
-main { padding: 2rem; }
-
-.table-responsive {
-    background: var(--card-bg);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
-
-th {
-    background: var(--readonly);
-    padding: 1rem;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--border);
-}
-
-td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
-}
-
-/* Cellules Question (Lecture seule) */
-.cell-question {
-    background-color: var(--readonly);
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-/* Cellules Réponse (Modifiables) */
-.cell-reponse input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--border);
+    padding: 4px 10px;
     border-radius: 4px;
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: 0.95rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    transition: background 0.2s;
 }
 
-.cell-reponse input:focus {
-    outline: 2px solid var(--primary);
-    border-color: transparent;
+.btn-ia:hover {
+    background: #047857;
 }
 
-.empty-state {
-    padding: 4rem;
-    text-align: center;
-    color: var(--text-muted);
+.btn-ia:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.cell-ia {
+    min-width: 250px;
 }
