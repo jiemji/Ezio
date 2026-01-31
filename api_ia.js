@@ -1,5 +1,6 @@
 /**
- * Service d'abstraction API IA - Version Compatible (OpenAI, LM Studio, Reasoning Models)
+ * Service API IA - Version Finale Robuste
+ * Gère : OpenAI, LM Studio (API standard & spécifique), Groq
  */
 const ApiService = {
     async fetchLLM(config, prompt) {
@@ -9,7 +10,7 @@ const ApiService = {
 
         switch (provider) {
             case 'lmstudio':
-                // Détection de l'endpoint spécifique LM Studio
+                // Détection auto de l'endpoint spécifique LM Studio
                 if (config.endpoint.endsWith('/api/v1/chat')) {
                     return await this.lmStudioDirect(config, prompt);
                 }
@@ -20,16 +21,14 @@ const ApiService = {
                 return await this.standardChatCompletion(config, prompt);
             
             case 'mock':
-                return new Promise(res => setTimeout(() => res("[TEST] Réponse simulée"), 800));
+                return new Promise(res => setTimeout(() => res("[MOCK] Réponse IA générée"), 800));
                 
             default:
                 throw new Error(`Provider '${provider}' non supporté.`);
         }
     },
 
-    /**
-     * Gestion spécifique pour LM Studio direct
-     */
+    // Format spécifique LM Studio
     async lmStudioDirect(config, prompt) {
         const headers = { 
             'Content-Type': 'application/json',
@@ -42,7 +41,6 @@ const ApiService = {
             temperature: config.temperature || 0.7,
             context_length: config.context_length || 8000
         };
-        
         if (config.integrations) body.integrations = config.integrations;
 
         try {
@@ -51,21 +49,16 @@ const ApiService = {
                 headers: headers,
                 body: JSON.stringify(body)
             });
-
             if (!response.ok) throw new Error(`Erreur LM Studio: ${response.status}`);
             const data = await response.json();
-            
             return this.extractContent(data);
-
         } catch (error) {
-            console.error("Erreur Fetch LM Studio:", error);
+            console.error("Erreur Fetch:", error);
             throw error;
         }
     },
 
-    /**
-     * Standard OpenAI (v1/chat/completions)
-     */
+    // Standard OpenAI (v1/chat/completions)
     async standardChatCompletion(config, prompt) {
         const headers = { 
             'Content-Type': 'application/json',
@@ -82,12 +75,9 @@ const ApiService = {
                     temperature: config.temperature || 0.7
                 })
             });
-
             if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
             const data = await response.json();
-            
             return this.extractContent(data);
-
         } catch (error) {
             if (error.message.includes('Failed to fetch')) {
                 throw new Error("Connexion refusée. Vérifiez que le serveur local est lancé.");
@@ -96,47 +86,24 @@ const ApiService = {
         }
     },
 
-    /**
-     * Fonction de nettoyage intelligente
-     * Gère : OpenAI standard, LM Studio simple, et les modèles avec "reasoning" (tableau d'outputs)
-     */
+    // Nettoyage intelligent de la réponse
     extractContent(data) {
-        // 1. Cas Spécifique "Reasoning/Chain of Thought" (Votre cas actuel)
-        // Format: { output: [ {type: "reasoning", ...}, {type: "message", content: "..."} ] }
+        // 1. Modèles "Reasoning" (Tableau d'outputs)
         if (data.output && Array.isArray(data.output)) {
-            // On cherche l'élément qui est le message final
-            const finalMessage = data.output.find(item => item.type === 'message');
-            if (finalMessage && finalMessage.content) {
-                return finalMessage.content.trim();
-            }
+            const msg = data.output.find(item => item.type === 'message');
+            if (msg && msg.content) return msg.content.trim();
         }
-
-        // 2. Cas Standard OpenAI (choices -> message -> content)
-        if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
-            const firstChoice = data.choices[0];
-            if (firstChoice.message && firstChoice.message.content) {
-                return firstChoice.message.content.trim();
-            }
+        // 2. OpenAI Standard
+        if (data.choices && data.choices[0]?.message?.content) {
+            return data.choices[0].message.content.trim();
         }
+        // 3. LM Studio simple / Autres
+        if (typeof data.content === 'string') return data.content.trim();
+        if (typeof data.output === 'string') return data.output.trim();
+        if (data.message?.content) return data.message.content.trim();
 
-        // 3. Cas LM Studio simple (content à la racine)
-        if (data.content && typeof data.content === 'string') {
-            return data.content.trim();
-        }
-
-        // 4. Cas Output simple (string)
-        if (data.output && typeof data.output === 'string') {
-            return data.output.trim();
-        }
-
-        // 5. Cas Message isolé
-        if (data.message && data.message.content) {
-            return data.message.content.trim();
-        }
-
-        // DEBUG : Si aucun format ne correspond
-        console.warn("Format inconnu :", data);
-        return JSON.stringify(data);
+        console.warn("Format inconnu:", data);
+        return typeof data === 'object' ? JSON.stringify(data) : String(data);
     }
 };
 

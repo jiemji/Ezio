@@ -8,7 +8,7 @@
       "label": "Slogan (IA)", 
       "type": "ia",
       "params": {
-        "requete": "Ecris un slogan court et accrocheur pour ce produit.",
+        "requete": "Ecris un slogan court et accrocheur pour ce produit. /no_think",
         "cibles": ["nom_produit"] 
       }
     },
@@ -17,7 +17,7 @@
       "label": "Analyse Rentabilité (IA)", 
       "type": "ia",
       "params": {
-        "requete": "Analyse si ce produit est techniquement viable par rapport à son prix.",
+        "requete": "Analyse si ce produit est techniquement viable par rapport à son prix. /no_think",
         "cibles": ["desc_technique", "prix_achat"]
       }
     }
