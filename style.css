@@ -2,6 +2,9 @@
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
     --ia-color: #059669;
     --text-main: #1e293b;
     --text-muted: #64748b;
@@ -14,6 +17,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-main);
     margin: 0;
+    line-height: 1.5;
 }
 
 header {
@@ -23,50 +27,148 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
+.header-content { display: flex; flex-direction: column; }
+h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
 .badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
+.status-bar { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; transition: opacity 0.5s; opacity: 0.7; }
 
-.controls { display: flex; gap: 1rem; }
+.controls { display: flex; gap: 1rem; align-items: center; }
 
-.btn-primary, .btn-secondary {
+.btn-primary, .btn-secondary, .btn-danger {
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: 500;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
-.btn-primary { background: var(--primary); color: white; border: none; }
-.btn-secondary { background: white; border: 1px solid var(--border); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary { background: white; border-color: var(--border); color: var(--text-main); }
+.btn-secondary:hover { background: var(--readonly); }
+
+.btn-danger { background: white; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: white; }
 
 main { padding: 2rem; }
-.table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; }
+.table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-table { width: 100%; border-collapse: collapse; }
-th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); }
-td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; min-width: 800px; }
+th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); }
+td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
 
 .cell-question { background-color: var(--readonly); color: var(--text-muted); }
 
-.ia-wrapper { display: flex; gap: 8px; }
-.ia-wrapper input { flex: 1; background-color: #f0fdf4; border: 1px dashed var(--ia-color); padding: 0.5rem; border-radius: 4px; }
+/* Wrapper IA */
+.ia-wrapper { 
+    display: flex; 
+    gap: 8px; 
+    width: 100%; 
+    align-items: flex-start;
+}
+
+/* CSS Textarea "Élastique" */
+.ia-wrapper textarea { 
+    flex: 1; 
+    background-color: #f0fdf4; 
+    border: 1px dashed #86efac; 
+    padding: 8px 10px; /* Padding ajusté pour l'esthétique */
+    border-radius: 4px; 
+    color: #166534;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5; 
+    
+    /* C'est ici que tout se joue pour la taille : */
+    resize: none;
+    overflow-y: hidden; /* Caché tant qu'on n'atteint pas le max */
+    
+    height: auto;       /* Laisse le JS calculer la hauteur */
+    min-height: 40px;   /* Hauteur EXACTE pour 1 ligne */
+    max-height: 400px;   /* Limite à ~3 lignes avant scroll */
+    
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.ia-wrapper textarea:focus {
+    outline: none;
+    border-color: var(--ia-color);
+    background-color: #fff;
+}
 
 .btn-ia {
     background: var(--ia-color);
     color: white;
     border: none;
-    padding: 4px 12px;
+    padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    margin-top: 2px;
 }
-
-.btn-ia:disabled { background: #94a3b8; }
+.btn-ia:disabled { background: #94a3b8; cursor: wait; }
 
 input[type="text"]:not([readonly]) {
     width: 100%;
-    padding: 0.5rem;
+    padding: 8px;
     border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+}
+input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+.empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
+
+/* --- NOUVEAU : Styles pour le type QCM --- */
+
+.qcm-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 120px; /* Limite la hauteur de la liste */
+    overflow-y: auto;  /* Ascenseur si trop d'items */
+    padding: 4px;
+    border: 1px solid transparent;
     border-radius: 4px;
 }
 
-.empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
+.qcm-wrapper:hover {
+    border-color: var(--border);
+    background: #fcfcfc;
+}
+
+.qcm-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.qcm-item input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+}
+
+.qcm-item span {
+    color: var(--text-main);
+}
+
+/* Style visuel quand coché (optionnel, pour le confort) */
+.qcm-item input:checked + span {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}

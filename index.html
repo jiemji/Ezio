@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdminForm IA - Expertise</title>
+    <title>AdminForm IA - Expert</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>AdminForm <span class="badge-ia">IA</span></h1>
-            <p class="subtitle">Éditeur de données agnostique</p>
+            <h1>AdminForm <span class="badge-ia">IA Powered</span></h1>
+            <div class="status-bar" id="statusIndicator">Prêt</div>
         </div>
         <div class="controls">
+            <button id="resetBtn" class="btn-danger" title="Effacer tout et recommencer">Réinitialiser</button>
+            
             <label for="jsonInput" class="btn-secondary">Charger JSON</label>
             <input type="file" id="jsonInput" accept=".json" hidden>
+            
             <button id="exportBtn" class="btn-primary">Exporter JSON</button>
         </div>
     </header>
@@ -22,7 +25,7 @@
     <main id="app">
         <div id="tableContainer" class="table-responsive">
             <div class="empty-state">
-                <p>En attente de chargement de données...</p>
+                <p>En attente de données... Chargez un fichier ou restaurez une session précédente.</p>
             </div>
         </div>
     </main>
