@@ -115,10 +115,10 @@ function renderTable() {
             // --- TYPE IA ---
             if (colDef.type === 'ia') {
                 html += `<td><div class="ia-wrapper">
-                    <textarea id="ia-${rowIndex}-${colIndex}" rows="1" readonly>${escapeHtml(value)}</textarea>
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
+                    <textarea id="ia-${rowIndex}-${colIndex}" rows="1" readonly>${escapeHtml(value)}</textarea>
                 </div></td>`;
-            } 
+            }
             // --- TYPE QCM (NOUVEAU) ---
             else if (colDef.type === 'qcm') {
                 html += `<td><div class="qcm-wrapper">`;
