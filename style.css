@@ -3,6 +3,8 @@
     --card-bg: #ffffff;
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
+    --danger: #ef4444; /* Rouge pour le reset */
+    --danger-hover: #dc2626;
     --ia-color: #059669;
     --text-main: #1e293b;
     --text-muted: #64748b;
@@ -30,19 +32,23 @@ header {
     z-index: 100;
 }
 
+.header-content { display: flex; flex-direction: column; }
 h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-.badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; vertical-align: middle; }
-.subtitle { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+.badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
 
-.controls { display: flex; gap: 1rem; }
+/* Petit indicateur de statut (Sauvegardé...) */
+.status-bar { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; transition: opacity 0.5s; opacity: 0.7; }
 
-.btn-primary, .btn-secondary {
+.controls { display: flex; gap: 1rem; align-items: center; }
+
+.btn-primary, .btn-secondary, .btn-danger {
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
     transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
 .btn-primary { background: var(--primary); color: white; }
@@ -50,6 +56,10 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 
 .btn-secondary { background: white; border-color: var(--border); color: var(--text-main); }
 .btn-secondary:hover { background: var(--readonly); }
+
+/* Nouveau bouton Danger */
+.btn-danger { background: white; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: white; }
 
 main { padding: 2rem; }
 .table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -73,7 +83,6 @@ td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-ali
     white-space: nowrap;
     font-size: 0.85rem;
 }
-.btn-ia:hover { background: #047857; }
 .btn-ia:disabled { background: #94a3b8; cursor: wait; }
 
 input[type="text"]:not([readonly]) {

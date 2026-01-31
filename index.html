@@ -10,11 +10,14 @@
     <header>
         <div class="header-content">
             <h1>AdminForm <span class="badge-ia">IA Powered</span></h1>
-            <p class="subtitle">Éditeur de données intelligent</p>
+            <div class="status-bar" id="statusIndicator">Prêt</div>
         </div>
         <div class="controls">
+            <button id="resetBtn" class="btn-danger" title="Effacer tout et recommencer">Réinitialiser</button>
+            
             <label for="jsonInput" class="btn-secondary">Charger JSON</label>
             <input type="file" id="jsonInput" accept=".json" hidden>
+            
             <button id="exportBtn" class="btn-primary">Exporter JSON</button>
         </div>
     </header>
@@ -22,7 +25,7 @@
     <main id="app">
         <div id="tableContainer" class="table-responsive">
             <div class="empty-state">
-                <p>En attente de données... Veuillez charger un fichier de configuration.</p>
+                <p>En attente de données... Chargez un fichier ou restaurez une session précédente.</p>
             </div>
         </div>
     </main>
