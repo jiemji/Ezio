@@ -10,7 +10,8 @@
         "requete": "Fais une synthèse en une phrase de ce qu'il reste à faire.",
         "cibles": ["tache", "checklist"]
       }
-    }
+    },
+        { "id": "Commentaire", "label": "Commentaire", "type": "réponse" }
   ],
   "rows": [
     [
@@ -21,6 +22,7 @@
         { "label": "Backup base de données", "checked": false },
         { "label": "Déploiement serveur", "checked": false }
       ],
+      "",
       ""
     ],
     [
@@ -29,6 +31,7 @@
         { "label": "Introduction", "checked": true },
         { "label": "Chapitre 1 : Installation et configuration initiale du système complexe", "checked": false }
       ],
+      "",
       ""
     ]
   ]

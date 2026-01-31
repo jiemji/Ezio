@@ -1,5 +1,5 @@
 /**
- * AdminForm - Script Principal (Version Finale)
+ * AdminForm - Script Principal (Version Finale avec Saisie Multi-lignes)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
@@ -87,11 +87,13 @@ function showStatus(msg) {
 // Gestion de la hauteur auto des textareas
 function adjustTextareaHeight(el) {
     if (!el) return;
-    el.style.height = 'auto'; // Reset pour calculer la réduction
+    el.style.height = 'auto'; 
     el.style.height = el.scrollHeight + 'px';
     
-    // Si dépasse 96px (max-height CSS), on active le scroll
-    if (el.scrollHeight > 96) {
+    // Détection du max-height CSS (on récupère la valeur calculée)
+    const maxHeight = parseInt(window.getComputedStyle(el).maxHeight);
+    
+    if (el.scrollHeight > maxHeight) {
         el.style.overflowY = 'auto';
     } else {
         el.style.overflowY = 'hidden';
@@ -120,7 +122,7 @@ function renderTable() {
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
-            // TYPE IA (Bouton GAUCHE)
+            // TYPE IA
             if (colDef.type === 'ia') {
                 html += `<td class="cell-ia-container"><div class="ia-wrapper">
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
@@ -148,10 +150,14 @@ function renderTable() {
             else if (colDef.type === 'question') {
                 html += `<td class="cell-question">${escapeHtml(value)}</td>`;
             } 
-            // DEFAULT
+            // TYPE REPONSE (DEFAULT) - MAINTENANT MULTI-LIGNES
             else {
                 html += `<td class="cell-reponse">
-                    <input type="text" value="${escapeHtml(value)}" onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">
+                    <textarea 
+                        rows="1" 
+                        oninput="adjustTextareaHeight(this)" 
+                        onchange="updateValue(${rowIndex}, ${colIndex}, this.value)"
+                    >${escapeHtml(value)}</textarea>
                 </td>`;
             }
         });
@@ -159,8 +165,8 @@ function renderTable() {
     });
     tableContainer.innerHTML = html + `</tbody></table>`;
     
-    // Ajustement initial des hauteurs
-    document.querySelectorAll('.ia-wrapper textarea').forEach(adjustTextareaHeight);
+    // Ajustement initial de TOUTES les textareas (IA et Saisie)
+    document.querySelectorAll('textarea').forEach(adjustTextareaHeight);
 }
 
 // -- UPDATES --
@@ -185,7 +191,6 @@ async function handleIA(rowIndex, colIndex, btn) {
     const colDef = currentForm.columns[colIndex];
     const params = colDef.params || {};
     
-    // Formatage spécial QCM pour le contexte IA
     const formatValue = (val) => {
         if (Array.isArray(val)) {
             return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
@@ -194,8 +199,6 @@ async function handleIA(rowIndex, colIndex, btn) {
     };
 
     let contextData = "";
-    
-    // Logique de ciblage
     if (params.cibles && Array.isArray(params.cibles) && params.cibles.length > 0) {
         const parts = [];
         params.cibles.forEach(targetId => {
@@ -208,7 +211,6 @@ async function handleIA(rowIndex, colIndex, btn) {
         });
         contextData = parts.join("\n\n");
     } else {
-        // Fallback global
         contextData = currentForm.rows[rowIndex].map(v => formatValue(v)).join("\n | \n");
     }
 
