@@ -1,22 +1,20 @@
 /**
- * Logique Applicative - Support QCM
+ * AdminForm - Script Principal (Version Finale)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
 let currentForm = { columns: [], rows: [] };
 
 // -- INITIALISATION --
-
 (async function init() {
     try {
         const response = await fetch('config.json');
         if (response.ok) IA_CONFIG = await response.json();
     } catch (e) { console.error("Config manquante", e); }
-
     loadState();
 })();
 
-// -- SÉLECTEURS --
+// -- DOM --
 const jsonInput = document.getElementById('jsonInput');
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -24,7 +22,6 @@ const tableContainer = document.getElementById('tableContainer');
 const statusIndicator = document.getElementById('statusIndicator');
 
 // -- LISTENERS --
-
 jsonInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -57,7 +54,7 @@ resetBtn.addEventListener('click', () => {
     }
 });
 
-// -- STATE MANAGEMENT --
+// -- STATE & UI HELPERS --
 
 function saveState() {
     if (currentForm.columns.length > 0) {
@@ -87,10 +84,13 @@ function showStatus(msg) {
     }
 }
 
+// Gestion de la hauteur auto des textareas
 function adjustTextareaHeight(el) {
     if (!el) return;
-    el.style.height = 'auto'; 
+    el.style.height = 'auto'; // Reset pour calculer la réduction
     el.style.height = el.scrollHeight + 'px';
+    
+    // Si dépasse 96px (max-height CSS), on active le scroll
     if (el.scrollHeight > 96) {
         el.style.overflowY = 'auto';
     } else {
@@ -98,7 +98,15 @@ function adjustTextareaHeight(el) {
     }
 }
 
-// -- RENDU TABLEAU --
+function escapeHtml(t) { 
+    if(t == null) return "";
+    if (typeof t === 'object') return ""; 
+    const d = document.createElement('div'); 
+    d.textContent = String(t); 
+    return d.innerHTML; 
+}
+
+// -- RENDU PRINCIPAL --
 
 function renderTable() {
     if (!currentForm.columns || !currentForm.columns.length) return;
@@ -112,18 +120,16 @@ function renderTable() {
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
-            // --- TYPE IA ---
+            // TYPE IA (Bouton GAUCHE)
             if (colDef.type === 'ia') {
-                html += `<td><div class="ia-wrapper">
+                html += `<td class="cell-ia-container"><div class="ia-wrapper">
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
                     <textarea id="ia-${rowIndex}-${colIndex}" rows="1" readonly>${escapeHtml(value)}</textarea>
                 </div></td>`;
-            }
-            // --- TYPE QCM (NOUVEAU) ---
+            } 
+            // TYPE QCM
             else if (colDef.type === 'qcm') {
-                html += `<td><div class="qcm-wrapper">`;
-                
-                // Vérification que 'value' est bien un tableau
+                html += `<td class="cell-qcm"><div class="qcm-wrapper">`;
                 if (Array.isArray(value)) {
                     value.forEach((item, itemIndex) => {
                         const checkedAttr = item.checked ? 'checked' : '';
@@ -135,17 +141,14 @@ function renderTable() {
                             </label>
                         `;
                     });
-                } else {
-                    html += `<span style="color:red">Erreur format QCM</span>`;
-                }
-                
+                } else { html += `<span style="color:red">Erreur format QCM</span>`; }
                 html += `</div></td>`;
             }
-            // --- TYPE QUESTION ---
+            // TYPE QUESTION
             else if (colDef.type === 'question') {
                 html += `<td class="cell-question">${escapeHtml(value)}</td>`;
             } 
-            // --- TYPE REPONSE (DEFAULT) ---
+            // DEFAULT
             else {
                 html += `<td class="cell-reponse">
                     <input type="text" value="${escapeHtml(value)}" onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">
@@ -155,60 +158,57 @@ function renderTable() {
         html += `</tr>`;
     });
     tableContainer.innerHTML = html + `</tbody></table>`;
-
+    
+    // Ajustement initial des hauteurs
     document.querySelectorAll('.ia-wrapper textarea').forEach(adjustTextareaHeight);
 }
 
-// -- LOGIQUE DE MISE A JOUR --
+// -- UPDATES --
 
-// Mise à jour standard (Texte)
 window.updateValue = (r, c, v) => { 
     currentForm.rows[r][c] = v; 
     saveState(); 
 };
 
-// Mise à jour spécifique QCM (Nouveau)
 window.updateQcmValue = (r, c, itemIndex, isChecked) => {
-    // On met à jour uniquement la propriété 'checked' de l'objet spécifique dans le tableau
     if (currentForm.rows[r][c] && currentForm.rows[r][c][itemIndex]) {
         currentForm.rows[r][c][itemIndex].checked = isChecked;
         saveState();
-        
-        // Optionnel : console log pour vérifier
-        console.log(`Ligne ${r}, Col ${c}, Item ${itemIndex} -> ${isChecked}`);
     }
 };
 
-// -- LOGIQUE IA --
+// -- IA LOGIC --
 
 async function handleIA(rowIndex, colIndex, btn) {
     if (!IA_CONFIG) return alert("Erreur: config.json non chargé.");
     
     const colDef = currentForm.columns[colIndex];
     const params = colDef.params || {};
-    let contextData = "";
-
-    // Fonction helper pour formater la valeur selon son type
+    
+    // Formatage spécial QCM pour le contexte IA
     const formatValue = (val) => {
         if (Array.isArray(val)) {
-            // Si c'est un QCM, on le formate proprement pour l'IA
             return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
         }
         return val;
     };
 
+    let contextData = "";
+    
+    // Logique de ciblage
     if (params.cibles && Array.isArray(params.cibles) && params.cibles.length > 0) {
         const parts = [];
         params.cibles.forEach(targetId => {
             const tIndex = currentForm.columns.findIndex(c => c.id === targetId);
             if (tIndex !== -1) {
+                const label = currentForm.columns[tIndex].label;
                 const rawVal = currentForm.rows[rowIndex][tIndex];
-                parts.push(`${currentForm.columns[tIndex].label}:\n${formatValue(rawVal)}`);
+                parts.push(`${label}:\n${formatValue(rawVal)}`);
             }
         });
         contextData = parts.join("\n\n");
     } else {
-        // Fallback global : on map toute la ligne en gérant les objets
+        // Fallback global
         contextData = currentForm.rows[rowIndex].map(v => formatValue(v)).join("\n | \n");
     }
 
@@ -226,21 +226,10 @@ async function handleIA(rowIndex, colIndex, btn) {
             input.value = result;
             adjustTextareaHeight(input);
         }
-        
     } catch (err) {
         alert("Erreur IA: " + err.message);
     } finally {
         btn.innerText = "🪄 IA";
         btn.disabled = false;
     }
-}
-
-function escapeHtml(t) { 
-    if(t == null) return "";
-    // Si t est un objet/tableau (cas QCM mal géré), on évite le crash
-    if (typeof t === 'object') return ""; 
-    
-    const d = document.createElement('div'); 
-    d.textContent = String(t); 
-    return d.innerHTML; 
 }

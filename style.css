@@ -20,6 +20,7 @@ body {
     line-height: 1.5;
 }
 
+/* --- HEADER & CONTROLS --- */
 header {
     background: var(--card-bg);
     padding: 1rem 2rem;
@@ -39,6 +40,7 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 
 .controls { display: flex; gap: 1rem; align-items: center; }
 
+/* Boutons Généraux */
 .btn-primary, .btn-secondary, .btn-danger {
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
@@ -58,117 +60,106 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 .btn-danger { background: white; border: 1px solid var(--danger); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: white; }
 
+/* --- TABLEAU & LAYOUT --- */
 main { padding: 2rem; }
 .table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); }
+table { width: 100%; border-collapse: collapse; table-layout: auto; }
+
+th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
 td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
 
-.cell-question { background-color: var(--readonly); color: var(--text-muted); }
-
-/* Wrapper IA */
-.ia-wrapper { 
-    display: flex; 
-    gap: 8px; 
-    width: 100%; 
-    align-items: flex-start;
+/* 1. Colonnes Flexibles (Standard & IA) */
+/* Elles prennent l'espace, mais acceptent de réduire si le QCM pousse */
+.cell-question, .cell-reponse {
+    width: auto;
+    min-width: 150px; /* Taille standard */
+    white-space: normal;
 }
 
-/* CSS Textarea "Élastique" */
-.ia-wrapper textarea { 
-    flex: 1; 
-    background-color: #f0fdf4; 
-    border: 1px dashed #86efac; 
-    padding: 8px 10px; /* Padding ajusté pour l'esthétique */
-    border-radius: 4px; 
-    color: #166534;
-    font-family: inherit;
-    font-size: 0.95rem;
-    line-height: 1.5; 
-    
-    /* C'est ici que tout se joue pour la taille : */
-    resize: none;
-    overflow-y: hidden; /* Caché tant qu'on n'atteint pas le max */
-    
-    height: auto;       /* Laisse le JS calculer la hauteur */
-    min-height: 40px;   /* Hauteur EXACTE pour 1 ligne */
-    max-height: 400px;   /* Limite à ~3 lignes avant scroll */
-    
-    white-space: pre-wrap;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
+.cell-ia-container {
+    width: auto;
+    min-width: 350px; /* Passé de 150px à 350px */
+    white-space: normal;
 }
 
-.ia-wrapper textarea:focus {
-    outline: none;
-    border-color: var(--ia-color);
-    background-color: #fff;
+
+/* 2. Colonne QCM (Conteneur TD) */
+.cell-qcm {
+    width: auto;
+    vertical-align: top;
 }
 
-.btn-ia {
-    background: var(--ia-color);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    font-size: 0.85rem;
-    margin-top: 2px;
-}
-.btn-ia:disabled { background: #94a3b8; cursor: wait; }
-
-input[type="text"]:not([readonly]) {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-family: inherit;
-}
-input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
-
-.empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
-
-/* --- NOUVEAU : Styles pour le type QCM --- */
-
+/* 3. Wrapper QCM (Le cœur du réglage) */
 .qcm-wrapper {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 120px; /* Limite la hauteur de la liste */
-    overflow-y: auto;  /* Ascenseur si trop d'items */
-    padding: 4px;
-    border: 1px solid transparent;
+    
+    /* COMPORTEMENT ÉLASTIQUE CAPÉ */
+    width: fit-content;   /* Colle au contenu */
+    min-width: 300px;     /* PROTECTION : Empêche d'être écrasé sous 300px */
+    max-width: 80ch;      /* CAP : Empêche de dépasser ~128 caractères */
+    
+    white-space: normal;  /* Autorise le retour à la ligne si le cap est atteint */
+    
+    /* Scroll & Esthétique */
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 6px;
+    background: rgba(0,0,0,0.02);
     border-radius: 4px;
+    box-sizing: border-box;
 }
 
-.qcm-wrapper:hover {
-    border-color: var(--border);
-    background: #fcfcfc;
+.qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+.qcm-item input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; accent-color: var(--primary); width: 16px; height: 16px; }
+.qcm-item input:checked + span { color: var(--text-muted); text-decoration: line-through; }
+
+
+/* --- WRAPPER IA --- */
+.ia-wrapper { 
+    display: flex; 
+    gap: 8px; 
+    width: 100%; 
+    align-items: flex-start; /* Aligne le bouton en haut */
 }
 
-.qcm-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
+/* Textarea IA Adaptatif */
+.ia-wrapper textarea { 
+    flex: 1; 
+    background-color: #f0fdf4; 
+    border: 1px dashed #86efac; 
+    padding: 8px 10px; 
+    border-radius: 4px; 
+    color: #166534;
+    font-family: inherit; font-size: 0.95rem; line-height: 1.5;
+    
+    /* Gestion hauteur via JS (mais limites CSS) */
+    resize: none; 
+    overflow-y: hidden; /* Caché par défaut */
+    height: auto; 
+    min-height: 40px;   /* ~1 ligne */
+    max-height: 96px;   /* ~3 lignes */
+    
+    white-space: pre-wrap; 
+    box-sizing: border-box; 
+    transition: border-color 0.2s;
 }
 
-.qcm-item input[type="checkbox"] {
-    cursor: pointer;
-    width: 16px;
-    height: 16px;
-    accent-color: var(--primary);
-}
+.ia-wrapper textarea:focus { outline: none; border-color: var(--ia-color); background-color: #fff; }
 
-.qcm-item span {
-    color: var(--text-main);
+.btn-ia {
+    background: var(--ia-color); color: white; border: none; padding: 6px 12px;
+    border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem;
+    margin-top: 2px; /* Alignement visuel */
 }
+.btn-ia:disabled { background: #94a3b8; cursor: wait; }
 
-/* Style visuel quand coché (optionnel, pour le confort) */
-.qcm-item input:checked + span {
-    color: var(--text-muted);
-    text-decoration: line-through;
+/* Inputs classiques */
+input[type="text"]:not([readonly]) {
+    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; box-sizing: border-box;
 }
+input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+.empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }

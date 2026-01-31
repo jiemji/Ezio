@@ -1,35 +1,37 @@
 {
   "columns": [
-    { "id": "task", "label": "Tâche Principale", "type": "question" },
-    { "id": "subtasks", "label": "Sous-tâches (QCM)", "type": "qcm" },
+    { "id": "tache", "label": "Tâche", "type": "question" },
+    { "id": "checklist", "label": "Liste de contrôle (QCM)", "type": "qcm" },
     { 
-      "id": "analysis", 
-      "label": "Bilan IA", 
-      "type": "ia", 
-      "params": { 
-        "requete": "Analyse l'avancement basé sur les cases cochées. Sois bref.",
-        "cibles": ["task", "subtasks"]
+      "id": "synthese", 
+      "label": "Analyse IA", 
+      "type": "ia",
+      "params": {
+        "requete": "Fais une synthèse en une phrase de ce qu'il reste à faire.",
+        "cibles": ["tache", "checklist"]
       }
     }
   ],
   "rows": [
     [
-      "Préparer le repas",
+         "Tendance 2025 : La spécialisation à l'extrême via le modèle As-a-Service. Les Access Brokers volent les accès et les revendent.Les Ransomware Operators fournissent le logiciel malveillant.Les Affiliés mènent l'attaque finale et partagent les gains.Exemple à citer : Des groupes comme LockBit (malgré les arrestations) ou Cl0p qui fonctionnent comme des franchises.",
       [
-        { "label": "Acheter légumes", "checked": true },
-        { "label": "Cuire la viande", "checked": false },
-        { "label": "Dresser la table", "checked": false }
+        { "label": "Tests unitaires", "checked": true },
+        { "label": "Validation client", "checked": true },
+        { "label": "Backup base de données", "checked": false },
+        { "label": "Déploiement serveur", "checked": false }
       ],
       ""
     ],
     [
-      "Développement Web",
+      "Rédaction Documentation avec un titre très long pour tester la largeur de la colonne QCM au delà de 128 caractères",
       [
-        { "label": "Créer HTML", "checked": true },
-        { "label": "Faire le CSS", "checked": true },
-        { "label": "Debug JS", "checked": true }
+        { "label": "Introduction", "checked": true },
+        { "label": "Chapitre 1 : Installation et configuration initiale du système complexe", "checked": false }
       ],
       ""
     ]
   ]
 }
+
+
