@@ -1,47 +1,42 @@
 /**
- * Logique Applicative - Avec Sauvegarde Locale (localStorage)
+ * Logique Applicative - Support QCM
  */
-const STORAGE_KEY = 'adminform_data_v1'; // Clé unique pour le stockage
+const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
 let currentForm = { columns: [], rows: [] };
 
 // -- INITIALISATION --
 
 (async function init() {
-    // 1. Charger Config API
     try {
         const response = await fetch('config.json');
         if (response.ok) IA_CONFIG = await response.json();
     } catch (e) { console.error("Config manquante", e); }
 
-    // 2. Tenter de restaurer les données locales
     loadState();
 })();
 
-// -- SÉLECTEURS DOM --
+// -- SÉLECTEURS --
 const jsonInput = document.getElementById('jsonInput');
 const exportBtn = document.getElementById('exportBtn');
-const resetBtn = document.getElementById('resetBtn'); // Nouveau
+const resetBtn = document.getElementById('resetBtn');
 const tableContainer = document.getElementById('tableContainer');
-const statusIndicator = document.getElementById('statusIndicator'); // Nouveau
+const statusIndicator = document.getElementById('statusIndicator');
 
 // -- LISTENERS --
 
-// Chargement fichier
 jsonInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
         currentForm = JSON.parse(await file.text());
         renderTable();
-        saveState(); // Sauvegarde immédiate après chargement
-        showStatus("Fichier chargé avec succès");
+        saveState();
+        showStatus("Fichier chargé");
     } catch (err) { alert("JSON invalide."); }
-    // Reset de l'input pour permettre de recharger le même fichier si besoin
     e.target.value = '';
 });
 
-// Export
 exportBtn.addEventListener('click', () => {
     if (!currentForm.rows.length) return;
     const blob = new Blob([JSON.stringify(currentForm, null, 2)], { type: "application/json" });
@@ -52,19 +47,17 @@ exportBtn.addEventListener('click', () => {
     a.click();
 });
 
-// Reset (Nouveau)
 resetBtn.addEventListener('click', () => {
-    if (confirm("Voulez-vous vraiment tout effacer ? Cette action est irréversible.")) {
+    if (confirm("Tout effacer ?")) {
         localStorage.removeItem(STORAGE_KEY);
         currentForm = { columns: [], rows: [] };
-        renderTable(); // Affiche vide ou empty state
-        // On force le rechargement de l'empty state
-        tableContainer.innerHTML = `<div class="empty-state"><p>Données effacées. Prêt pour un nouveau fichier.</p></div>`;
+        renderTable();
+        tableContainer.innerHTML = `<div class="empty-state"><p>Données effacées.</p></div>`;
         showStatus("Session nettoyée");
     }
 });
 
-// -- GESTION DE L'ÉTAT (LOCAL STORAGE) --
+// -- STATE MANAGEMENT --
 
 function saveState() {
     if (currentForm.columns.length > 0) {
@@ -81,12 +74,8 @@ function loadState() {
             if (currentForm.columns && currentForm.rows) {
                 renderTable();
                 showStatus("Session restaurée");
-                console.log("Données restaurées du localStorage");
             }
-        } catch (e) {
-            console.error("Erreur lecture sauvegarde", e);
-            localStorage.removeItem(STORAGE_KEY); // Nettoyage si corrompu
-        }
+        } catch (e) { localStorage.removeItem(STORAGE_KEY); }
     }
 }
 
@@ -98,7 +87,18 @@ function showStatus(msg) {
     }
 }
 
-// -- FONCTIONS D'AFFICHAGE --
+function adjustTextareaHeight(el) {
+    if (!el) return;
+    el.style.height = 'auto'; 
+    el.style.height = el.scrollHeight + 'px';
+    if (el.scrollHeight > 96) {
+        el.style.overflowY = 'auto';
+    } else {
+        el.style.overflowY = 'hidden';
+    }
+}
+
+// -- RENDU TABLEAU --
 
 function renderTable() {
     if (!currentForm.columns || !currentForm.columns.length) return;
@@ -112,14 +112,41 @@ function renderTable() {
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
+            // --- TYPE IA ---
             if (colDef.type === 'ia') {
                 html += `<td><div class="ia-wrapper">
-                    <input type="text" id="ia-${rowIndex}-${colIndex}" value="${escapeHtml(value)}" readonly>
+                    <textarea id="ia-${rowIndex}-${colIndex}" rows="1" readonly>${escapeHtml(value)}</textarea>
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
                 </div></td>`;
-            } else if (colDef.type === 'question') {
+            } 
+            // --- TYPE QCM (NOUVEAU) ---
+            else if (colDef.type === 'qcm') {
+                html += `<td><div class="qcm-wrapper">`;
+                
+                // Vérification que 'value' est bien un tableau
+                if (Array.isArray(value)) {
+                    value.forEach((item, itemIndex) => {
+                        const checkedAttr = item.checked ? 'checked' : '';
+                        html += `
+                            <label class="qcm-item">
+                                <input type="checkbox" ${checkedAttr} 
+                                onchange="updateQcmValue(${rowIndex}, ${colIndex}, ${itemIndex}, this.checked)">
+                                <span>${escapeHtml(item.label)}</span>
+                            </label>
+                        `;
+                    });
+                } else {
+                    html += `<span style="color:red">Erreur format QCM</span>`;
+                }
+                
+                html += `</div></td>`;
+            }
+            // --- TYPE QUESTION ---
+            else if (colDef.type === 'question') {
                 html += `<td class="cell-question">${escapeHtml(value)}</td>`;
-            } else {
+            } 
+            // --- TYPE REPONSE (DEFAULT) ---
+            else {
                 html += `<td class="cell-reponse">
                     <input type="text" value="${escapeHtml(value)}" onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">
                 </td>`;
@@ -128,7 +155,29 @@ function renderTable() {
         html += `</tr>`;
     });
     tableContainer.innerHTML = html + `</tbody></table>`;
+
+    document.querySelectorAll('.ia-wrapper textarea').forEach(adjustTextareaHeight);
 }
+
+// -- LOGIQUE DE MISE A JOUR --
+
+// Mise à jour standard (Texte)
+window.updateValue = (r, c, v) => { 
+    currentForm.rows[r][c] = v; 
+    saveState(); 
+};
+
+// Mise à jour spécifique QCM (Nouveau)
+window.updateQcmValue = (r, c, itemIndex, isChecked) => {
+    // On met à jour uniquement la propriété 'checked' de l'objet spécifique dans le tableau
+    if (currentForm.rows[r][c] && currentForm.rows[r][c][itemIndex]) {
+        currentForm.rows[r][c][itemIndex].checked = isChecked;
+        saveState();
+        
+        // Optionnel : console log pour vérifier
+        console.log(`Ligne ${r}, Col ${c}, Item ${itemIndex} -> ${isChecked}`);
+    }
+};
 
 // -- LOGIQUE IA --
 
@@ -139,18 +188,28 @@ async function handleIA(rowIndex, colIndex, btn) {
     const params = colDef.params || {};
     let contextData = "";
 
-    // Logique de ciblage
+    // Fonction helper pour formater la valeur selon son type
+    const formatValue = (val) => {
+        if (Array.isArray(val)) {
+            // Si c'est un QCM, on le formate proprement pour l'IA
+            return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
+        }
+        return val;
+    };
+
     if (params.cibles && Array.isArray(params.cibles) && params.cibles.length > 0) {
         const parts = [];
         params.cibles.forEach(targetId => {
             const tIndex = currentForm.columns.findIndex(c => c.id === targetId);
             if (tIndex !== -1) {
-                parts.push(`${currentForm.columns[tIndex].label}: ${currentForm.rows[rowIndex][tIndex]}`);
+                const rawVal = currentForm.rows[rowIndex][tIndex];
+                parts.push(`${currentForm.columns[tIndex].label}:\n${formatValue(rawVal)}`);
             }
         });
-        contextData = parts.join("\n");
+        contextData = parts.join("\n\n");
     } else {
-        contextData = currentForm.rows[rowIndex].join(" | ");
+        // Fallback global : on map toute la ligne en gérant les objets
+        contextData = currentForm.rows[rowIndex].map(v => formatValue(v)).join("\n | \n");
     }
 
     const prompt = `${params.requete || "Analyse :"}\n\nDonnées contextuelles:\n${contextData}`;
@@ -160,9 +219,14 @@ async function handleIA(rowIndex, colIndex, btn) {
 
     try {
         const result = await window.ApiService.fetchLLM(IA_CONFIG, prompt);
-        updateValue(rowIndex, colIndex, result); // Sauvegarde automatique incluse dans updateValue
+        updateValue(rowIndex, colIndex, result);
+        
         const input = document.getElementById(`ia-${rowIndex}-${colIndex}`);
-        if(input) input.value = result;
+        if(input) {
+            input.value = result;
+            adjustTextareaHeight(input);
+        }
+        
     } catch (err) {
         alert("Erreur IA: " + err.message);
     } finally {
@@ -171,14 +235,11 @@ async function handleIA(rowIndex, colIndex, btn) {
     }
 }
 
-// Mise à jour de la valeur ET sauvegarde
-window.updateValue = (r, c, v) => { 
-    currentForm.rows[r][c] = v; 
-    saveState(); // Sauvegarde à chaque frappe/modif
-};
-
 function escapeHtml(t) { 
     if(t == null) return "";
+    // Si t est un objet/tableau (cas QCM mal géré), on évite le crash
+    if (typeof t === 'object') return ""; 
+    
     const d = document.createElement('div'); 
     d.textContent = String(t); 
     return d.innerHTML; 
