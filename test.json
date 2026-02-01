@@ -1,92 +1,188 @@
 {
   "columns": [
-    { 
-      "id": "phase", 
-      "label": "Phase", 
-      "type": "chapitre" 
+    {
+      "id": "domaine",
+      "label": "Domaine",
+      "type": "chapitre"
     },
-    { 
-      "id": "action", 
-      "label": "Action Requise", 
-      "type": "question" 
+    {
+      "id": "reference",
+      "label": "Référence",
+      "type": "question",
+      "size" : "S"
     },
-    { 
-      "id": "info_bulle", 
-      "label": "Détails Techniques", 
-      "type": "popup" 
+    {
+      "id": "controle",
+      "label": "Contrôle",
+      "type": "question",
+      "size" : "M"
     },
-    { 
-      "id": "controles", 
-      "label": "Points de contrôle", 
-      "type": "qcm" 
+    {
+      "id": "objectif",
+      "label": "Objectif",
+      "type": "question",
+      "size" : "L"
     },
-    { 
-      "id": "statut", 
-      "label": "État", 
+    {
+      "id": "preuves",
+      "label": "Preuves possibles",
+      "type": "popup"
+    },
+    {
+      "id": "reponse",
+      "label": "Réponse Auditeur",
+      "type": "reponse"
+    },
+    {
+      "id": "conformite",
+      "label": "Conformité",
       "type": "combo",
       "params": {
-        "options": ["À faire", "En cours", "Validé", "Bloqué"],
+        "options": [
+          "Conforme",
+          "Partiellement conforme",
+          "Non-Conforme"
+        ],
         "colors": {
-          "Validé": "#dcfce7",
-          "Bloqué": "#fee2e2",
-          "En cours": "#fef9c3"
+          "Conforme": "#dcfce7",
+          "Partiellement conforme": "#ffedd5",
+          "Non-Conforme": "#fee2e2"
         }
       }
     },
-    { 
-      "id": "ia_risk", 
-      "label": "Analyse de Risque", 
-      "type": "ia", 
+    {
+      "id": "ia_conseil",
+      "label": "IA Advisor",
+      "type": "ia",
       "params": {
-        "requete": "Analyse cette action technique et liste 2 risques potentiels si elle est mal exécutée.",
-        "cibles": ["action", "info_bulle"]
-      } 
+        "requete": "En te basant sur l'objectif du contrôle norme ISO 27001, la réponse de l'auditeur et le statut de conformité, propose 3 mesures de protection ou actions correctives concrètes.",
+        "cibles": [
+          "objectif",
+          "reponse",
+          "conformite"
+        ]
+      }
     }
   ],
   "rows": [
     [
-      "Infrastructure",
-      "Configuration SSL/HTTPS",
-      "Vérifier que le certificat est bien un Wildcard pour *.mondomaine.com et que la redirection HTTP vers HTTPS est forcée (Code 301).",
-      [
-        { "label": "Certificat valide", "checked": true },
-        { "label": "Redirection 301 active", "checked": false },
-        { "label": "Score A+ sur SSLLabs", "checked": false }
-      ],
-      "En cours",
+      "Gouvernance",
+      "4.1",
+      "Compréhension de l'organisme et de son contexte",
+      "L'organisme doit déterminer les enjeux externes et internes pertinents par rapport à sa finalité.",
+      "Documents attendus :\n- Analyse SWOT ou PESTEL\n- Liste formalisée des enjeux internes/externes\n- PV de réunion de direction validant le contexte",
+      "",
+      "Non-Conforme",
       ""
     ],
     [
-      "Infrastructure",
-      "Variables d'environnement",
-      "IMPORTANT : Ne jamais commiter le fichier .env en prod.\nS'assurer que : \n- DB_PASSWORD est fort\n- DEBUG=false",
-      [
-        { "label": "Fichier .env sécurisé", "checked": true },
-        { "label": "Clés API masquées", "checked": true }
-      ],
-      "Validé",
+      "Gouvernance",
+      "4.2",
+      "Besoins et attentes des parties intéressées",
+      "L'organisme doit déterminer les parties intéressées pertinentes et leurs exigences.",
+      "Documents attendus :\n- Cartographie des parties intéressées (Clients, Actionnaires, Régulateurs)\n- Matrice des exigences (Légales, Contractuelles)\n- Preuve de la prise en compte dans le SMSI",
+      "",
+      "Non-Conforme",
       ""
     ],
     [
-      "Frontend",
-      "Optimisation des Assets",
-      "Les images doivent être au format WebP.\nLes fichiers JS et CSS doivent être minifiés (Gzip ou Brotli activé sur Nginx).",
-      [
-        { "label": "Images compressées", "checked": false },
-        { "label": "Minification JS/CSS", "checked": false }
-      ],
-      "À faire",
+      "Gouvernance",
+      "5.1",
+      "Leadership et engagement",
+      "La direction doit démontrer son leadership et son engagement vis-à-vis du SMSI.",
+      "Documents attendus :\n- Politique de sécurité signée par la direction\n- Comptes-rendus de comités de pilotage\n- Preuves budgétaires (allocation des ressources)",
+      "",
+      "Non-Conforme",
       ""
     ],
     [
-      "Base de Données",
-      "Migration des données",
-      "Attention : Faire un dump complet avant de lancer 'npm run migrate'.\nVérifier la compatibilité des colonnes ENUM.",
-      [
-        { "label": "Backup effectué", "checked": false },
-        { "label": "Script de migration testé", "checked": false }
-      ],
-      "Bloqué",
+      "Gouvernance",
+      "6.1.2",
+      "Appréciation des risques",
+      "L'organisme doit définir et appliquer un processus d'appréciation des risques (identification, analyse, évaluation).",
+      "Documents attendus :\n- Politique/Méthodologie de gestion des risques\n- Registre des risques (Asset-based ou Scenario-based)\n- Matrice d'évaluation (Gravité/Vraisemblance)",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Gouvernance",
+      "6.1.3",
+      "Traitement des risques",
+      "L'organisme doit définir et appliquer un processus de traitement des risques et produire une Déclaration d'Applicabilité.",
+      "Documents attendus :\n- Plan de Traitement des Risques (PTR)\n- Déclaration d'Applicabilité (DdA / SoA)\n- Acceptation des risques résiduels par les propriétaires",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Organisation",
+      "7.2",
+      "Compétences",
+      "L'organisme doit s'assurer que les personnes ont les compétences nécessaires (études, formation ou expérience).",
+      "Documents attendus :\n- Fiches de poste avec compétences requises\n- Dossiers du personnel (Diplômes, Certifications)\n- Plan de formation annuel et émargements",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Organisation",
+      "7.5",
+      "Informations documentées",
+      "Le SMSI doit inclure les informations documentées requises, contrôlées, mises à jour et protégées.",
+      "Documents attendus :\n- Procédure de gestion documentaire\n- Charte de nommage et versioning\n- Preuves de revue régulière des documents",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Protection",
+      "8.1",
+      "Planification et contrôle opérationnels",
+      "L'organisme doit planifier, mettre en œuvre et maîtriser les processus nécessaires pour satisfaire aux exigences.",
+      "Documents attendus :\n- Procédures opérationnelles (SOP)\n- Registres des changements\n- Contrats et contrôles des prestataires externes",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Détection",
+      "9.1",
+      "Surveillance, mesure, analyse et évaluation",
+      "L'organisme doit évaluer la performance de la sécurité de l'information et l'efficacité du SMSI.",
+      "Documents attendus :\n- Tableau de bord sécurité (KPI / KRI)\n- Rapports de monitoring technique\n- Preuves d'analyse des résultats par la direction",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Détection",
+      "9.2",
+      "Audit interne",
+      "L'organisme doit réaliser des audits internes à des intervalles planifiés.",
+      "Documents attendus :\n- Programme d'audit (Planning)\n- Rapports d'audit interne\n- Suivi des constats d'audit",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Réaction",
+      "10.1",
+      "Amélioration continue",
+      "L'organisme doit améliorer en continu la pertinence, l'adéquation et l'efficacité du SMSI.",
+      "Documents attendus :\n- Liste des opportunités d'amélioration\n- Comptes-rendus de revue de direction (décisions d'amélioration)",
+      "",
+      "Non-Conforme",
+      ""
+    ],
+    [
+      "Réaction",
+      "10.2",
+      "Non-conformité et actions correctives",
+      "L'organisme doit réagir aux non-conformités et évaluer le besoin d'action pour éliminer les causes.",
+      "Documents attendus :\n- Registre des non-conformités\n- Fiches d'actions correctives (avec analyse de cause racine)\n- Preuves de vérification de l'efficacité des actions",
+      "",
+      "Non-Conforme",
       ""
     ]
   ]
