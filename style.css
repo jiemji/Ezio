@@ -50,11 +50,11 @@ body.dark-mode {
 
 /* Styles spécifiques QCM en Dark Mode */
 body.dark-mode .qcm-wrapper {
-    background-color: var(--readonly); /* Gris foncé distinct du fond */
+    background-color: var(--readonly); 
     border-color: #475569;
 }
 body.dark-mode .qcm-item {
-    color: var(--text-main); /* Texte bien blanc */
+    color: var(--text-main); 
 }
 
 body {
@@ -94,7 +94,6 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-hover); }
 
-/* Secondaire (s'adapte au dark mode) */
 .btn-secondary { background: var(--card-bg); border-color: var(--border); color: var(--text-main); }
 .btn-secondary:hover { background: var(--readonly); }
 
@@ -133,7 +132,6 @@ main#app { display: flex; align-items: flex-start; gap: 0; padding: 0; min-heigh
     color: var(--primary); border-left-color: var(--primary);
 }
 
-/* Sous-Chapitres */
 .sub-chapter-list { list-style: none; padding: 0 0 0 12px; margin-top: 2px; }
 
 .sub-chapter-item {
@@ -157,10 +155,17 @@ main#app { display: flex; align-items: flex-start; gap: 0; padding: 0; min-heigh
 /* --- 3. TABLEAU & COLONNES --- */
 .table-responsive { 
     background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); 
-    overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;
+    overflow-x: auto; /* Active le scroll horizontal */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;
 }
 
-table { width: 100%; border-collapse: collapse; table-layout: auto; }
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: auto; 
+    /* AJOUT ESSENTIEL : Force le tableau à être large pour activer le scroll si besoin */
+    min-width: 1000px; 
+}
 
 th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
 td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-main); }
@@ -173,17 +178,15 @@ td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-ali
 .cell-combo { width: auto; min-width: 180px; vertical-align: top; }
 .cell-combo select {
     width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;
-    background-color: var(--card-bg); /* Couleur de fond par défaut (Blanc ou Sombre) */
+    background-color: var(--card-bg);
     font-family: inherit; font-size: 0.95rem; color: var(--text-main);
     cursor: pointer; appearance: none;
-    /* Variable SVG pour l'icône */
     background-image: var(--select-arrow);
     background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 10px auto;
     padding-right: 30px; transition: background-color 0.2s, border-color 0.2s;
 }
 .cell-combo select:focus { outline: none; border-color: var(--primary); }
 
-/* Options select natives */
 option {
     background-color: var(--card-bg);
     color: var(--text-main);
@@ -202,7 +205,7 @@ option {
 .qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; color: var(--text-main); }
 .qcm-item input[type="checkbox"] { 
     margin-top: 4px; flex-shrink: 0; 
-    accent-color: var(--primary); /* Force la couleur pour être visible */
+    accent-color: var(--primary); 
     border: 1px solid var(--text-muted);
     width: 16px; height: 16px; 
 }
@@ -210,7 +213,6 @@ option {
 
 /* --- 4. SAISIE & IA --- */
 
-/* Style Base Textarea */
 textarea {
     font-family: inherit; font-size: 0.95rem; line-height: 1.5;
     resize: none; overflow-y: hidden; 
@@ -219,12 +221,10 @@ textarea {
     border-radius: 4px; padding: 8px 10px; width: 100%;
 }
 
-/* IA (Markdown Container) */
+/* IA */
 .ia-wrapper { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
-
 .markdown-view {
     flex: 1;
-    /* Variables IA */
     background-color: var(--ia-bg); 
     border: 1px dashed var(--ia-border); 
     color: var(--ia-text);
@@ -232,12 +232,8 @@ textarea {
     height: auto; min-height: 40px; max-height: 200px; overflow-y: auto;
     font-family: inherit; font-size: 0.95rem; line-height: 1.5;
 }
-
 .markdown-view p { margin: 0 0 8px 0; }
-.markdown-view p:last-child { margin-bottom: 0; }
-.markdown-view ul, .markdown-view ol { margin: 4px 0; padding-left: 20px; }
 .markdown-view strong { font-weight: 700; color: inherit; }
-.markdown-view h1, .markdown-view h2, .markdown-view h3 { margin: 8px 0 4px 0; font-size: 1rem; font-weight: 700; text-decoration: underline; }
 
 /* Réponse Manuelle */
 .cell-reponse textarea {
@@ -253,5 +249,37 @@ textarea {
     border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; margin-top: 2px;
 }
 .btn-ia:disabled { background: #94a3b8; cursor: wait; }
+
+/* --- 5. POPUP (Réintégré) --- */
+.popup-wrapper { position: relative; display: inline-block; }
+
+.popup-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background-color: var(--primary); color: #ffffff;
+    padding: 6px 12px; border-radius: 20px;
+    font-size: 0.85rem; font-weight: 600; cursor: help;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.popup-badge:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+
+.popup-content {
+    display: none; 
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    width: 250px; background-color: #1e293b; color: #ffffff;
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 0.9rem; line-height: 1.4; z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: left; white-space: normal;
+}
+.popup-content::after {
+    content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
+    border-width: 6px; border-style: solid; border-color: #1e293b transparent transparent transparent;
+}
+.popup-wrapper:hover .popup-content { display: block; animation: fadeIn 0.2s ease-in-out; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, 5px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
 
 .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
