@@ -1,17 +1,21 @@
 {
   "columns": [
-    { "id": "chap", "label": "Module", "type": "chapitre" },
-    { "id": "tache", "label": "Tâche à réaliser", "type": "question" },
-    { "id": "statut", "label": "Statut", "type": "combo", "params": { "options": ["En attente", "Fait"], "colors": {"Fait": "#dcfce7"} } },
-    { "id": "notes", "label": "Notes IA", "type": "ia", "params": {"requete": "Résume la tâche", "cibles": ["tache"]}}
+    { "id": "chap", "label": "Phase Projet", "type": "chapitre" },
+    { "id": "sub", "label": "Étape", "type": "sous-chapitre" },
+    { "id": "tache", "label": "Action à réaliser", "type": "question" },
+    { "id": "statut", "label": "État", "type": "combo", "params": { "options": ["À faire", "En cours", "Terminé"], "colors": {"Terminé": "#dcfce7", "En cours": "#fef9c3"} } },
+    { "id": "ia_note", "label": "Note IA", "type": "ia", "params": {"requete": "Donne un conseil court", "cibles": ["tache", "statut"]}}
   ],
   "rows": [
-    ["Frontend", "Créer le header", "Fait", ""],
-    ["Frontend", "Créer le footer", "En attente", ""],
-    ["Frontend", "Responsive Design", "En attente", ""],
-    ["Backend", "Configurer la DB", "Fait", ""],
-    ["Backend", "Créer l'API User", "En attente", ""],
-    ["Marketing", "Définir le persona", "Fait", ""],
-    ["Marketing", "Rédiger 3 posts LinkedIn", "En attente", ""]
+    ["Conception", "Wireframing", "Maquettes Desktop", "Terminé", ""],
+    ["Conception", "Wireframing", "Maquettes Mobile", "En cours", ""],
+    ["Conception", "Validation", "Réunion client", "À faire", ""],
+    
+    ["Développement", "Frontend", "Intégration HTML/CSS", "À faire", ""],
+    ["Développement", "Frontend", "Logique JS", "À faire", ""],
+    ["Développement", "Backend", "Création API", "En cours", ""],
+    
+    ["Livraison", "Tests", "Tests unitaires", "À faire", ""],
+    ["Livraison", "Déploiement", "Mise en prod", "À faire", ""]
   ]
 }

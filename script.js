@@ -1,10 +1,13 @@
 /**
- * AdminForm - Script Principal (Version Chapitres)
+ * AdminForm - Script Principal (Version Finale Corrigée)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
 let currentForm = { columns: [], rows: [] };
-let activeChapterFilter = null; // 'null' signifie "Tout afficher"
+
+// Gestion des filtres
+let activeChapterFilter = null; 
+let activeSubChapterFilter = null;
 
 // -- INITIALISATION --
 (async function init() {
@@ -30,7 +33,8 @@ jsonInput.addEventListener('change', async (e) => {
     if (!file) return;
     try {
         currentForm = JSON.parse(await file.text());
-        activeChapterFilter = null; // Reset filtre au chargement
+        activeChapterFilter = null;
+        activeSubChapterFilter = null;
         renderTable();
         saveState();
         showStatus("Fichier chargé");
@@ -48,16 +52,29 @@ exportBtn.addEventListener('click', () => {
     a.click();
 });
 
+// --- CORRECTIF ICI ---
 resetBtn.addEventListener('click', () => {
     if (confirm("Tout effacer ?")) {
+        // 1. Nettoyage Données
         localStorage.removeItem(STORAGE_KEY);
         currentForm = { columns: [], rows: [] };
+        
+        // 2. Nettoyage Filtres
         activeChapterFilter = null;
-        renderTable();
+        activeSubChapterFilter = null;
+
+        // 3. Nettoyage UI Tableau
+        // On n'appelle pas renderTable() car il s'arrêterait tout de suite (pas de colonnes)
         tableContainer.innerHTML = `<div class="empty-state"><p>Données effacées.</p></div>`;
+        
+        // 4. Nettoyage UI Sidebar (AJOUTÉ)
+        sidebar.classList.add('hidden'); // Cache le panneau
+        chapterList.innerHTML = '';      // Vide la liste
+        
         showStatus("Session nettoyée");
     }
 });
+// ---------------------
 
 // -- STATE & UI HELPERS --
 function saveState() {
@@ -122,86 +139,109 @@ window.handleComboChange = (r, c, selectEl) => {
     }
 };
 
-// -- GESTION CHAPITRES --
+// -- GESTION HIERARCHIE CHAPITRES --
 
-function setupSidebar(chapColIndex) {
-    // 1. Récupération des chapitres uniques et comptage
-    const chaptersMap = new Map();
+function setupSidebar(chapColIndex, subChapColIndex) {
+    const hierarchy = new Map();
     
     currentForm.rows.forEach(row => {
         const chapName = String(row[chapColIndex] || "Sans chapitre");
-        if (!chaptersMap.has(chapName)) {
-            chaptersMap.set(chapName, 0);
+        if (!hierarchy.has(chapName)) {
+            hierarchy.set(chapName, { count: 0, subChapters: new Map() });
         }
-        chaptersMap.set(chapName, chaptersMap.get(chapName) + 1);
+        const chapData = hierarchy.get(chapName);
+        chapData.count++;
+
+        if (subChapColIndex !== -1) {
+            const subName = String(row[subChapColIndex] || "");
+            if (subName) {
+                if (!chapData.subChapters.has(subName)) {
+                    chapData.subChapters.set(subName, 0);
+                }
+                chapData.subChapters.set(subName, chapData.subChapters.get(subName) + 1);
+            }
+        }
     });
 
-    // 2. Génération HTML
     let html = `
         <li class="chapter-item ${activeChapterFilter === null ? 'active' : ''}" 
-            onclick="setChapterFilter(null)">
+            onclick="setFilter(null, null)">
             Tout afficher <span class="chapter-count">${currentForm.rows.length}</span>
         </li>
     `;
 
-    chaptersMap.forEach((count, chapName) => {
-        const isActive = activeChapterFilter === chapName ? 'active' : '';
-        // On escape les quotes dans l'appel de fonction pour éviter les bugs JS
-        const safeName = chapName.replace(/'/g, "\\'"); 
+    hierarchy.forEach((data, chapName) => {
+        const isChapActive = activeChapterFilter === chapName && activeSubChapterFilter === null;
+        const safeChap = chapName.replace(/'/g, "\\'"); 
+        
         html += `
-            <li class="chapter-item ${isActive}" 
-                onclick="setChapterFilter('${safeName}')">
+            <li class="chapter-item ${isChapActive ? 'active' : ''}" 
+                onclick="setFilter('${safeChap}', null)">
                 ${escapeHtml(chapName)} 
-                <span class="chapter-count">${count}</span>
+                <span class="chapter-count">${data.count}</span>
             </li>
         `;
+
+        if (data.subChapters.size > 0) {
+            html += `<ul class="sub-chapter-list">`;
+            data.subChapters.forEach((subCount, subName) => {
+                const isSubActive = activeChapterFilter === chapName && activeSubChapterFilter === subName;
+                const safeSub = subName.replace(/'/g, "\\'");
+                html += `
+                    <li class="sub-chapter-item ${isSubActive ? 'active' : ''}"
+                        onclick="setFilter('${safeChap}', '${safeSub}'); event.stopPropagation();">
+                        ${escapeHtml(subName)}
+                        <span class="chapter-count" style="font-size:0.75em; padding:1px 5px;">${subCount}</span>
+                    </li>
+                `;
+            });
+            html += `</ul>`;
+        }
     });
 
     chapterList.innerHTML = html;
     sidebar.classList.remove('hidden');
 }
 
-window.setChapterFilter = (chapName) => {
+window.setFilter = (chapName, subChapName) => {
     activeChapterFilter = chapName;
-    renderTable(); // Re-render pour appliquer le filtre et mettre à jour la classe 'active' du menu
+    activeSubChapterFilter = subChapName;
+    renderTable();
 }
 
 // -- RENDU PRINCIPAL --
 function renderTable() {
     if (!currentForm.columns || !currentForm.columns.length) return;
 
-    // 1. Détection de la colonne Chapitre
     const chapColIndex = currentForm.columns.findIndex(c => c.type === 'chapitre');
+    const subChapColIndex = currentForm.columns.findIndex(c => c.type === 'sous-chapitre');
     
-    // 2. Gestion de la sidebar
     if (chapColIndex !== -1) {
-        setupSidebar(chapColIndex);
+        setupSidebar(chapColIndex, subChapColIndex);
     } else {
         sidebar.classList.add('hidden');
-        activeChapterFilter = null; // Sécurité
+        activeChapterFilter = null;
+        activeSubChapterFilter = null;
     }
 
     let html = `<table><thead><tr>`;
     currentForm.columns.forEach(col => html += `<th>${col.label}</th>`);
     html += `</tr></thead><tbody>`;
 
-    // 3. Boucle sur les lignes (AVEC FILTRE)
     currentForm.rows.forEach((row, rowIndex) => {
-        
-        // --- LOGIQUE DE FILTRE ---
         if (activeChapterFilter !== null && chapColIndex !== -1) {
             const rowChap = String(row[chapColIndex] || "Sans chapitre");
-            if (rowChap !== activeChapterFilter) {
-                return; // On saute cette ligne, elle ne correspond pas au chapitre
+            if (rowChap !== activeChapterFilter) return;
+            if (activeSubChapterFilter !== null && subChapColIndex !== -1) {
+                const rowSub = String(row[subChapColIndex] || "");
+                if (rowSub !== activeSubChapterFilter) return;
             }
         }
-        // -------------------------
 
         html += `<tr>`;
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
-            // TYPE IA
             if (colDef.type === 'ia') {
                 let renderedContent = "";
                 try { renderedContent = value ? marked.parse(String(value)) : ""; } 
@@ -212,61 +252,44 @@ function renderTable() {
                     <div id="ia-${rowIndex}-${colIndex}" class="markdown-view">${renderedContent}</div>
                 </div></td>`;
             } 
-            // TYPE QCM
             else if (colDef.type === 'qcm') {
                 html += `<td class="cell-qcm"><div class="qcm-wrapper">`;
                 if (Array.isArray(value)) {
                     value.forEach((item, itemIndex) => {
                         const checkedAttr = item.checked ? 'checked' : '';
-                        html += `
-                            <label class="qcm-item">
-                                <input type="checkbox" ${checkedAttr} 
-                                onchange="updateQcmValue(${rowIndex}, ${colIndex}, ${itemIndex}, this.checked)">
-                                <span>${escapeHtml(item.label)}</span>
-                            </label>
-                        `;
+                        html += `<label class="qcm-item"><input type="checkbox" ${checkedAttr} onchange="updateQcmValue(${rowIndex}, ${colIndex}, ${itemIndex}, this.checked)"><span>${escapeHtml(item.label)}</span></label>`;
                     });
-                } else { html += `<span style="color:red">Erreur format QCM</span>`; }
+                } else { html += `<span style="color:red">Erreur format</span>`; }
                 html += `</div></td>`;
             }
-            // TYPE COMBO
             else if (colDef.type === 'combo') {
                 const options = colDef.params?.options || [];
                 const colors = colDef.params?.colors || {};
                 const currentColor = colors[value] || '#ffffff';
-                html += `<td class="cell-combo">
-                    <select style="background-color: ${currentColor}" onchange="handleComboChange(${rowIndex}, ${colIndex}, this)">
-                        <option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
+                html += `<td class="cell-combo"><select style="background-color: ${currentColor}" onchange="handleComboChange(${rowIndex}, ${colIndex}, this)"><option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
                 options.forEach(opt => {
                     const isSelected = String(value) === String(opt) ? 'selected' : '';
                     html += `<option value="${escapeHtml(opt)}" ${isSelected}>${escapeHtml(opt)}</option>`;
                 });
                 html += `</select></td>`;
             }
-            // TYPE CHAPITRE (Affichage simple, en lecture seule pour l'instant)
-            else if (colDef.type === 'chapitre') {
+            else if (colDef.type === 'chapitre' || colDef.type === 'sous-chapitre') {
                  html += `<td class="cell-question"><strong>${escapeHtml(value)}</strong></td>`;
             }
-            // TYPE QUESTION
             else if (colDef.type === 'question') {
                 html += `<td class="cell-question">${escapeHtml(value)}</td>`;
             } 
-            // TYPE REPONSE
             else {
-                html += `<td class="cell-reponse">
-                    <textarea rows="1" oninput="adjustTextareaHeight(this)" 
-                        onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">${escapeHtml(value)}</textarea>
-                </td>`;
+                html += `<td class="cell-reponse"><textarea rows="1" oninput="adjustTextareaHeight(this)" onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">${escapeHtml(value)}</textarea></td>`;
             }
         });
         html += `</tr>`;
     });
     tableContainer.innerHTML = html + `</tbody></table>`;
-    
     document.querySelectorAll('textarea').forEach(adjustTextareaHeight);
 }
 
-// -- IA LOGIC (Inchangée mais nécessaire) --
+// -- IA LOGIC --
 async function handleIA(rowIndex, colIndex, btn) {
     if (!IA_CONFIG) return alert("Erreur: config.json non chargé.");
     
@@ -274,12 +297,8 @@ async function handleIA(rowIndex, colIndex, btn) {
     const params = colDef.params || {};
     
     const formatValue = (val, type, params) => {
-        if (type === 'qcm' && Array.isArray(val)) {
-            return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
-        }
-        if (type === 'combo') {
-            return val ? `Sélectionné: "${val}"` : "Non sélectionné";
-        }
+        if (type === 'qcm' && Array.isArray(val)) return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
+        if (type === 'combo') return val ? `Sélectionné: "${val}"` : "Non sélectionné";
         return val;
     };
 
@@ -291,11 +310,8 @@ async function handleIA(rowIndex, colIndex, btn) {
             if (tIndex !== -1) {
                 const targetCol = currentForm.columns[tIndex];
                 const rawVal = currentForm.rows[rowIndex][tIndex];
-                
                 let valStr = formatValue(rawVal, targetCol.type, targetCol.params);
-                if (targetCol.type === 'combo' && targetCol.params?.options) {
-                    valStr += ` (Options possibles: ${targetCol.params.options.join(', ')})`;
-                }
+                if (targetCol.type === 'combo' && targetCol.params?.options) valStr += ` (Options possibles: ${targetCol.params.options.join(', ')})`;
                 parts.push(`${targetCol.label}:\n${valStr}`);
             }
         });
@@ -313,9 +329,7 @@ async function handleIA(rowIndex, colIndex, btn) {
         const result = await window.ApiService.fetchLLM(IA_CONFIG, prompt);
         updateValue(rowIndex, colIndex, result);
         const container = document.getElementById(`ia-${rowIndex}-${colIndex}`);
-        if(container) {
-            container.innerHTML = marked.parse(result);
-        }
+        if(container) container.innerHTML = marked.parse(result);
     } catch (err) {
         alert("Erreur IA: " + err.message);
     } finally {
