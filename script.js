@@ -1,5 +1,5 @@
 /**
- * AdminForm - Script Principal (Version Finale Corrigée)
+ * AdminForm - Script Principal (Version Dark Mode + Fix Contraste Combo)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
@@ -9,25 +9,44 @@ let currentForm = { columns: [], rows: [] };
 let activeChapterFilter = null; 
 let activeSubChapterFilter = null;
 
+// -- DOM --
+const jsonInput = document.getElementById('jsonInput');
+const exportBtn = document.getElementById('exportBtn');
+const resetBtn = document.getElementById('resetBtn');
+const themeBtn = document.getElementById('themeBtn');
+const tableContainer = document.getElementById('tableContainer');
+const statusIndicator = document.getElementById('statusIndicator');
+const sidebar = document.getElementById('sidebar');
+const chapterList = document.getElementById('chapterList');
+
 // -- INITIALISATION --
 (async function init() {
     try {
         const response = await fetch('config.json');
         if (response.ok) IA_CONFIG = await response.json();
     } catch (e) { console.error("Config manquante", e); }
+    
+    // Application du thème sauvegardé
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeBtn.textContent = '☀️';
+    } else {
+        themeBtn.textContent = '🌙';
+    }
+
     loadState();
 })();
 
-// -- DOM --
-const jsonInput = document.getElementById('jsonInput');
-const exportBtn = document.getElementById('exportBtn');
-const resetBtn = document.getElementById('resetBtn');
-const tableContainer = document.getElementById('tableContainer');
-const statusIndicator = document.getElementById('statusIndicator');
-const sidebar = document.getElementById('sidebar');
-const chapterList = document.getElementById('chapterList');
-
 // -- LISTENERS --
+
+// Changement de Thème
+themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+});
+
 jsonInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -52,29 +71,23 @@ exportBtn.addEventListener('click', () => {
     a.click();
 });
 
-// --- CORRECTIF ICI ---
 resetBtn.addEventListener('click', () => {
     if (confirm("Tout effacer ?")) {
-        // 1. Nettoyage Données
         localStorage.removeItem(STORAGE_KEY);
         currentForm = { columns: [], rows: [] };
         
-        // 2. Nettoyage Filtres
         activeChapterFilter = null;
         activeSubChapterFilter = null;
 
-        // 3. Nettoyage UI Tableau
-        // On n'appelle pas renderTable() car il s'arrêterait tout de suite (pas de colonnes)
         tableContainer.innerHTML = `<div class="empty-state"><p>Données effacées.</p></div>`;
         
-        // 4. Nettoyage UI Sidebar (AJOUTÉ)
-        sidebar.classList.add('hidden'); // Cache le panneau
-        chapterList.innerHTML = '';      // Vide la liste
+        // Nettoyage UI Sidebar
+        sidebar.classList.add('hidden');
+        chapterList.innerHTML = '';
         
         showStatus("Session nettoyée");
     }
 });
-// ---------------------
 
 // -- STATE & UI HELPERS --
 function saveState() {
@@ -127,20 +140,32 @@ window.updateQcmValue = (r, c, itemIndex, isChecked) => {
         saveState();
     }
 };
+
+// GESTION INTELLIGENTE DES COULEURS COMBO
 window.handleComboChange = (r, c, selectEl) => {
     const val = selectEl.value;
     window.updateValue(r, c, val);
     const colDef = currentForm.columns[c];
+    
     if (colDef && colDef.params && colDef.params.colors) {
-        const newColor = colDef.params.colors[val] || '#ffffff';
-        selectEl.style.backgroundColor = newColor;
+        const newColor = colDef.params.colors[val];
+        
+        if (newColor) {
+            // Si couleur définie (ex: pastel), on force le texte en foncé
+            selectEl.style.backgroundColor = newColor;
+            selectEl.style.color = '#1e293b'; 
+        } else {
+            // Sinon on reset pour utiliser le style CSS (Blanc en dark mode)
+            selectEl.style.backgroundColor = ''; 
+            selectEl.style.color = ''; 
+        }
     } else {
-        selectEl.style.backgroundColor = '#ffffff';
+        selectEl.style.backgroundColor = '';
+        selectEl.style.color = '';
     }
 };
 
-// -- GESTION HIERARCHIE CHAPITRES --
-
+// -- GESTION HIERARCHIE --
 function setupSidebar(chapColIndex, subChapColIndex) {
     const hierarchy = new Map();
     
@@ -262,11 +287,19 @@ function renderTable() {
                 } else { html += `<span style="color:red">Erreur format</span>`; }
                 html += `</div></td>`;
             }
+            // MODIFICATION COMBO : Gestion de l'affichage initial
             else if (colDef.type === 'combo') {
                 const options = colDef.params?.options || [];
                 const colors = colDef.params?.colors || {};
-                const currentColor = colors[value] || '#ffffff';
-                html += `<td class="cell-combo"><select style="background-color: ${currentColor}" onchange="handleComboChange(${rowIndex}, ${colIndex}, this)"><option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
+                const currentColor = colors[value] || ''; 
+                
+                // Si une couleur est définie, on l'applique ET on force le texte en foncé
+                let styleAttr = '';
+                if (currentColor) {
+                    styleAttr = `style="background-color: ${currentColor}; color: #1e293b;"`;
+                }
+
+                html += `<td class="cell-combo"><select ${styleAttr} onchange="handleComboChange(${rowIndex}, ${colIndex}, this)"><option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
                 options.forEach(opt => {
                     const isSelected = String(value) === String(opt) ? 'selected' : '';
                     html += `<option value="${escapeHtml(opt)}" ${isSelected}>${escapeHtml(opt)}</option>`;
