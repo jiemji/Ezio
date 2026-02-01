@@ -1,5 +1,5 @@
 /**
- * AdminForm - Script Principal (Version Finale avec Saisie Multi-lignes)
+ * AdminForm - Script Principal (Version Corrective Combo Couleur)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
@@ -30,7 +30,7 @@ jsonInput.addEventListener('change', async (e) => {
         renderTable();
         saveState();
         showStatus("Fichier chargé");
-    } catch (err) { alert("JSON invalide."); }
+    } catch (err) { alert("JSON invalide: " + err.message); }
     e.target.value = '';
 });
 
@@ -55,14 +55,12 @@ resetBtn.addEventListener('click', () => {
 });
 
 // -- STATE & UI HELPERS --
-
 function saveState() {
     if (currentForm.columns.length > 0) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(currentForm));
         showStatus("Sauvegardé");
     }
 }
-
 function loadState() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -75,7 +73,6 @@ function loadState() {
         } catch (e) { localStorage.removeItem(STORAGE_KEY); }
     }
 }
-
 function showStatus(msg) {
     if(statusIndicator) {
         statusIndicator.textContent = msg;
@@ -83,33 +80,60 @@ function showStatus(msg) {
         setTimeout(() => { statusIndicator.style.opacity = '0.7'; }, 2000);
     }
 }
-
-// Gestion de la hauteur auto des textareas
 function adjustTextareaHeight(el) {
     if (!el) return;
     el.style.height = 'auto'; 
     el.style.height = el.scrollHeight + 'px';
-    
-    // Détection du max-height CSS (on récupère la valeur calculée)
     const maxHeight = parseInt(window.getComputedStyle(el).maxHeight);
-    
-    if (el.scrollHeight > maxHeight) {
-        el.style.overflowY = 'auto';
-    } else {
-        el.style.overflowY = 'hidden';
-    }
+    if (el.scrollHeight > maxHeight) { el.style.overflowY = 'auto'; } 
+    else { el.style.overflowY = 'hidden'; }
 }
-
 function escapeHtml(t) { 
     if(t == null) return "";
     if (typeof t === 'object') return ""; 
-    const d = document.createElement('div'); 
-    d.textContent = String(t); 
-    return d.innerHTML; 
+    const d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; 
 }
 
-// -- RENDU PRINCIPAL --
+// -- FONCTIONS GLOBALES (Accessibles depuis le HTML) --
 
+window.updateValue = (r, c, v) => { 
+    currentForm.rows[r][c] = v; 
+    saveState(); 
+};
+
+window.updateQcmValue = (r, c, itemIndex, isChecked) => {
+    if (currentForm.rows[r][c] && currentForm.rows[r][c][itemIndex]) {
+        currentForm.rows[r][c][itemIndex].checked = isChecked;
+        saveState();
+    }
+};
+
+/**
+ * Gestion du changement de Combo (Couleur + Valeur)
+ */
+window.handleComboChange = (r, c, selectEl) => {
+    const val = selectEl.value;
+    
+    // Debug : Voir si la fonction est appelée
+    console.log(`Changement Combo [Ligne ${r}, Col ${c}] -> Valeur: "${val}"`);
+
+    // 1. Sauvegarde
+    window.updateValue(r, c, val);
+    
+    // 2. Mise à jour visuelle immédiate
+    const colDef = currentForm.columns[c];
+    if (colDef && colDef.params && colDef.params.colors) {
+        // On cherche la couleur correspondante, sinon blanc
+        const newColor = colDef.params.colors[val] || '#ffffff';
+        selectEl.style.backgroundColor = newColor;
+        console.log(`Nouvelle couleur appliquée : ${newColor}`);
+    } else {
+        // Si pas de config couleur, on remet blanc
+        selectEl.style.backgroundColor = '#ffffff';
+    }
+};
+
+// -- RENDU PRINCIPAL --
 function renderTable() {
     if (!currentForm.columns || !currentForm.columns.length) return;
 
@@ -146,18 +170,36 @@ function renderTable() {
                 } else { html += `<span style="color:red">Erreur format QCM</span>`; }
                 html += `</div></td>`;
             }
+            // TYPE COMBO (CORRIGÉ AVEC COULEUR)
+            else if (colDef.type === 'combo') {
+                const options = colDef.params?.options || [];
+                const colors = colDef.params?.colors || {};
+                // Calcul de la couleur initiale
+                const currentColor = colors[value] || '#ffffff';
+
+                html += `<td class="cell-combo">
+                    <select 
+                        style="background-color: ${currentColor}" 
+                        onchange="handleComboChange(${rowIndex}, ${colIndex}, this)"
+                    >
+                        <option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
+                
+                options.forEach(opt => {
+                    const isSelected = String(value) === String(opt) ? 'selected' : '';
+                    html += `<option value="${escapeHtml(opt)}" ${isSelected}>${escapeHtml(opt)}</option>`;
+                });
+                
+                html += `</select></td>`;
+            }
             // TYPE QUESTION
             else if (colDef.type === 'question') {
                 html += `<td class="cell-question">${escapeHtml(value)}</td>`;
             } 
-            // TYPE REPONSE (DEFAULT) - MAINTENANT MULTI-LIGNES
+            // TYPE REPONSE
             else {
                 html += `<td class="cell-reponse">
-                    <textarea 
-                        rows="1" 
-                        oninput="adjustTextareaHeight(this)" 
-                        onchange="updateValue(${rowIndex}, ${colIndex}, this.value)"
-                    >${escapeHtml(value)}</textarea>
+                    <textarea rows="1" oninput="adjustTextareaHeight(this)" 
+                        onchange="updateValue(${rowIndex}, ${colIndex}, this.value)">${escapeHtml(value)}</textarea>
                 </td>`;
             }
         });
@@ -165,35 +207,22 @@ function renderTable() {
     });
     tableContainer.innerHTML = html + `</tbody></table>`;
     
-    // Ajustement initial de TOUTES les textareas (IA et Saisie)
     document.querySelectorAll('textarea').forEach(adjustTextareaHeight);
 }
 
-// -- UPDATES --
-
-window.updateValue = (r, c, v) => { 
-    currentForm.rows[r][c] = v; 
-    saveState(); 
-};
-
-window.updateQcmValue = (r, c, itemIndex, isChecked) => {
-    if (currentForm.rows[r][c] && currentForm.rows[r][c][itemIndex]) {
-        currentForm.rows[r][c][itemIndex].checked = isChecked;
-        saveState();
-    }
-};
-
 // -- IA LOGIC --
-
 async function handleIA(rowIndex, colIndex, btn) {
     if (!IA_CONFIG) return alert("Erreur: config.json non chargé.");
     
     const colDef = currentForm.columns[colIndex];
     const params = colDef.params || {};
     
-    const formatValue = (val) => {
-        if (Array.isArray(val)) {
+    const formatValue = (val, type, params) => {
+        if (type === 'qcm' && Array.isArray(val)) {
             return val.map(item => `- ${item.label} : ${item.checked ? "[FAIT]" : "[A FAIRE]"}`).join("\n");
+        }
+        if (type === 'combo') {
+            return val ? `Sélectionné: "${val}"` : "Non sélectionné";
         }
         return val;
     };
@@ -204,9 +233,14 @@ async function handleIA(rowIndex, colIndex, btn) {
         params.cibles.forEach(targetId => {
             const tIndex = currentForm.columns.findIndex(c => c.id === targetId);
             if (tIndex !== -1) {
-                const label = currentForm.columns[tIndex].label;
+                const targetCol = currentForm.columns[tIndex];
                 const rawVal = currentForm.rows[rowIndex][tIndex];
-                parts.push(`${label}:\n${formatValue(rawVal)}`);
+                
+                let valStr = formatValue(rawVal, targetCol.type, targetCol.params);
+                if (targetCol.type === 'combo' && targetCol.params?.options) {
+                    valStr += ` (Options possibles: ${targetCol.params.options.join(', ')})`;
+                }
+                parts.push(`${targetCol.label}:\n${valStr}`);
             }
         });
         contextData = parts.join("\n\n");
