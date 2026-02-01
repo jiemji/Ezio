@@ -40,17 +40,12 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 
 .controls { display: flex; gap: 1rem; align-items: center; }
 
-/* Boutons Généraux */
+/* Boutons */
 .btn-primary, .btn-secondary, .btn-danger {
     padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+    border-radius: 6px; font-weight: 600; cursor: pointer;
+    border: 1px solid transparent; transition: all 0.2s; font-size: 0.9rem;
 }
-
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-hover); }
 
@@ -60,7 +55,7 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 .btn-danger { background: white; border: 1px solid var(--danger); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: white; }
 
-/* --- TABLEAU & LAYOUT --- */
+/* --- TABLEAU GENERAL --- */
 main { padding: 2rem; }
 .table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
@@ -69,97 +64,119 @@ table { width: 100%; border-collapse: collapse; table-layout: auto; }
 th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
 td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
 
-/* 1. Colonnes Flexibles (Standard & IA) */
-/* Elles prennent l'espace, mais acceptent de réduire si le QCM pousse */
-.cell-question, .cell-reponse {
-    width: auto;
-    min-width: 150px; /* Taille standard */
-    white-space: normal;
+/* --- GESTION DES COLONNES (LARGEURS) --- */
+
+/* 1. Colonne Question (Lecture Seule) - Compacte */
+.cell-question { 
+    width: auto; 
+    min-width: 150px; 
+    white-space: normal; 
 }
 
-.cell-ia-container {
-    width: auto;
-    min-width: 350px; /* Passé de 150px à 350px */
-    white-space: normal;
+/* 2. Colonnes de Saisie (Réponse & IA) - Larges */
+.cell-reponse, .cell-ia-container { 
+    width: auto; 
+    min-width: 350px; 
+    white-space: normal; 
 }
 
-
-/* 2. Colonne QCM (Conteneur TD) */
-.cell-qcm {
-    width: auto;
-    vertical-align: top;
+/* 3. Colonne Combo (Liste déroulante) */
+.cell-combo { 
+    width: auto; 
+    min-width: 180px; 
+    vertical-align: top; 
 }
 
-/* 3. Wrapper QCM (Le cœur du réglage) */
-.qcm-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    
-    /* COMPORTEMENT ÉLASTIQUE CAPÉ */
-    width: fit-content;   /* Colle au contenu */
-    min-width: 300px;     /* PROTECTION : Empêche d'être écrasé sous 300px */
-    max-width: 80ch;      /* CAP : Empêche de dépasser ~128 caractères */
-    
-    white-space: normal;  /* Autorise le retour à la ligne si le cap est atteint */
-    
-    /* Scroll & Esthétique */
-    max-height: 150px;
-    overflow-y: auto;
-    padding: 6px;
-    background: rgba(0,0,0,0.02);
+/* Style du Select Combo */
+.cell-combo select {
+    width: 100%; 
+    padding: 8px; 
+    border: 1px solid var(--border); 
     border-radius: 4px;
-    box-sizing: border-box;
+    background-color: white; /* Sera surchargé par le JS pour la couleur */
+    font-family: inherit; 
+    font-size: 0.95rem; 
+    color: var(--text-main);
+    cursor: pointer; 
+    appearance: none; /* Supprime le style natif */
+    /* Flèche personnalisée SVG */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231E293B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat; 
+    background-position: right 10px top 50%; 
+    background-size: 10px auto;
+    padding-right: 30px; 
+    transition: background-color 0.2s;
+}
+.cell-combo select:focus { outline: none; border-color: var(--primary); }
+
+/* 4. Colonne QCM */
+.cell-qcm { width: auto; vertical-align: top; }
+
+/* Wrapper QCM (Largeur Hybride) */
+.qcm-wrapper {
+    display: flex; flex-direction: column; gap: 6px;
+    
+    /* Logique: Fit-content mais borné */
+    width: fit-content; 
+    min-width: 300px; 
+    max-width: 80ch;
+    white-space: normal;
+    
+    max-height: 150px; overflow-y: auto; padding: 6px;
+    background: rgba(0,0,0,0.02); border-radius: 4px; box-sizing: border-box;
 }
 
 .qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; }
 .qcm-item input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; accent-color: var(--primary); width: 16px; height: 16px; }
 .qcm-item input:checked + span { color: var(--text-muted); text-decoration: line-through; }
 
+/* --- ELEMENTS DE SAISIE & IA --- */
 
-/* --- WRAPPER IA --- */
-.ia-wrapper { 
-    display: flex; 
-    gap: 8px; 
-    width: 100%; 
-    align-items: flex-start; /* Aligne le bouton en haut */
-}
-
-/* Textarea IA Adaptatif */
-.ia-wrapper textarea { 
-    flex: 1; 
-    background-color: #f0fdf4; 
-    border: 1px dashed #86efac; 
-    padding: 8px 10px; 
-    border-radius: 4px; 
-    color: #166534;
+/* Style générique Textarea (élastique) */
+textarea {
     font-family: inherit; font-size: 0.95rem; line-height: 1.5;
-    
-    /* Gestion hauteur via JS (mais limites CSS) */
-    resize: none; 
-    overflow-y: hidden; /* Caché par défaut */
-    height: auto; 
-    min-height: 40px;   /* ~1 ligne */
-    max-height: 96px;   /* ~3 lignes */
-    
-    white-space: pre-wrap; 
-    box-sizing: border-box; 
-    transition: border-color 0.2s;
+    resize: none; overflow-y: hidden; 
+    height: auto; min-height: 40px; 
+    white-space: pre-wrap; box-sizing: border-box;
+    border-radius: 4px; padding: 8px 10px; width: 100%;
 }
 
-.ia-wrapper textarea:focus { outline: none; border-color: var(--ia-color); background-color: #fff; }
+/* Style Spécifique IA : Conteneur Markdown */
+.ia-wrapper { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
 
+.markdown-view {
+    flex: 1;
+    background-color: #f0fdf4; border: 1px dashed #86efac; color: #166534;
+    border-radius: 4px; padding: 8px 12px;
+    height: auto; min-height: 40px; max-height: 200px; overflow-y: auto;
+    font-family: inherit; font-size: 0.95rem; line-height: 1.5;
+}
+
+/* Rendu Markdown à l'intérieur de la div IA */
+.markdown-view p { margin: 0 0 8px 0; }
+.markdown-view p:last-child { margin-bottom: 0; }
+.markdown-view ul, .markdown-view ol { margin: 4px 0; padding-left: 20px; }
+.markdown-view strong { font-weight: 700; color: #14532d; }
+.markdown-view em { font-style: italic; }
+.markdown-view h1, .markdown-view h2, .markdown-view h3 { margin: 8px 0 4px 0; font-size: 1rem; font-weight: 700; text-decoration: underline; }
+
+/* Style Spécifique Réponse Manuelle (Textarea) */
+.cell-reponse textarea {
+    background-color: white; border: 1px solid var(--border); color: var(--text-main);
+    max-height: 200px; 
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cell-reponse textarea:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); 
+}
+
+/* Bouton IA */
 .btn-ia {
     background: var(--ia-color); color: white; border: none; padding: 6px 12px;
-    border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem;
-    margin-top: 2px; /* Alignement visuel */
+    border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; margin-top: 2px;
 }
 .btn-ia:disabled { background: #94a3b8; cursor: wait; }
-
-/* Inputs classiques */
-input[type="text"]:not([readonly]) {
-    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; box-sizing: border-box;
-}
-input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
 .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }

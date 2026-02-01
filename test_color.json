@@ -1,0 +1,24 @@
+{
+  "columns": [
+    { "id": "tache", "label": "Tâche", "type": "question" },
+    { 
+      "id": "priorite", 
+      "label": "Priorité (Couleurs)", 
+      "type": "combo",
+      "params": {
+        "options": ["Basse", "Normale", "Haute", "Critique"],
+        "colors": {
+          "Basse": "#dcfce7", 
+          "Normale": "#e0f2fe",
+          "Haute": "#fef9c3",
+          "Critique": "#fee2e2"
+        }
+      }
+    },
+    { "id": "commentaire", "label": "Commentaire", "type": "reponse" }
+  ],
+  "rows": [
+    ["Serveur planté", "Critique", ""],
+    ["Mettre à jour le footer", "Basse", ""]
+  ]
+}
