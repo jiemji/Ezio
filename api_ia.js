@@ -10,7 +10,6 @@ const ApiService = {
 
         switch (provider) {
             case 'lmstudio':
-                // Détection auto de l'endpoint spécifique LM Studio
                 if (config.endpoint.endsWith('/api/v1/chat')) {
                     return await this.lmStudioDirect(config, prompt);
                 }
@@ -28,6 +27,41 @@ const ApiService = {
         }
     },
 
+    async standardChatCompletion(config, prompt) {
+        const url = config.endpoint.endsWith('/chat/completions') 
+            ? config.endpoint 
+            : `${config.endpoint.replace(/\/$/, '')}/chat/completions`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: config.model,
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: config.temperature || 0.7
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Erreur API (${response.status}): ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            return this.extractContent(data);
+        } catch (error) {
+            // Diagnostic amélioré
+            if (error.message.includes('Failed to fetch')) {
+                throw new Error("Impossible de contacter l'API. Vérifiez votre connexion internet ou les restrictions CORS de votre navigateur.");
+            }
+            throw error;
+        }
+    },
+
     // Format spécifique LM Studio
     async lmStudioDirect(config, prompt) {
         const headers = { 
@@ -38,42 +72,14 @@ const ApiService = {
         const body = {
             model: config.model,
             input: prompt,
-            temperature: config.temperature || 0.7,
-            context_length: config.context_length || 8000
+            temperature: config.temperature || 0.7
         };
-        if (config.integrations) body.integrations = config.integrations;
 
         try {
             const response = await fetch(config.endpoint, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(body)
-            });
-            if (!response.ok) throw new Error(`Erreur LM Studio: ${response.status}`);
-            const data = await response.json();
-            return this.extractContent(data);
-        } catch (error) {
-            console.error("Erreur Fetch:", error);
-            throw error;
-        }
-    },
-
-    // Standard OpenAI (v1/chat/completions)
-    async standardChatCompletion(config, prompt) {
-        const headers = { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.apiKey}`
-        };
-
-        try {
-            const response = await fetch(config.endpoint, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    model: config.model,
-                    messages: [{ role: "user", content: prompt }],
-                    temperature: config.temperature || 0.7
-                })
             });
             if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
             const data = await response.json();
@@ -86,24 +92,20 @@ const ApiService = {
         }
     },
 
-    // Nettoyage intelligent de la réponse
     extractContent(data) {
-        // 1. Modèles "Reasoning" (Tableau d'outputs)
         if (data.output && Array.isArray(data.output)) {
             const msg = data.output.find(item => item.type === 'message');
             if (msg && msg.content) return msg.content.trim();
         }
-        // 2. OpenAI Standard
         if (data.choices && data.choices[0]?.message?.content) {
             return data.choices[0].message.content.trim();
         }
-        // 3. LM Studio simple / Autres
         if (typeof data.content === 'string') return data.content.trim();
         if (typeof data.output === 'string') return data.output.trim();
         if (data.message?.content) return data.message.content.trim();
 
         console.warn("Format inconnu:", data);
-        return typeof data === 'object' ? JSON.stringify(data) : String(data);
+        return "Format de réponse inconnu";
     }
 };
 
