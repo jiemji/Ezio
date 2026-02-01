@@ -1,21 +1,93 @@
 {
   "columns": [
-    { "id": "chap", "label": "Phase Projet", "type": "chapitre" },
-    { "id": "sub", "label": "Étape", "type": "sous-chapitre" },
-    { "id": "tache", "label": "Action à réaliser", "type": "question" },
-    { "id": "statut", "label": "État", "type": "combo", "params": { "options": ["À faire", "En cours", "Terminé"], "colors": {"Terminé": "#dcfce7", "En cours": "#fef9c3"} } },
-    { "id": "ia_note", "label": "Note IA", "type": "ia", "params": {"requete": "Donne un conseil court", "cibles": ["tache", "statut"]}}
+    { 
+      "id": "phase", 
+      "label": "Phase", 
+      "type": "chapitre" 
+    },
+    { 
+      "id": "action", 
+      "label": "Action Requise", 
+      "type": "question" 
+    },
+    { 
+      "id": "info_bulle", 
+      "label": "Détails Techniques", 
+      "type": "popup" 
+    },
+    { 
+      "id": "controles", 
+      "label": "Points de contrôle", 
+      "type": "qcm" 
+    },
+    { 
+      "id": "statut", 
+      "label": "État", 
+      "type": "combo",
+      "params": {
+        "options": ["À faire", "En cours", "Validé", "Bloqué"],
+        "colors": {
+          "Validé": "#dcfce7",
+          "Bloqué": "#fee2e2",
+          "En cours": "#fef9c3"
+        }
+      }
+    },
+    { 
+      "id": "ia_risk", 
+      "label": "Analyse de Risque", 
+      "type": "ia", 
+      "params": {
+        "requete": "Analyse cette action technique et liste 2 risques potentiels si elle est mal exécutée.",
+        "cibles": ["action", "info_bulle"]
+      } 
+    }
   ],
   "rows": [
-    ["Conception", "Wireframing", "Maquettes Desktop", "Terminé", ""],
-    ["Conception", "Wireframing", "Maquettes Mobile", "En cours", ""],
-    ["Conception", "Validation", "Réunion client", "À faire", ""],
-    
-    ["Développement", "Frontend", "Intégration HTML/CSS", "À faire", ""],
-    ["Développement", "Frontend", "Logique JS", "À faire", ""],
-    ["Développement", "Backend", "Création API", "En cours", ""],
-    
-    ["Livraison", "Tests", "Tests unitaires", "À faire", ""],
-    ["Livraison", "Déploiement", "Mise en prod", "À faire", ""]
+    [
+      "Infrastructure",
+      "Configuration SSL/HTTPS",
+      "Vérifier que le certificat est bien un Wildcard pour *.mondomaine.com et que la redirection HTTP vers HTTPS est forcée (Code 301).",
+      [
+        { "label": "Certificat valide", "checked": true },
+        { "label": "Redirection 301 active", "checked": false },
+        { "label": "Score A+ sur SSLLabs", "checked": false }
+      ],
+      "En cours",
+      ""
+    ],
+    [
+      "Infrastructure",
+      "Variables d'environnement",
+      "IMPORTANT : Ne jamais commiter le fichier .env en prod.\nS'assurer que : \n- DB_PASSWORD est fort\n- DEBUG=false",
+      [
+        { "label": "Fichier .env sécurisé", "checked": true },
+        { "label": "Clés API masquées", "checked": true }
+      ],
+      "Validé",
+      ""
+    ],
+    [
+      "Frontend",
+      "Optimisation des Assets",
+      "Les images doivent être au format WebP.\nLes fichiers JS et CSS doivent être minifiés (Gzip ou Brotli activé sur Nginx).",
+      [
+        { "label": "Images compressées", "checked": false },
+        { "label": "Minification JS/CSS", "checked": false }
+      ],
+      "À faire",
+      ""
+    ],
+    [
+      "Base de Données",
+      "Migration des données",
+      "Attention : Faire un dump complet avant de lancer 'npm run migrate'.\nVérifier la compatibilité des colonnes ENUM.",
+      [
+        { "label": "Backup effectué", "checked": false },
+        { "label": "Script de migration testé", "checked": false }
+      ],
+      "Bloqué",
+      ""
+    ]
   ]
 }

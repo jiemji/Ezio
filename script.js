@@ -1,5 +1,5 @@
 /**
- * AdminForm - Script Principal (Version Dark Mode + Fix Contraste Combo)
+ * AdminForm - Script Principal (Restoration Popup & Scrollfix)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
@@ -287,13 +287,11 @@ function renderTable() {
                 } else { html += `<span style="color:red">Erreur format</span>`; }
                 html += `</div></td>`;
             }
-            // MODIFICATION COMBO : Gestion de l'affichage initial
             else if (colDef.type === 'combo') {
                 const options = colDef.params?.options || [];
                 const colors = colDef.params?.colors || {};
                 const currentColor = colors[value] || ''; 
                 
-                // Si une couleur est définie, on l'applique ET on force le texte en foncé
                 let styleAttr = '';
                 if (currentColor) {
                     styleAttr = `style="background-color: ${currentColor}; color: #1e293b;"`;
@@ -305,6 +303,15 @@ function renderTable() {
                     html += `<option value="${escapeHtml(opt)}" ${isSelected}>${escapeHtml(opt)}</option>`;
                 });
                 html += `</select></td>`;
+            }
+            // --- AJOUT : TYPE POPUP RESTAURÉ ---
+            else if (colDef.type === 'popup') {
+                html += `<td class="cell-popup">
+                    <div class="popup-wrapper">
+                        <span class="popup-badge">ℹ️ ${colDef.label}</span>
+                        <div class="popup-content">${escapeHtml(value || "Aucune info")}</div>
+                    </div>
+                </td>`;
             }
             else if (colDef.type === 'chapitre' || colDef.type === 'sous-chapitre') {
                  html += `<td class="cell-question"><strong>${escapeHtml(value)}</strong></td>`;
