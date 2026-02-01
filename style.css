@@ -1,5 +1,5 @@
 :root {
-    /* --- THEME CLAIR (Défaut) --- */
+    /* --- THEME CLAIR --- */
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --text-main: #1e293b;
@@ -12,274 +12,184 @@
     --danger: #ef4444;
     --danger-hover: #dc2626;
 
-    /* Couleurs Spécifiques IA */
+    /* IA & Sidebar */
     --ia-color: #059669;
     --ia-bg: #f0fdf4;
     --ia-border: #86efac;
     --ia-text: #166534;
-
-    /* Couleurs Menu Sidebar */
     --menu-active-bg: #eff6ff;
     --menu-hover: #f1f5f9;
     
-    /* Icone Select (Noir pour le thème clair) */
-    --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231E293B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
 }
 
-/* --- THEME SOMBRE (Override) --- */
-body.dark-mode {
-    --bg-color: #0f172a;       /* Fond Slate 900 */
-    --card-bg: #1e293b;        /* Cartes Slate 800 */
-    --text-main: #f1f5f9;      /* Texte Slate 100 */
-    --text-muted: #94a3b8;     /* Gris moyen */
-    --border: #334155;         /* Bordures gris foncé */
-    --readonly: #334155;       /* Fond lecture seule foncé */
-    
-    /* IA en mode sombre */
-    --ia-bg: #064e3b;          /* Vert très foncé */
-    --ia-border: #059669;      /* Bordure verte */
-    --ia-text: #ecfdf5;        /* Texte vert clair */
-
-    /* Menu en mode sombre */
-    --menu-active-bg: #1e3a8a; /* Bleu nuit */
+.dark-mode {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --readonly: #1e293b;
+    --ia-bg: #064e3b;
+    --ia-border: #065f46;
+    --ia-text: #d1fae5;
+    --menu-active-bg: #1e293b;
     --menu-hover: #334155;
-
-    /* Icone Select (Blanc pour le thème sombre) */
-    --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23F1F5F9%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
 }
 
-/* Styles spécifiques QCM en Dark Mode */
-body.dark-mode .qcm-wrapper {
-    background-color: var(--readonly); 
-    border-color: #475569;
-}
-body.dark-mode .qcm-item {
-    color: var(--text-main); 
-}
-
+/* --- BASE --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
-    margin: 0;
     line-height: 1.5;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background 0.3s;
+    overflow: auto; /* Scroll global */
 }
 
-/* --- 1. HEADER & CONTROLS --- */
+/* --- HEADER --- */
 header {
     background: var(--card-bg);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 0 2rem;
     border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 100; height: 80px; box-sizing: border-box;
-    transition: background-color 0.3s, border-color 0.3s;
+    display: flex; justify-content: space-between; align-items: center;
+    position: fixed; top: 0; left: 0; right: 0; height: 70px; z-index: 1000;
 }
+.header-content { display: flex; align-items: center; gap: 15px; }
+.header-content h1 { font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
+.badge-ia { background: var(--ia-bg); color: var(--ia-color); font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--ia-border); }
+.btn-icon { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
 
-.header-content { display: flex; flex-direction: column; }
-h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-.badge-ia { background: var(--ia-color); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
-.status-bar { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; transition: opacity 0.5s; opacity: 0.7; }
+/* --- LAYOUT --- */
+main { padding-top: 70px; display: block; min-height: 100vh; }
 
-.controls { display: flex; gap: 1rem; align-items: center; }
-
-/* Boutons */
-.btn-primary, .btn-secondary, .btn-danger {
-    padding: 0.6rem 1.2rem;
-    border-radius: 6px; font-weight: 600; cursor: pointer;
-    border: 1px solid transparent; transition: all 0.2s; font-size: 0.9rem;
-}
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-hover); }
-
-.btn-secondary { background: var(--card-bg); border-color: var(--border); color: var(--text-main); }
-.btn-secondary:hover { background: var(--readonly); }
-
-.btn-danger { background: var(--card-bg); border: 1px solid var(--danger); color: var(--danger); }
-.btn-danger:hover { background: var(--danger); color: white; }
-
-
-/* --- 2. LAYOUT PRINCIPAL --- */
-main#app { display: flex; align-items: flex-start; gap: 0; padding: 0; min-height: calc(100vh - 80px); }
-
-/* Sidebar */
 .sidebar {
-    width: 260px;
-    background-color: var(--card-bg);
-    border-right: 1px solid var(--border);
-    padding: 1.5rem;
-    flex-shrink: 0; height: calc(100vh - 80px); overflow-y: auto; position: sticky; top: 80px;
-    transition: background-color 0.3s, border-color 0.3s;
-}
-.sidebar.hidden { display: none; }
-
-.sidebar-title {
-    margin-top: 0; margin-bottom: 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+    width: 260px; background: var(--card-bg); border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem; position: fixed; top: 70px; bottom: 0; left: 0; z-index: 900;
+    overflow-y: auto; transition: transform 0.3s ease;
 }
 
-.chapter-list { list-style: none; padding: 0; margin: 0; }
-
-.chapter-item {
-    padding: 8px 12px; margin-bottom: 4px; border-radius: 6px; cursor: pointer;
-    font-size: 0.95rem; font-weight: 600; color: var(--text-main);
-    transition: all 0.2s; border-left: 3px solid transparent;
-}
-.chapter-item:hover { background-color: var(--menu-hover); }
-.chapter-item.active {
-    background-color: var(--menu-active-bg);
-    color: var(--primary); border-left-color: var(--primary);
+.content-area { 
+    margin-left: 260px; padding: 1.5rem; transition: margin-left 0.3s ease; overflow: visible; 
 }
 
-.sub-chapter-list { list-style: none; padding: 0 0 0 12px; margin-top: 2px; }
+body.menu-closed .sidebar { transform: translateX(-100%); }
+body.menu-closed .content-area { margin-left: 0; }
 
-.sub-chapter-item {
-    padding: 6px 12px; margin-bottom: 2px; border-radius: 6px; cursor: pointer;
-    font-size: 0.85rem; font-weight: 400; color: var(--text-muted);
-    transition: all 0.2s; border-left: 2px solid transparent;
-}
-.sub-chapter-item:hover { color: var(--text-main); background-color: var(--menu-hover); }
-.sub-chapter-item.active {
-    color: var(--primary); background-color: var(--menu-active-bg);
-    border-left-color: var(--primary); font-weight: 600;
-}
+.sidebar-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+.chapter-list { list-style: none; }
+.chapter-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; margin-bottom: 4px; }
+.chapter-item:hover { background: var(--menu-hover); }
+.chapter-item.active { background: var(--menu-active-bg); color: var(--primary); font-weight: 600; }
 
-.chapter-count {
-    font-size: 0.8em; color: var(--text-main); float: right; font-weight: normal;
-    background: var(--border); padding: 2px 6px; border-radius: 10px;
-}
-
-.content-area { flex: 1; padding: 2rem; overflow-x: hidden; }
-
-/* --- 3. TABLEAU & COLONNES --- */
+/* --- TABLEAU --- */
 .table-responsive { 
-    background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); 
-    overflow-x: auto; /* Active le scroll horizontal */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;
+    background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: block; width: max-content; min-width: 100%; overflow: visible; 
 }
 
 table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    table-layout: auto; 
-    /* AJOUT ESSENTIEL : Force le tableau à être large pour activer le scroll si besoin */
-    min-width: 1000px; 
+    width: max-content; /* La table prend la largeur exacte définie par les colonnes */
+    border-collapse: separate; border-spacing: 0; 
+    font-size: 0.95rem; 
+    table-layout: fixed; /* OBLIGATOIRE : Respecte strictement les largeurs définies ci-dessous */
 }
 
-th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
-td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-main); }
-
-/* Largeurs Colonnes */
-.cell-question { width: auto; min-width: 150px; white-space: normal; }
-.cell-reponse, .cell-ia-container { width: auto; min-width: 350px; white-space: normal; }
-
-/* Combo */
-.cell-combo { width: auto; min-width: 180px; vertical-align: top; }
-.cell-combo select {
-    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;
-    background-color: var(--card-bg);
-    font-family: inherit; font-size: 0.95rem; color: var(--text-main);
-    cursor: pointer; appearance: none;
-    background-image: var(--select-arrow);
-    background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 10px auto;
-    padding-right: 30px; transition: background-color 0.2s, border-color 0.2s;
+th {
+    background: var(--readonly); padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-muted);
+    border-bottom: 2px solid var(--border); border-right: 1px solid var(--border);
+    position: sticky; top: 70px; z-index: 100;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.cell-combo select:focus { outline: none; border-color: var(--primary); }
-
-option {
-    background-color: var(--card-bg);
-    color: var(--text-main);
+td {
+    padding: 10px 15px; border-bottom: 1px solid var(--border); vertical-align: top;
+    background: var(--card-bg);
+    word-break: break-word; /* Casse les mots longs pour éviter l'infini */
 }
+th:last-child, td:last-child { border-right: none; }
+
+/* --- DIMENSIONS STRICTES PAR TYPE --- */
+
+/* 1. Chapitre: 16 chars */
+.col-chapitre { width: 16ch; min-width: 16ch; max-width: 16ch; }
+
+/* 2. Questions S, M, L */
+.col-s { width: 10ch; min-width: 10ch; max-width: 10ch; }
+.col-m { width: 20ch; min-width: 20ch; max-width: 20ch; }
+.col-l { width: 40ch; min-width: 40ch; max-width: 40ch; }
+
+/* 3. Réponse: 32-40 chars. On fixe à 40 pour la stabilité du tableau */
+.col-reponse { width: 40ch; min-width: 40ch; max-width: 40ch; }
+
+/* 4. Popup: 10 chars */
+.col-popup { width: 10ch; min-width: 10ch; max-width: 10ch; text-align: center; }
+
+/* 5. Combo: 16-20 chars. On fixe à 20 */
+.col-combo { width: 20ch; min-width: 20ch; max-width: 20ch; }
+
+/* 6. QCM: 16-20 chars. On fixe à 20 */
+.col-qcm { width: 20ch; min-width: 20ch; max-width: 20ch; }
+
+/* 7. IA: 32-40 chars. On fixe à 40. */
+.col-ia { width: 40ch; min-width: 40ch; max-width: 40ch; }
+
+
+/* --- COMPOSANTS CELLULES --- */
+.cell-readonly { background-color: var(--readonly); color: var(--text-muted); font-size: 0.9rem; }
+
+/* Inputs */
+input[type="text"], textarea, select {
+    width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px;
+    background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem;
+}
+textarea { resize: vertical; min-height: 80px; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); }
+
+select { appearance: none; background-image: var(--select-arrow); background-repeat: no-repeat; background-position: right 8px center; background-size: 10px; padding-right: 25px; }
+select option { background-color: var(--card-bg); color: var(--text-main); }
 
 /* QCM */
-.cell-qcm { width: auto; vertical-align: top; }
-.qcm-wrapper {
-    display: flex; flex-direction: column; gap: 6px;
-    width: fit-content; min-width: 300px; max-width: 80ch; white-space: normal;
-    max-height: 150px; overflow-y: auto; padding: 6px;
-    background: rgba(0,0,0,0.02); 
-    border: 1px solid var(--border);
-    border-radius: 4px; box-sizing: border-box;
-}
-.qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; color: var(--text-main); }
-.qcm-item input[type="checkbox"] { 
-    margin-top: 4px; flex-shrink: 0; 
-    accent-color: var(--primary); 
-    border: 1px solid var(--text-muted);
-    width: 16px; height: 16px; 
-}
-.qcm-item input:checked + span { color: var(--text-muted); text-decoration: line-through; }
+.qcm-container { display: flex; flex-direction: column; gap: 5px; }
+.qcm-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
+.qcm-item input { width: 14px; height: 14px; }
 
-/* --- 4. SAISIE & IA --- */
-
-textarea {
-    font-family: inherit; font-size: 0.95rem; line-height: 1.5;
-    resize: none; overflow-y: hidden; 
-    height: auto; min-height: 40px; 
-    white-space: pre-wrap; box-sizing: border-box;
-    border-radius: 4px; padding: 8px 10px; width: 100%;
-}
-
-/* IA */
-.ia-wrapper { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
-.markdown-view {
-    flex: 1;
-    background-color: var(--ia-bg); 
-    border: 1px dashed var(--ia-border); 
-    color: var(--ia-text);
-    border-radius: 4px; padding: 8px 12px;
-    height: auto; min-height: 40px; max-height: 200px; overflow-y: auto;
-    font-family: inherit; font-size: 0.95rem; line-height: 1.5;
-}
-.markdown-view p { margin: 0 0 8px 0; }
-.markdown-view strong { font-weight: 700; color: inherit; }
-
-/* Réponse Manuelle */
-.cell-reponse textarea {
-    background-color: var(--card-bg); 
-    border: 1px solid var(--border); 
-    color: var(--text-main);
-    max-height: 200px; transition: border-color 0.2s, background-color 0.2s;
-}
-.cell-reponse textarea:focus { outline: none; border-color: var(--primary); }
-
-.btn-ia {
-    background: var(--ia-color); color: white; border: none; padding: 6px 12px;
-    border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; margin-top: 2px;
-}
-.btn-ia:disabled { background: #94a3b8; cursor: wait; }
-
-/* --- 5. POPUP (Réintégré) --- */
-.popup-wrapper { position: relative; display: inline-block; }
-
+/* Popup Badge */
+.popup-wrapper { position: relative; display: flex; justify-content: center; }
 .popup-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    background-color: var(--primary); color: #ffffff;
-    padding: 6px 12px; border-radius: 20px;
-    font-size: 0.85rem; font-weight: 600; cursor: help;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    background-color: var(--primary); color: #ffffff; padding: 4px 8px; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 600; cursor: help; white-space: nowrap;
 }
-.popup-badge:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-
 .popup-content {
-    display: none; 
-    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
-    width: 250px; background-color: #1e293b; color: #ffffff;
-    padding: 10px 14px; border-radius: 8px;
-    font-size: 0.9rem; line-height: 1.4; z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: left; white-space: normal;
+    display: none; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    width: 250px; background-color: #1e293b; color: #ffffff; padding: 10px; border-radius: 4px;
+    font-size: 0.85rem; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); white-space: pre-wrap; text-align: left;
 }
-.popup-content::after {
-    content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
-    border-width: 6px; border-style: solid; border-color: #1e293b transparent transparent transparent;
-}
-.popup-wrapper:hover .popup-content { display: block; animation: fadeIn 0.2s ease-in-out; }
+.popup-wrapper:hover .popup-content { display: block; }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, 5px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+/* IA Cell & Scrollbar */
+.ia-cell { position: relative; }
+.btn-ia {
+    background: var(--ia-color); color: white; border: none; padding: 4px 8px; border-radius: 4px;
+    cursor: pointer; font-size: 0.75rem; margin-bottom: 6px; display: inline-flex; align-items: center;
+}
+.ia-content {
+    font-style: italic; color: var(--ia-text); line-height: 1.5; font-size: 0.85rem;
+    
+    /* GESTION ASCENSEUR (SCROLLBAR) */
+    max-height: 18em; /* Env 12 lignes (12 * 1.5em) */
+    overflow-y: auto; /* Affiche l'ascenseur si ça dépasse */
+    padding-right: 5px; /* Espace pour éviter que le texte touche la scrollbar */
+    
+    /* Style scrollbar fin */
+    scrollbar-width: thin;
+    scrollbar-color: var(--ia-border) transparent;
 }
 
+/* Utils */
+.btn-primary { background: var(--primary); color: white; padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; }
+.btn-secondary { background: var(--readonly); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.btn-danger { background: #fef2f2; color: var(--danger); padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; }
+.status-bar { font-size: 0.8rem; color: var(--text-muted); padding: 4px 12px; background: var(--readonly); border-radius: 20px; }
+.hidden { display: none !important; }
 .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
