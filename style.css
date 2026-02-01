@@ -131,8 +131,8 @@ th:last-child, td:last-child { border-right: none; }
 /* 6. QCM: 16-20 chars. On fixe à 20 */
 .col-qcm { width: 20ch; min-width: 20ch; max-width: 20ch; }
 
-/* 7. IA: 32-40 chars. On fixe à 40. */
-.col-ia { width: 40ch; min-width: 40ch; max-width: 40ch; }
+/* 7. IA: 32-40 chars. On fixe à 640. */
+.col-ia { width: 60ch; min-width: 60ch; max-width: 60ch; }
 
 
 /* --- COMPOSANTS CELLULES --- */
