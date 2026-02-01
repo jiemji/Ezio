@@ -1,35 +1,48 @@
 {
   "columns": [
-    { "id": "tache", "label": "Description Tâche", "type": "question" },
     { 
-      "id": "priorite", 
-      "label": "Priorité (Combo)", 
+      "id": "sujet", 
+      "label": "Sujet de la demande", 
+      "type": "question" 
+    },
+    { 
+      "id": "format_demande", 
+      "label": "Type de format attendu (Combo)", 
       "type": "combo",
       "params": {
-        "options": ["Basse", "Moyenne", "Haute", "Urgente"]
+        "options": ["Liste à puces", "Plan structuré", "Email formel"],
+        "colors": {
+          "Liste à puces": "#dbeafe",
+          "Plan structuré": "#fce7f3",
+          "Email formel": "#f0fdf4"
+        }
       }
     },
     { 
-      "id": "statut", 
-      "label": "État (Combo)", 
-      "type": "combo",
-      "params": {
-        "options": ["À faire", "En cours", "Bloqué", "Terminé"]
-      }
-    },
-    { 
-      "id": "action_ia", 
-      "label": "Conseil IA", 
-      "type": "ia",
+      "id": "ia_output", 
+      "label": "Résultat IA (Markdown)", 
+      "type": "ia", 
       "params": { 
-        "requete": "Donne un conseil court basé sur la priorité et le statut.",
-        "cibles": ["tache", "priorite", "statut"]
+        "requete": "Agis comme un assistant expert. Traite le 'Sujet' en respectant scrupuleusement le 'Type de format attendu'.\n\n- Si 'Liste à puces' : Utilise des tirets et mets les mots clés en **gras**.\n- Si 'Plan structuré' : Utilise des titres Markdown (##) pour les sections.\n- Si 'Email formel' : Utilise de l'italique (*) pour les formules de politesse.",
+        "cibles": ["sujet", "format_demande"]
       }
     }
   ],
   "rows": [
-    ["Refaire la homepage", "Haute", "En cours", ""],
-    ["Corriger le bug du footer", "Basse", "À faire", ""],
-    ["Serveur en feu", "", "Bloqué", ""]
+    [
+      "Préparer une réunion de lancement de projet", 
+      "Liste à puces", 
+      ""
+    ],
+    [
+      "Stratégie marketing pour une boulangerie", 
+      "Plan structuré", 
+      ""
+    ],
+    [
+      "Refus poli d'une invitation commerciale", 
+      "Email formel", 
+      ""
+    ]
   ]
 }

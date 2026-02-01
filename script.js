@@ -1,5 +1,5 @@
 /**
- * AdminForm - Script Principal (Version Corrective Combo Couleur)
+ * AdminForm - Script Principal (Version Markdown Support)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
@@ -94,7 +94,7 @@ function escapeHtml(t) {
     const d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; 
 }
 
-// -- FONCTIONS GLOBALES (Accessibles depuis le HTML) --
+// -- FONCTIONS GLOBALES --
 
 window.updateValue = (r, c, v) => { 
     currentForm.rows[r][c] = v; 
@@ -108,27 +108,14 @@ window.updateQcmValue = (r, c, itemIndex, isChecked) => {
     }
 };
 
-/**
- * Gestion du changement de Combo (Couleur + Valeur)
- */
 window.handleComboChange = (r, c, selectEl) => {
     const val = selectEl.value;
-    
-    // Debug : Voir si la fonction est appelée
-    console.log(`Changement Combo [Ligne ${r}, Col ${c}] -> Valeur: "${val}"`);
-
-    // 1. Sauvegarde
     window.updateValue(r, c, val);
-    
-    // 2. Mise à jour visuelle immédiate
     const colDef = currentForm.columns[c];
     if (colDef && colDef.params && colDef.params.colors) {
-        // On cherche la couleur correspondante, sinon blanc
         const newColor = colDef.params.colors[val] || '#ffffff';
         selectEl.style.backgroundColor = newColor;
-        console.log(`Nouvelle couleur appliquée : ${newColor}`);
     } else {
-        // Si pas de config couleur, on remet blanc
         selectEl.style.backgroundColor = '#ffffff';
     }
 };
@@ -146,11 +133,20 @@ function renderTable() {
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
-            // TYPE IA
+            // TYPE IA (Modifié pour Markdown)
             if (colDef.type === 'ia') {
+                // Utilisation de marked.parse pour convertir le Markdown en HTML
+                // On utilise une DIV avec la classe markdown-view au lieu d'un textarea
+                let renderedContent = "";
+                try {
+                     renderedContent = value ? marked.parse(String(value)) : "";
+                } catch(e) { 
+                    renderedContent = escapeHtml(value); 
+                }
+
                 html += `<td class="cell-ia-container"><div class="ia-wrapper">
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
-                    <textarea id="ia-${rowIndex}-${colIndex}" rows="1" readonly>${escapeHtml(value)}</textarea>
+                    <div id="ia-${rowIndex}-${colIndex}" class="markdown-view">${renderedContent}</div>
                 </div></td>`;
             } 
             // TYPE QCM
@@ -170,11 +166,10 @@ function renderTable() {
                 } else { html += `<span style="color:red">Erreur format QCM</span>`; }
                 html += `</div></td>`;
             }
-            // TYPE COMBO (CORRIGÉ AVEC COULEUR)
+            // TYPE COMBO
             else if (colDef.type === 'combo') {
                 const options = colDef.params?.options || [];
                 const colors = colDef.params?.colors || {};
-                // Calcul de la couleur initiale
                 const currentColor = colors[value] || '#ffffff';
 
                 html += `<td class="cell-combo">
@@ -255,12 +250,12 @@ async function handleIA(rowIndex, colIndex, btn) {
 
     try {
         const result = await window.ApiService.fetchLLM(IA_CONFIG, prompt);
-        updateValue(rowIndex, colIndex, result);
+        updateValue(rowIndex, colIndex, result); // Sauvegarde brute
         
-        const input = document.getElementById(`ia-${rowIndex}-${colIndex}`);
-        if(input) {
-            input.value = result;
-            adjustTextareaHeight(input);
+        // Mise à jour visuelle : Markdown -> HTML
+        const container = document.getElementById(`ia-${rowIndex}-${colIndex}`);
+        if(container) {
+            container.innerHTML = marked.parse(result);
         }
     } catch (err) {
         alert("Erreur IA: " + err.message);
