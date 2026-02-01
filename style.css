@@ -1,15 +1,60 @@
 :root {
+    /* --- THEME CLAIR (Défaut) --- */
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --danger: #ef4444;
-    --danger-hover: #dc2626;
-    --ia-color: #059669;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --border: #e2e8f0;
     --readonly: #f1f5f9;
+    
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+
+    /* Couleurs Spécifiques IA */
+    --ia-color: #059669;
+    --ia-bg: #f0fdf4;
+    --ia-border: #86efac;
+    --ia-text: #166534;
+
+    /* Couleurs Menu Sidebar */
+    --menu-active-bg: #eff6ff;
+    --menu-hover: #f1f5f9;
+    
+    /* Icone Select (Noir pour le thème clair) */
+    --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231E293B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* --- THEME SOMBRE (Override) --- */
+body.dark-mode {
+    --bg-color: #0f172a;       /* Fond Slate 900 */
+    --card-bg: #1e293b;        /* Cartes Slate 800 */
+    --text-main: #f1f5f9;      /* Texte Slate 100 */
+    --text-muted: #94a3b8;     /* Gris moyen */
+    --border: #334155;         /* Bordures gris foncé */
+    --readonly: #334155;       /* Fond lecture seule foncé */
+    
+    /* IA en mode sombre */
+    --ia-bg: #064e3b;          /* Vert très foncé */
+    --ia-border: #059669;      /* Bordure verte */
+    --ia-text: #ecfdf5;        /* Texte vert clair */
+
+    /* Menu en mode sombre */
+    --menu-active-bg: #1e3a8a; /* Bleu nuit */
+    --menu-hover: #334155;
+
+    /* Icone Select (Blanc pour le thème sombre) */
+    --select-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23F1F5F9%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Styles spécifiques QCM en Dark Mode */
+body.dark-mode .qcm-wrapper {
+    background-color: var(--readonly); /* Gris foncé distinct du fond */
+    border-color: #475569;
+}
+body.dark-mode .qcm-item {
+    color: var(--text-main); /* Texte bien blanc */
 }
 
 body {
@@ -18,9 +63,10 @@ body {
     color: var(--text-main);
     margin: 0;
     line-height: 1.5;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-/* --- HEADER & CONTROLS --- */
+/* --- 1. HEADER & CONTROLS --- */
 header {
     background: var(--card-bg);
     padding: 1rem 2rem;
@@ -28,9 +74,8 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: sticky; top: 0; z-index: 100; height: 80px; box-sizing: border-box;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
 .header-content { display: flex; flex-direction: column; }
@@ -49,90 +94,123 @@ h1 { margin: 0; font-size: 1.5rem; color: var(--text-main); display: flex; align
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-hover); }
 
-.btn-secondary { background: white; border-color: var(--border); color: var(--text-main); }
+/* Secondaire (s'adapte au dark mode) */
+.btn-secondary { background: var(--card-bg); border-color: var(--border); color: var(--text-main); }
 .btn-secondary:hover { background: var(--readonly); }
 
-.btn-danger { background: white; border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger { background: var(--card-bg); border: 1px solid var(--danger); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: white; }
 
-/* --- TABLEAU GENERAL --- */
-main { padding: 2rem; }
-.table-responsive { background: white; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+/* --- 2. LAYOUT PRINCIPAL --- */
+main#app { display: flex; align-items: flex-start; gap: 0; padding: 0; min-height: calc(100vh - 80px); }
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: var(--card-bg);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    flex-shrink: 0; height: calc(100vh - 80px); overflow-y: auto; position: sticky; top: 80px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+.sidebar.hidden { display: none; }
+
+.sidebar-title {
+    margin-top: 0; margin-bottom: 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+}
+
+.chapter-list { list-style: none; padding: 0; margin: 0; }
+
+.chapter-item {
+    padding: 8px 12px; margin-bottom: 4px; border-radius: 6px; cursor: pointer;
+    font-size: 0.95rem; font-weight: 600; color: var(--text-main);
+    transition: all 0.2s; border-left: 3px solid transparent;
+}
+.chapter-item:hover { background-color: var(--menu-hover); }
+.chapter-item.active {
+    background-color: var(--menu-active-bg);
+    color: var(--primary); border-left-color: var(--primary);
+}
+
+/* Sous-Chapitres */
+.sub-chapter-list { list-style: none; padding: 0 0 0 12px; margin-top: 2px; }
+
+.sub-chapter-item {
+    padding: 6px 12px; margin-bottom: 2px; border-radius: 6px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 400; color: var(--text-muted);
+    transition: all 0.2s; border-left: 2px solid transparent;
+}
+.sub-chapter-item:hover { color: var(--text-main); background-color: var(--menu-hover); }
+.sub-chapter-item.active {
+    color: var(--primary); background-color: var(--menu-active-bg);
+    border-left-color: var(--primary); font-weight: 600;
+}
+
+.chapter-count {
+    font-size: 0.8em; color: var(--text-main); float: right; font-weight: normal;
+    background: var(--border); padding: 2px 6px; border-radius: 10px;
+}
+
+.content-area { flex: 1; padding: 2rem; overflow-x: hidden; }
+
+/* --- 3. TABLEAU & COLONNES --- */
+.table-responsive { 
+    background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); 
+    overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;
+}
 
 table { width: 100%; border-collapse: collapse; table-layout: auto; }
 
 th { background: var(--readonly); padding: 1rem; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
-td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-main); }
 
-/* --- GESTION DES COLONNES (LARGEURS) --- */
+/* Largeurs Colonnes */
+.cell-question { width: auto; min-width: 150px; white-space: normal; }
+.cell-reponse, .cell-ia-container { width: auto; min-width: 350px; white-space: normal; }
 
-/* 1. Colonne Question (Lecture Seule) - Compacte */
-.cell-question { 
-    width: auto; 
-    min-width: 150px; 
-    white-space: normal; 
-}
-
-/* 2. Colonnes de Saisie (Réponse & IA) - Larges */
-.cell-reponse, .cell-ia-container { 
-    width: auto; 
-    min-width: 350px; 
-    white-space: normal; 
-}
-
-/* 3. Colonne Combo (Liste déroulante) */
-.cell-combo { 
-    width: auto; 
-    min-width: 180px; 
-    vertical-align: top; 
-}
-
-/* Style du Select Combo */
+/* Combo */
+.cell-combo { width: auto; min-width: 180px; vertical-align: top; }
 .cell-combo select {
-    width: 100%; 
-    padding: 8px; 
-    border: 1px solid var(--border); 
-    border-radius: 4px;
-    background-color: white; /* Sera surchargé par le JS pour la couleur */
-    font-family: inherit; 
-    font-size: 0.95rem; 
-    color: var(--text-main);
-    cursor: pointer; 
-    appearance: none; /* Supprime le style natif */
-    /* Flèche personnalisée SVG */
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231E293B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat; 
-    background-position: right 10px top 50%; 
-    background-size: 10px auto;
-    padding-right: 30px; 
-    transition: background-color 0.2s;
+    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;
+    background-color: var(--card-bg); /* Couleur de fond par défaut (Blanc ou Sombre) */
+    font-family: inherit; font-size: 0.95rem; color: var(--text-main);
+    cursor: pointer; appearance: none;
+    /* Variable SVG pour l'icône */
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 10px auto;
+    padding-right: 30px; transition: background-color 0.2s, border-color 0.2s;
 }
 .cell-combo select:focus { outline: none; border-color: var(--primary); }
 
-/* 4. Colonne QCM */
-.cell-qcm { width: auto; vertical-align: top; }
-
-/* Wrapper QCM (Largeur Hybride) */
-.qcm-wrapper {
-    display: flex; flex-direction: column; gap: 6px;
-    
-    /* Logique: Fit-content mais borné */
-    width: fit-content; 
-    min-width: 300px; 
-    max-width: 80ch;
-    white-space: normal;
-    
-    max-height: 150px; overflow-y: auto; padding: 6px;
-    background: rgba(0,0,0,0.02); border-radius: 4px; box-sizing: border-box;
+/* Options select natives */
+option {
+    background-color: var(--card-bg);
+    color: var(--text-main);
 }
 
-.qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; }
-.qcm-item input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; accent-color: var(--primary); width: 16px; height: 16px; }
+/* QCM */
+.cell-qcm { width: auto; vertical-align: top; }
+.qcm-wrapper {
+    display: flex; flex-direction: column; gap: 6px;
+    width: fit-content; min-width: 300px; max-width: 80ch; white-space: normal;
+    max-height: 150px; overflow-y: auto; padding: 6px;
+    background: rgba(0,0,0,0.02); 
+    border: 1px solid var(--border);
+    border-radius: 4px; box-sizing: border-box;
+}
+.qcm-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; cursor: pointer; color: var(--text-main); }
+.qcm-item input[type="checkbox"] { 
+    margin-top: 4px; flex-shrink: 0; 
+    accent-color: var(--primary); /* Force la couleur pour être visible */
+    border: 1px solid var(--text-muted);
+    width: 16px; height: 16px; 
+}
 .qcm-item input:checked + span { color: var(--text-muted); text-decoration: line-through; }
 
-/* --- ELEMENTS DE SAISIE & IA --- */
+/* --- 4. SAISIE & IA --- */
 
-/* Style générique Textarea (élastique) */
+/* Style Base Textarea */
 textarea {
     font-family: inherit; font-size: 0.95rem; line-height: 1.5;
     resize: none; overflow-y: hidden; 
@@ -141,38 +219,35 @@ textarea {
     border-radius: 4px; padding: 8px 10px; width: 100%;
 }
 
-/* Style Spécifique IA : Conteneur Markdown */
+/* IA (Markdown Container) */
 .ia-wrapper { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
 
 .markdown-view {
     flex: 1;
-    background-color: #f0fdf4; border: 1px dashed #86efac; color: #166534;
+    /* Variables IA */
+    background-color: var(--ia-bg); 
+    border: 1px dashed var(--ia-border); 
+    color: var(--ia-text);
     border-radius: 4px; padding: 8px 12px;
     height: auto; min-height: 40px; max-height: 200px; overflow-y: auto;
     font-family: inherit; font-size: 0.95rem; line-height: 1.5;
 }
 
-/* Rendu Markdown à l'intérieur de la div IA */
 .markdown-view p { margin: 0 0 8px 0; }
 .markdown-view p:last-child { margin-bottom: 0; }
 .markdown-view ul, .markdown-view ol { margin: 4px 0; padding-left: 20px; }
-.markdown-view strong { font-weight: 700; color: #14532d; }
-.markdown-view em { font-style: italic; }
+.markdown-view strong { font-weight: 700; color: inherit; }
 .markdown-view h1, .markdown-view h2, .markdown-view h3 { margin: 8px 0 4px 0; font-size: 1rem; font-weight: 700; text-decoration: underline; }
 
-/* Style Spécifique Réponse Manuelle (Textarea) */
+/* Réponse Manuelle */
 .cell-reponse textarea {
-    background-color: white; border: 1px solid var(--border); color: var(--text-main);
-    max-height: 200px; 
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: var(--card-bg); 
+    border: 1px solid var(--border); 
+    color: var(--text-main);
+    max-height: 200px; transition: border-color 0.2s, background-color 0.2s;
 }
-.cell-reponse textarea:focus { 
-    outline: none; 
-    border-color: var(--primary); 
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); 
-}
+.cell-reponse textarea:focus { outline: none; border-color: var(--primary); }
 
-/* Bouton IA */
 .btn-ia {
     background: var(--ia-color); color: white; border: none; padding: 6px 12px;
     border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 0.85rem; margin-top: 2px;
