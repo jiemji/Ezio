@@ -1,48 +1,17 @@
 {
   "columns": [
-    { 
-      "id": "sujet", 
-      "label": "Sujet de la demande", 
-      "type": "question" 
-    },
-    { 
-      "id": "format_demande", 
-      "label": "Type de format attendu (Combo)", 
-      "type": "combo",
-      "params": {
-        "options": ["Liste à puces", "Plan structuré", "Email formel"],
-        "colors": {
-          "Liste à puces": "#dbeafe",
-          "Plan structuré": "#fce7f3",
-          "Email formel": "#f0fdf4"
-        }
-      }
-    },
-    { 
-      "id": "ia_output", 
-      "label": "Résultat IA (Markdown)", 
-      "type": "ia", 
-      "params": { 
-        "requete": "Agis comme un assistant expert. Traite le 'Sujet' en respectant scrupuleusement le 'Type de format attendu'.\n\n- Si 'Liste à puces' : Utilise des tirets et mets les mots clés en **gras**.\n- Si 'Plan structuré' : Utilise des titres Markdown (##) pour les sections.\n- Si 'Email formel' : Utilise de l'italique (*) pour les formules de politesse.",
-        "cibles": ["sujet", "format_demande"]
-      }
-    }
+    { "id": "chap", "label": "Module", "type": "chapitre" },
+    { "id": "tache", "label": "Tâche à réaliser", "type": "question" },
+    { "id": "statut", "label": "Statut", "type": "combo", "params": { "options": ["En attente", "Fait"], "colors": {"Fait": "#dcfce7"} } },
+    { "id": "notes", "label": "Notes IA", "type": "ia", "params": {"requete": "Résume la tâche", "cibles": ["tache"]}}
   ],
   "rows": [
-    [
-      "Préparer une réunion de lancement de projet", 
-      "Liste à puces", 
-      ""
-    ],
-    [
-      "Stratégie marketing pour une boulangerie", 
-      "Plan structuré", 
-      ""
-    ],
-    [
-      "Refus poli d'une invitation commerciale", 
-      "Email formel", 
-      ""
-    ]
+    ["Frontend", "Créer le header", "Fait", ""],
+    ["Frontend", "Créer le footer", "En attente", ""],
+    ["Frontend", "Responsive Design", "En attente", ""],
+    ["Backend", "Configurer la DB", "Fait", ""],
+    ["Backend", "Créer l'API User", "En attente", ""],
+    ["Marketing", "Définir le persona", "Fait", ""],
+    ["Marketing", "Rédiger 3 posts LinkedIn", "En attente", ""]
   ]
 }

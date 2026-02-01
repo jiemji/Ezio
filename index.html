@@ -24,9 +24,17 @@
     </header>
 
     <main id="app">
-        <div id="tableContainer" class="table-responsive">
-            <div class="empty-state">
-                <p>Aucune donnée. Chargez un fichier JSON pour commencer.</p>
+        <aside id="sidebar" class="sidebar hidden">
+            <h3 class="sidebar-title">Chapitres</h3>
+            <ul id="chapterList" class="chapter-list">
+                </ul>
+        </aside>
+
+        <div class="content-area">
+            <div id="tableContainer" class="table-responsive">
+                <div class="empty-state">
+                    <p>Aucune donnée. Chargez un fichier JSON pour commencer.</p>
+                </div>
             </div>
         </div>
     </main>

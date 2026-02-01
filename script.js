@@ -1,9 +1,10 @@
 /**
- * AdminForm - Script Principal (Version Markdown Support)
+ * AdminForm - Script Principal (Version Chapitres)
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
 let currentForm = { columns: [], rows: [] };
+let activeChapterFilter = null; // 'null' signifie "Tout afficher"
 
 // -- INITIALISATION --
 (async function init() {
@@ -20,6 +21,8 @@ const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
 const tableContainer = document.getElementById('tableContainer');
 const statusIndicator = document.getElementById('statusIndicator');
+const sidebar = document.getElementById('sidebar');
+const chapterList = document.getElementById('chapterList');
 
 // -- LISTENERS --
 jsonInput.addEventListener('change', async (e) => {
@@ -27,6 +30,7 @@ jsonInput.addEventListener('change', async (e) => {
     if (!file) return;
     try {
         currentForm = JSON.parse(await file.text());
+        activeChapterFilter = null; // Reset filtre au chargement
         renderTable();
         saveState();
         showStatus("Fichier chargé");
@@ -48,6 +52,7 @@ resetBtn.addEventListener('click', () => {
     if (confirm("Tout effacer ?")) {
         localStorage.removeItem(STORAGE_KEY);
         currentForm = { columns: [], rows: [] };
+        activeChapterFilter = null;
         renderTable();
         tableContainer.innerHTML = `<div class="empty-state"><p>Données effacées.</p></div>`;
         showStatus("Session nettoyée");
@@ -95,19 +100,16 @@ function escapeHtml(t) {
 }
 
 // -- FONCTIONS GLOBALES --
-
 window.updateValue = (r, c, v) => { 
     currentForm.rows[r][c] = v; 
     saveState(); 
 };
-
 window.updateQcmValue = (r, c, itemIndex, isChecked) => {
     if (currentForm.rows[r][c] && currentForm.rows[r][c][itemIndex]) {
         currentForm.rows[r][c][itemIndex].checked = isChecked;
         saveState();
     }
 };
-
 window.handleComboChange = (r, c, selectEl) => {
     const val = selectEl.value;
     window.updateValue(r, c, val);
@@ -120,29 +122,90 @@ window.handleComboChange = (r, c, selectEl) => {
     }
 };
 
+// -- GESTION CHAPITRES --
+
+function setupSidebar(chapColIndex) {
+    // 1. Récupération des chapitres uniques et comptage
+    const chaptersMap = new Map();
+    
+    currentForm.rows.forEach(row => {
+        const chapName = String(row[chapColIndex] || "Sans chapitre");
+        if (!chaptersMap.has(chapName)) {
+            chaptersMap.set(chapName, 0);
+        }
+        chaptersMap.set(chapName, chaptersMap.get(chapName) + 1);
+    });
+
+    // 2. Génération HTML
+    let html = `
+        <li class="chapter-item ${activeChapterFilter === null ? 'active' : ''}" 
+            onclick="setChapterFilter(null)">
+            Tout afficher <span class="chapter-count">${currentForm.rows.length}</span>
+        </li>
+    `;
+
+    chaptersMap.forEach((count, chapName) => {
+        const isActive = activeChapterFilter === chapName ? 'active' : '';
+        // On escape les quotes dans l'appel de fonction pour éviter les bugs JS
+        const safeName = chapName.replace(/'/g, "\\'"); 
+        html += `
+            <li class="chapter-item ${isActive}" 
+                onclick="setChapterFilter('${safeName}')">
+                ${escapeHtml(chapName)} 
+                <span class="chapter-count">${count}</span>
+            </li>
+        `;
+    });
+
+    chapterList.innerHTML = html;
+    sidebar.classList.remove('hidden');
+}
+
+window.setChapterFilter = (chapName) => {
+    activeChapterFilter = chapName;
+    renderTable(); // Re-render pour appliquer le filtre et mettre à jour la classe 'active' du menu
+}
+
 // -- RENDU PRINCIPAL --
 function renderTable() {
     if (!currentForm.columns || !currentForm.columns.length) return;
+
+    // 1. Détection de la colonne Chapitre
+    const chapColIndex = currentForm.columns.findIndex(c => c.type === 'chapitre');
+    
+    // 2. Gestion de la sidebar
+    if (chapColIndex !== -1) {
+        setupSidebar(chapColIndex);
+    } else {
+        sidebar.classList.add('hidden');
+        activeChapterFilter = null; // Sécurité
+    }
 
     let html = `<table><thead><tr>`;
     currentForm.columns.forEach(col => html += `<th>${col.label}</th>`);
     html += `</tr></thead><tbody>`;
 
+    // 3. Boucle sur les lignes (AVEC FILTRE)
     currentForm.rows.forEach((row, rowIndex) => {
+        
+        // --- LOGIQUE DE FILTRE ---
+        if (activeChapterFilter !== null && chapColIndex !== -1) {
+            const rowChap = String(row[chapColIndex] || "Sans chapitre");
+            if (rowChap !== activeChapterFilter) {
+                return; // On saute cette ligne, elle ne correspond pas au chapitre
+            }
+        }
+        // -------------------------
+
         html += `<tr>`;
         row.forEach((value, colIndex) => {
             const colDef = currentForm.columns[colIndex];
             
-            // TYPE IA (Modifié pour Markdown)
+            // TYPE IA
             if (colDef.type === 'ia') {
-                // Utilisation de marked.parse pour convertir le Markdown en HTML
-                // On utilise une DIV avec la classe markdown-view au lieu d'un textarea
                 let renderedContent = "";
-                try {
-                     renderedContent = value ? marked.parse(String(value)) : "";
-                } catch(e) { 
-                    renderedContent = escapeHtml(value); 
-                }
+                try { renderedContent = value ? marked.parse(String(value)) : ""; } 
+                catch(e) { renderedContent = escapeHtml(value); }
 
                 html += `<td class="cell-ia-container"><div class="ia-wrapper">
                     <button onclick="handleIA(${rowIndex}, ${colIndex}, this)" class="btn-ia">🪄 IA</button>
@@ -171,20 +234,18 @@ function renderTable() {
                 const options = colDef.params?.options || [];
                 const colors = colDef.params?.colors || {};
                 const currentColor = colors[value] || '#ffffff';
-
                 html += `<td class="cell-combo">
-                    <select 
-                        style="background-color: ${currentColor}" 
-                        onchange="handleComboChange(${rowIndex}, ${colIndex}, this)"
-                    >
+                    <select style="background-color: ${currentColor}" onchange="handleComboChange(${rowIndex}, ${colIndex}, this)">
                         <option value="" disabled ${!value ? 'selected' : ''}>Choisir...</option>`;
-                
                 options.forEach(opt => {
                     const isSelected = String(value) === String(opt) ? 'selected' : '';
                     html += `<option value="${escapeHtml(opt)}" ${isSelected}>${escapeHtml(opt)}</option>`;
                 });
-                
                 html += `</select></td>`;
+            }
+            // TYPE CHAPITRE (Affichage simple, en lecture seule pour l'instant)
+            else if (colDef.type === 'chapitre') {
+                 html += `<td class="cell-question"><strong>${escapeHtml(value)}</strong></td>`;
             }
             // TYPE QUESTION
             else if (colDef.type === 'question') {
@@ -205,7 +266,7 @@ function renderTable() {
     document.querySelectorAll('textarea').forEach(adjustTextareaHeight);
 }
 
-// -- IA LOGIC --
+// -- IA LOGIC (Inchangée mais nécessaire) --
 async function handleIA(rowIndex, colIndex, btn) {
     if (!IA_CONFIG) return alert("Erreur: config.json non chargé.");
     
@@ -250,9 +311,7 @@ async function handleIA(rowIndex, colIndex, btn) {
 
     try {
         const result = await window.ApiService.fetchLLM(IA_CONFIG, prompt);
-        updateValue(rowIndex, colIndex, result); // Sauvegarde brute
-        
-        // Mise à jour visuelle : Markdown -> HTML
+        updateValue(rowIndex, colIndex, result);
         const container = document.getElementById(`ia-${rowIndex}-${colIndex}`);
         if(container) {
             container.innerHTML = marked.parse(result);
