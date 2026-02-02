@@ -82,27 +82,45 @@ main { display: flex; flex: 1; overflow: hidden; position: relative; }
 /* Content Area */
 .content-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; position: relative; background: var(--bg-color); }
 
-/* --- CORRECTION ICI : Gestion du scroll et de la largeur --- */
+/* --- CORRECTION ICI --- */
 .table-responsive { 
     flex: 1; 
-    overflow: auto; /* Active le scroll si le contenu dépasse */
-    padding: 1.5rem; 
-    width: 100%; /* Prend toute la largeur disponible du parent */
+    overflow: auto; 
+    /* On supprime le padding du haut pour coller les entêtes au header */
+    /* On garde le padding sur les côtés et en bas pour l'esthétique */
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    width: 100%; 
 }
 
 /* Table */
 table { 
-    width: max-content; /* IMPORTANT : Force le tableau à prendre la largeur de ses colonnes, pas de l'écran */
+    width: max-content; 
     border-collapse: separate; 
     border-spacing: 0;
     background: var(--card-bg); 
     border-radius: 8px; 
     box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-    table-layout: fixed; /* Respect strict des largeurs de colonnes */
+    table-layout: fixed; 
 }
 
 th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 0.9rem; }
-th { background: var(--bg-color); font-weight: 600; color: var(--text-muted); position: sticky; top: 0; z-index: 5; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+
+/* Correction TH : Fond opaque pour couvrir le défilement */
+th { 
+    background: var(--bg-color); 
+    font-weight: 600; 
+    color: var(--text-muted); 
+    position: sticky; 
+    top: 0; 
+    z-index: 5; 
+    text-transform: uppercase; 
+    font-size: 0.75rem; 
+    letter-spacing: 0.5px; 
+    border-bottom: 2px solid var(--border);
+    /* Optionnel : petite ombre pour marquer la séparation quand on scrolle */
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+}
+
 tr:last-child td { border-bottom: none; }
 tr:hover td { background-color: var(--bg-color); }
 
@@ -119,7 +137,7 @@ tr:hover td { background-color: var(--bg-color); }
 .col-reponse { width: 350px; min-width: 350px; }
 .col-combo { width: 200px; min-width: 200px; }
 .col-qcm { width: 250px; min-width: 250px; }
-.col-ia { width: 500px; min-width: 500px; } /* Largeur fixe importante pour l'IA */
+.col-ia { width: 500px; min-width: 500px; } 
 
 .col-reponse textarea { width: 100%; min-height: 60px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-main); resize: vertical; font-family: inherit; font-size: 0.9rem; }
 .col-reponse textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
