@@ -49,6 +49,7 @@ h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px; display: flex
 .status-bar { font-size: 0.85rem; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 1rem; height: 24px; display: flex; align-items: center; }
 
 .controls { display: flex; gap: 0.5rem; align-items: center; }
+.controls-group { display: flex; gap: 0.5rem; align-items: center; } /* Groupement pour masquer/afficher */
 
 /* Search Input */
 .search-input {
@@ -68,26 +69,82 @@ h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px; display: flex
 }
 
 /* Main Layout */
-main { display: flex; flex: 1; overflow: hidden; position: relative; }
+main { display: flex; flex: 1; overflow: hidden; position: relative; width: 100%; }
+.view-section { display: flex; flex: 1; width: 100%; overflow: hidden; }
 
 /* Sidebar */
 .sidebar { width: 260px; background: var(--card-bg); border-right: 1px solid var(--border); overflow-y: auto; padding: 1rem; transition: transform 0.3s ease; flex-shrink: 0; }
 .sidebar.hidden { transform: translateX(-100%); margin-right: -260px; } 
 .sidebar-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; letter-spacing: 0.5px; }
-.chapter-list { list-style: none; }
-.chapter-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-bottom: 2px; color: var(--text-main); transition: background 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chapter-list { list-style: none; padding: 0; margin: 0; }
+
+/* Item Parent (Chapitre) */
+.chapter-item { 
+    padding: 8px 12px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    margin-bottom: 2px; 
+    color: var(--text-main); 
+    transition: background 0.2s; 
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
 .chapter-item:hover { background: var(--menu-hover); }
-.chapter-item.active { background: var(--menu-active-bg); color: var(--primary); font-weight: 600; }
+.chapter-item.active { background: var(--menu-active-bg); color: var(--primary); }
+
+/* Compteur (Badge) */
+.count-badge {
+    background: var(--readonly);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: normal;
+}
+.chapter-item.active .count-badge { background: #dbeafe; color: var(--primary); }
+
+/* Sous-Liste (Sous-Chapitres) */
+.sub-chapter-list {
+    list-style: none;
+    padding-left: 12px; /* Indentation */
+    margin-bottom: 4px;
+    display: none; /* Caché par défaut */
+    border-left: 1px solid var(--border);
+    margin-left: 12px;
+}
+.sub-chapter-list.open { display: block; }
+
+/* Item Enfant (Sous-Chapitre) */
+.sub-chapter-item {
+    padding: 6px 10px;
+    margin-left: 4px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 1px;
+    transition: color 0.2s;
+}
+.sub-chapter-item:hover { color: var(--text-main); background: var(--menu-hover); }
+.sub-chapter-item.active { 
+    color: var(--primary); 
+    background: var(--menu-active-bg); 
+    font-weight: 500; 
+    border-left: 2px solid var(--primary);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
 
 /* Content Area */
 .content-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; position: relative; background: var(--bg-color); }
 
-/* --- CORRECTION ICI --- */
 .table-responsive { 
     flex: 1; 
     overflow: auto; 
-    /* On supprime le padding du haut pour coller les entêtes au header */
-    /* On garde le padding sur les côtés et en bas pour l'esthétique */
     padding: 0 1.5rem 1.5rem 1.5rem;
     width: 100%; 
 }
@@ -105,7 +162,6 @@ table {
 
 th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 0.9rem; }
 
-/* Correction TH : Fond opaque pour couvrir le défilement */
 th { 
     background: var(--bg-color); 
     font-weight: 600; 
@@ -117,14 +173,13 @@ th {
     font-size: 0.75rem; 
     letter-spacing: 0.5px; 
     border-bottom: 2px solid var(--border);
-    /* Optionnel : petite ombre pour marquer la séparation quand on scrolle */
     box-shadow: 0 1px 0 rgba(0,0,0,0.05);
 }
 
 tr:last-child td { border-bottom: none; }
 tr:hover td { background-color: var(--bg-color); }
 
-/* Column Sizing & Types - FIXES */
+/* Column Sizing & Types */
 .col-s { width: 80px; min-width: 80px; text-align: center; font-family: monospace; font-weight: bold; color: var(--primary); }
 .col-m { width: 150px; min-width: 150px; }
 .col-l { width: 300px; min-width: 300px; } 
@@ -133,7 +188,6 @@ tr:hover td { background-color: var(--bg-color); }
 .col-question { font-weight: 500; color: var(--text-main); }
 .col-popup { width: 100px; min-width: 100px; text-align: center; }
 
-/* Important : On force les largeurs pour éviter l'écrasement */
 .col-reponse { width: 350px; min-width: 350px; }
 .col-combo { width: 200px; min-width: 200px; }
 .col-qcm { width: 250px; min-width: 250px; }
@@ -182,3 +236,127 @@ tr:hover td { background-color: var(--bg-color); }
 
 /* Mode menu fermé */
 body.menu-closed .sidebar { transform: translateX(-100%); margin-right: -260px; }
+
+/* --- CREATOR VIEW STYLES --- */
+.creator-container { 
+    width: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    overflow: hidden; 
+    background: var(--bg-color); 
+}
+
+.creator-header { 
+    padding: 2rem; 
+    background: var(--card-bg); 
+    border-bottom: 1px solid var(--border); 
+    flex-shrink: 0; 
+}
+
+.creator-header h2 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+.creator-header p { color: var(--text-muted); margin-bottom: 1.5rem; }
+.file-upload-box { display: flex; align-items: center; gap: 1rem; }
+.file-name { font-style: italic; color: var(--text-muted); }
+
+/* Zone de configuration avec Scroll */
+.creator-config { 
+    flex: 1; 
+    overflow: hidden; /* Laisse le table-responsive gérer le scroll */
+    display: flex; 
+    flex-direction: column; 
+    background: var(--bg-color);
+}
+
+.creator-actions { 
+    padding: 1rem; 
+    border-top: 1px solid var(--border); 
+    background: var(--card-bg); 
+    text-align: center; 
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* --- TABLEAU CREATEUR (Modifications demandées) --- */
+
+/* On cible spécifiquement la table de config */
+#configTable {
+    width: max-content; /* 1. Force le tableau à s'étendre au-delà de l'écran */
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* En-têtes et Cellules larges */
+#configTable th, 
+#configTable td {
+    width: 240px;      /* 2. Largeur fixe (~40 caractères) */
+    min-width: 240px;  /* Empêche le rétrécissement */
+    max-width: 240px;  
+    vertical-align: top; 
+    padding: 12px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--readonly); /* Séparateur vertical subtil */
+}
+
+#configTable th {
+    background: var(--readonly);
+    text-align: center;
+    position: sticky; /* Garde l'entête visible au scroll vertical */
+    top: 0;
+    z-index: 5;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid var(--border);
+}
+
+/* Inputs dans le tableau pour qu'ils prennent toute la place */
+.config-input,
+.config-textarea { 
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 8px; 
+    border: 1px solid var(--border); 
+    border-radius: 4px; 
+    font-size: 0.9rem; 
+    background: var(--bg-color); 
+    color: var(--text-main); 
+    font-family: inherit;
+}
+
+.config-textarea {
+    min-height: 100px; /* Plus de hauteur pour les prompts IA et options */
+    resize: vertical;
+}
+
+/* Checkbox group styling */
+.config-checkbox-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    max-height: 180px; 
+    overflow-y: auto; 
+    border: 1px solid var(--border); 
+    padding: 10px; 
+    border-radius: 4px; 
+    background: var(--bg-color); 
+}
+
+.config-checkbox-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-size: 0.85rem; 
+}
+
+.param-label { 
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+    font-weight: 700; 
+    display: block; 
+    margin-top: 12px; 
+    margin-bottom: 6px; 
+}
+
+.large-btn { padding: 10px 24px; font-size: 1rem; }

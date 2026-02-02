@@ -17,28 +17,57 @@
             <div class="status-bar" id="statusIndicator">Prêt</div>
         </div>
         <div class="controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
-            
-            <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
-            
-            <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinitialiser</button>
-            <label for="jsonInput" class="btn-secondary">Charger JSON</label>
-            <input type="file" id="jsonInput" accept=".json" hidden>
-            <button id="exportBtn" class="btn-primary">Exporter JSON</button>
+            <button id="btnShowApp" class="btn-secondary hidden">← Retour Audit</button>
+            <button id="btnShowCreator" class="btn-primary">Créer un JSON</button>
+
+            <div id="auditControls" class="controls-group">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
+                <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
+                <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinitialiser</button>
+                <label for="jsonInput" class="btn-secondary">Charger JSON</label>
+                <input type="file" id="jsonInput" accept=".json" hidden>
+                <button id="exportBtn" class="btn-primary">Exporter JSON</button>
+            </div>
         </div>
     </header>
 
-    <main id="app">
-        <aside id="sidebar" class="sidebar hidden">
-            <h3 class="sidebar-title">Navigation</h3>
-            <ul id="chapterList" class="chapter-list">
-                </ul>
-        </aside>
+    <main id="app-container">
+        <div id="audit-view" class="view-section">
+            <aside id="sidebar" class="sidebar hidden">
+                <h3 class="sidebar-title">Navigation</h3>
+                <ul id="chapterList" class="chapter-list"></ul>
+            </aside>
 
-        <div class="content-area">
-            <div id="tableContainer" class="table-responsive">
-                <div class="empty-state">
-                    <p>Aucune donnée. Chargez un fichier JSON pour commencer.</p>
+            <div class="content-area">
+                <div id="tableContainer" class="table-responsive">
+                    <div class="empty-state">
+                        <p>Aucune donnée. Chargez un fichier JSON pour commencer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="creator-view" class="view-section hidden">
+            <div class="creator-container">
+                <div class="creator-header">
+                    <h2>Générateur de Formulaire</h2>
+                    <p>Importez un fichier CSV (séparateur virgule ou point-virgule) pour configurer les colonnes.</p>
+                    <div class="file-upload-box">
+                        <label for="csvInput" class="btn-primary">📂 Importer CSV</label>
+                        <input type="file" id="csvInput" accept=".csv" hidden>
+                        <span id="csvFileName" class="file-name">Aucun fichier choisi</span>
+                    </div>
+                </div>
+
+                <div id="creatorConfig" class="creator-config hidden">
+                    <div class="table-responsive">
+                        <table id="configTable">
+                            </table>
+                    </div>
+                    
+                    <div class="creator-actions">
+                        <button id="generateJsonBtn" class="btn-primary large">💾 Générer le JSON</button>
+                    </div>
                 </div>
             </div>
         </div>
