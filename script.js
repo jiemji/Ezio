@@ -1,15 +1,17 @@
 /**
  * AdminForm - Script Principal
- * Mise à jour : Mapping strict des classes CSS par type de colonne
+ * Mise à jour : Ajout Barre de Recherche Globale
  */
 const STORAGE_KEY = 'adminform_data_v1';
 let IA_CONFIG = null;
 let currentForm = { columns: [], rows: [] };
 
 let activeChapterFilter = null; 
+let currentSearch = ""; // État de la recherche
 
 // -- DOM --
 const jsonInput = document.getElementById('jsonInput');
+const searchInput = document.getElementById('searchInput'); // NOUVEAU
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
 const themeBtn = document.getElementById('themeBtn');
@@ -41,11 +43,17 @@ themeBtn.onclick = () => {
     const isDark = document.body.classList.toggle('dark-mode');
     themeBtn.textContent = isDark ? '☀️' : '🌙';
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    renderTable(); // Re-render pour corriger les backgrounds des combos
+    renderTable(); 
 };
 
 toggleSidebarBtn.onclick = () => {
     document.body.classList.toggle('menu-closed');
+};
+
+// Listener Recherche
+searchInput.oninput = (e) => {
+    currentSearch = e.target.value.toLowerCase();
+    renderTable(); // Re-render immédiat à la frappe
 };
 
 jsonInput.onchange = (e) => {
@@ -57,6 +65,9 @@ jsonInput.onchange = (e) => {
             const data = JSON.parse(event.target.result);
             if (data.columns && data.rows) {
                 currentForm = data;
+                activeChapterFilter = null; // Reset filtre
+                currentSearch = "";         // Reset recherche
+                searchInput.value = "";
                 saveState();
                 renderApp();
             }
@@ -112,6 +123,8 @@ function renderSidebar() {
     chapterList.innerHTML = "";
     const chapColIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
     
+    if (chapColIdx === -1) return;
+
     const chapterMap = new Map();
     currentForm.rows.forEach(row => {
         const chapName = row[chapColIdx] || "Sans chapitre";
@@ -139,7 +152,6 @@ function renderTable() {
     const thead = document.createElement('thead');
     const trHead = document.createElement('tr');
 
-    // --- LOGIQUE D'ATTRIBUTION DES CLASSES ---
     const getColClass = (col) => {
         switch (col.type) {
             case 'chapitre': return 'col-chapitre';
@@ -148,22 +160,21 @@ function renderTable() {
             case 'qcm': return 'col-qcm';
             case 'reponse': return 'col-reponse';
             case 'ia': return 'col-ia';
-            
             case 'question':
-                // Gestion S, M, L
-                const size = col.size ? col.size.toUpperCase() : 'L'; // Défaut L si non précisé
+                const size = col.size ? col.size.toUpperCase() : 'L';
                 if (size === 'S') return 'col-s';
                 if (size === 'M') return 'col-m';
                 return 'col-l';
-            
-            default: return 'col-l'; // Fallback sécurité
+            default: return 'col-l';
         }
     };
 
+    // 1. En-têtes
     currentForm.columns.forEach(col => {
+        if (col.visible === false) return;
         const th = document.createElement('th');
         th.innerText = col.label;
-        th.className = getColClass(col); // On applique la classe stricte
+        th.className = getColClass(col);
         trHead.appendChild(th);
     });
     thead.appendChild(trHead);
@@ -171,17 +182,35 @@ function renderTable() {
 
     const tbody = document.createElement('tbody');
     const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
+    
+    let visibleCount = 0;
 
     currentForm.rows.forEach((row, rIdx) => {
-        if (activeChapterFilter && row[chapIdx] !== activeChapterFilter) return;
+        // A. Filtre Chapitre
+        if (activeChapterFilter && chapIdx !== -1 && row[chapIdx] !== activeChapterFilter) return;
 
+        // B. Filtre Recherche (Texte Global)
+        if (currentSearch) {
+            // On transforme toute la ligne en une chaîne de caractères pour chercher dedans
+            // On inclut même les colonnes cachées (ex: mot clé dans un domaine caché)
+            const rowText = row.map(cell => {
+                if (cell === null || cell === undefined) return "";
+                if (typeof cell === 'object') return JSON.stringify(cell); // Pour QCM/Objets
+                return String(cell);
+            }).join(" ").toLowerCase();
+
+            if (!rowText.includes(currentSearch)) return;
+        }
+
+        visibleCount++;
         const tr = document.createElement('tr');
+        
         row.forEach((cell, cIdx) => {
-            const td = document.createElement('td');
             const col = currentForm.columns[cIdx];
-            
-            td.className = getColClass(col); // On applique la classe stricte
+            if (col.visible === false) return; 
 
+            const td = document.createElement('td');
+            td.className = getColClass(col);
             renderCell(td, col, cell, rIdx, cIdx);
             tr.appendChild(td);
         });
@@ -190,7 +219,11 @@ function renderTable() {
 
     table.appendChild(tbody);
     tableContainer.appendChild(table);
-    statusIndicator.innerText = activeChapterFilter ? `Filtre : ${activeChapterFilter}` : "Affichage complet";
+    
+    // Mise à jour de l'indicateur
+    let status = activeChapterFilter ? `Filtre : ${activeChapterFilter}` : "Affichage complet";
+    if (currentSearch) status += ` | Recherche : "${currentSearch}" (${visibleCount} résultats)`;
+    statusIndicator.innerText = status;
 }
 
 function renderCell(container, col, value, r, c) {
@@ -269,7 +302,7 @@ function renderCell(container, col, value, r, c) {
             wrap.className = 'popup-wrapper';
             const badge = document.createElement('div');
             badge.className = 'popup-badge';
-            badge.innerText = "Preuves"; // Texte court pour respecter les 10ch
+            badge.innerText = "Preuves";
             const content = document.createElement('div');
             content.className = 'popup-content';
             content.innerText = value || "Aucune preuve.";
@@ -289,7 +322,6 @@ function renderCell(container, col, value, r, c) {
             const resDiv = document.createElement('div');
             resDiv.id = `ia-${r}-${c}`;
             resDiv.className = 'ia-content';
-            // Le scroll interne (ascenseur) est géré via le CSS sur .ia-content
             resDiv.innerHTML = value ? marked.parse(value) : "";
             
             iaDiv.appendChild(btn);

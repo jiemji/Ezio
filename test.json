@@ -3,7 +3,8 @@
     {
       "id": "domaine",
       "label": "Domaine",
-      "type": "chapitre"
+      "type": "chapitre",
+      "visible": false
     },
     {
       "id": "reference",
