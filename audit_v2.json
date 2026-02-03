@@ -4,7 +4,7 @@
       "id": "domaine",
       "label": "Domaine",
       "type": "chapitre",
-      "visible": false
+      "visible": true
     },
     {
       "id": "ref",
@@ -47,17 +47,12 @@
       "visible": true,
       "params": {
         "options": [
-          "Bien",
-          "moins bien",
-          "Pas bien"
+          "très mature",
+          "mature",
+          "assez mature",
+          "peu mature"
         ],
-        "colors": {
-          "Conforme": "#dcfce7",
-          "Oui": "#dcfce7",
-          "Partiellement conforme": "#ffedd5",
-          "Non-Conforme": "#fee2e2",
-          "Non": "#fee2e2"
-        }
+        "colorScheme": "alert"
       }
     },
     {
@@ -68,15 +63,10 @@
       "params": {
         "options": [
           "Conforme",
-          "Pas Conforme"
+          "partiellement conforme",
+          "non conforme"
         ],
-        "colors": {
-          "Conforme": "#dcfce7",
-          "Oui": "#dcfce7",
-          "Partiellement conforme": "#ffedd5",
-          "Non-Conforme": "#fee2e2",
-          "Non": "#fee2e2"
-        }
+        "colorScheme": "alert"
       }
     },
     {
@@ -85,15 +75,9 @@
       "type": "ia",
       "visible": true,
       "params": {
-        "requete": "3 mesures de sécurité appropriées",
         "cibles": [
-          "titre_du_controle",
-          "domaine",
-          "description_et_objectifs",
-          "preuves_suggerees",
-          "constats_de_l_auditeur",
-          "niveau_de_maturite",
-          "conformite"
+          "ref",
+          "titre_du_controle"
         ]
       }
     }
@@ -106,9 +90,9 @@
       "Une politique de sécurité de l'information et des politiques spécifiques doivent être définies, approuvées par la direction et communiquées.",
       "- Politique de sécurité signée\\n- Preuve de diffusion aux employés",
       "- Politique existante mais non mise à jour depuis 3 ans.",
-      "",
-      "Non-Conforme",
-      ""
+      "très mature",
+      "Conforme",
+      "[Analysis]\n\nContext: Référence 5.1 concerns the analysis of security policies as part of an information system audit.\n\nTitle of Control: Security Policies\n\nThis section focuses on evaluating whether the organization's security policies are effectively implemented and enforced to protect sensitive data from unauthorized access, disclosure, alteration, or destruction. The assessment will examine various aspects such as policy content, user awareness, compliance mechanisms, incident response procedures, and continuous monitoring practices to ensure that they align with industry standards and regulatory requirements.\n\nKey areas of focus include:\n- Reviewing the documented security policies for clarity, comprehensiveness, and relevance.\n- Assessing employee understanding and adherence to these policies through training records and interviews.\n- Evaluating technical controls in place (e.g., firewalls, encryption) against policy stipulations.\n- Testing incident response plans by simulating potential breaches or vulnerabilities.\n- Verifying that regular audits are conducted to ensure ongoing compliance with internal security standards.\n\nThe ultimate goal is to identify gaps between current practices and desired outcomes outlined in the policies, thereby recommending improvements for a more robust cybersecurity posture."
     ],
     [
       "5. Contrôles organisationnels",
@@ -117,7 +101,7 @@
       "Les règles de contrôle d’accès, les droits et les restrictions doivent être définis selon le besoin d'en connaitre.",
       "- Matrice des flux\\n- Revue des comptes à privilèges",
       "",
-      "Optimisé",
+      "peu mature",
       "Conforme",
       ""
     ],
@@ -128,8 +112,8 @@
       "Le personnel et les parties intéressées doivent recevoir une sensibilisation appropriée en matière de sécurité.",
       "- Planning de formation\\n- Registre des présences\\n- Contenu des modules e-learning",
       "",
-      "Défini",
-      "Partiellement conforme",
+      "assez mature",
+      "partiellement conforme",
       ""
     ],
     [
@@ -139,7 +123,7 @@
       "Les zones sécurisées doivent être protégées par des contrôles d'entrée appropriés pour assurer que seul le personnel autorisé a accès.",
       "- Logs des badges\\n- Cahier des visiteurs\\n- Vidéosurveillance",
       "",
-      "Géré",
+      "très mature",
       "Conforme",
       ""
     ],
@@ -150,7 +134,7 @@
       "Une protection contre les logiciels malveillants doit être mise en œuvre et supportée par une sensibilisation appropriée.",
       "- Console antivirus centralisée\\n- Rapports de scan hebdomadaires",
       "",
-      "Initial",
+      "mature",
       "Conforme",
       ""
     ],
@@ -161,9 +145,23 @@
       "Les informations stockées dans les systèmes d'information, les équipements ou les supports doivent être supprimées lorsqu'elles ne sont plus nécessaires.",
       "- Procédure de suppression\\n- Certificats de destruction de disques durs",
       "",
-      "",
-      "Non",
+      "peu mature",
+      "non conforme",
       ""
     ]
+  ],
+  "statics": [
+    {
+      "id": "widget_1770160420393",
+      "columnId": "niveau_de_maturite",
+      "type": "pie",
+      "title": "Niveau de maturité"
+    },
+    {
+      "id": "widget_1770160425571",
+      "columnId": "conformite",
+      "type": "bar",
+      "title": "Conformité"
+    }
   ]
 }

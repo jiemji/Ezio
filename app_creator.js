@@ -152,10 +152,23 @@ function renderParamsCell(colIdx) {
         cell.appendChild(txt);
         
         if (cfg.type === 'combo') {
-            cell.appendChild(mkLabel("Couleurs"));
+            cell.appendChild(mkLabel("Schéma de Couleurs"));
             const cSel = document.createElement('select');
             cSel.className = 'config-input';
-            [{k:'',v:'Aucun'},{k:'traffic',v:'Feux'},{k:'blue',v:'Bleu'},{k:'red',v:'Rouge'}].forEach(sc => {
+            
+            const schemes = [
+                {k:'', v:'Aucun'},
+                {k:'alert', v:'Alerte (Fixe)'},        
+                {k:'rainbow', v:'Arc-en-Ciel (Fixe)'}, 
+                {k:'blue', v:'Bleu (Dégradé)'},
+                {k:'green', v:'Vert (Dégradé)'},
+                {k:'red', v:'Rouge (Dégradé)'},
+                {k:'purple', v:'Violet (Dégradé)'},
+                {k:'orange', v:'Orange (Dégradé)'},
+                {k:'yellow', v:'Jaune (Dégradé)'}
+            ];
+
+            schemes.forEach(sc => {
                 const o = document.createElement('option');
                 o.value = sc.k; o.innerText = sc.v;
                 if (cfg.params.colorScheme === sc.k) o.selected = true;
@@ -206,18 +219,9 @@ if(generateJsonBtn) {
             
             if (Object.keys(cfg.params).length > 0) {
                 colObj.params = JSON.parse(JSON.stringify(cfg.params));
-                if (cfg.type === 'combo' && colObj.params.colorScheme) {
-                    const s = colObj.params.colorScheme;
-                    let c = {};
-                    if (s === 'traffic') c = { "Conforme": "#dcfce7", "Oui": "#dcfce7", "Partiellement conforme": "#ffedd5", "Non-Conforme": "#fee2e2", "Non": "#fee2e2" };
-                    else if (s === 'blue') c = { "Oui": "#dbeafe", "Non": "#e2e8f0" };
-                    else if (s === 'red') c = { "Oui": "#fee2e2", "Non": "#dcfce7" };
-                    if (Object.keys(c).length > 0) colObj.params.colors = c;
-                    delete colObj.params.colorScheme;
-                }
             }
             if (colObj.params && colObj.params.size) { colObj.size = colObj.params.size; delete colObj.params.size; }
-            else if (['question', 'reference'].includes(colObj.type)) { colObj.size = 'M'; } // Fallback sécurité export
+            else if (['question', 'reference'].includes(colObj.type)) { colObj.size = 'M'; } 
 
             return colObj;
         });
@@ -236,8 +240,8 @@ if(generateJsonBtn) {
         if(confirm("JSON généré ! Charger dans l'application ?")) {
             currentForm = finalJson;
             saveState();
-            switchView('app'); // Utilise fonction globale
-            renderApp();       // Utilise fonction audit
+            switchView('app'); 
+            renderApp();       
         }
     };
 }

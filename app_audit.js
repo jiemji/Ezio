@@ -16,35 +16,41 @@ const jsonInput = document.getElementById('jsonInput');
 const exportBtn = document.getElementById('exportBtn');
 
 // Listeners spécifiques
-searchInput.oninput = (e) => {
-    currentSearch = e.target.value.toLowerCase();
-    renderTable(); 
-};
-
-exportBtn.onclick = () => downloadJSON(currentForm, `export_${new Date().getTime()}.json`);
-
-jsonInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-            const data = JSON.parse(event.target.result);
-            if (data.columns && data.rows) {
-                currentForm = data;
-                if(!currentForm.statics) currentForm.statics = [];
-                
-                activeFilters = { chapter: null, subChapter: null };
-                currentSearch = "";
-                searchInput.value = "";
-                saveState();
-                switchView('app'); // Utilise la fonction de app_shared.js
-                renderApp();
-            }
-        } catch (err) { alert("Erreur JSON : " + err.message); }
+if (searchInput) {
+    searchInput.oninput = (e) => {
+        currentSearch = e.target.value.toLowerCase();
+        renderTable(); 
     };
-    reader.readAsText(file);
-};
+}
+
+if (exportBtn) {
+    exportBtn.onclick = () => downloadJSON(currentForm, `export_${new Date().getTime()}.json`);
+}
+
+if (jsonInput) {
+    jsonInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (data.columns && data.rows) {
+                    currentForm = data;
+                    if(!currentForm.statics) currentForm.statics = [];
+                    
+                    activeFilters = { chapter: null, subChapter: null };
+                    currentSearch = "";
+                    searchInput.value = "";
+                    saveState();
+                    switchView('app'); // Utilise la fonction de app_shared.js
+                    renderApp();
+                }
+            } catch (err) { alert("Erreur JSON : " + err.message); }
+        };
+        reader.readAsText(file);
+    };
+}
 
 // -- LOGIQUE DE RENDU --
 
@@ -55,12 +61,15 @@ function updateValue(r, c, val) {
 
 function renderApp() {
     if (!currentForm.columns.length) return;
-    sidebar.classList.remove('hidden');
-    renderSidebar();
+    if (sidebar) {
+        sidebar.classList.remove('hidden');
+        renderSidebar();
+    }
     renderTable();
 }
 
 function renderSidebar() {
+    if (!chapterList) return;
     chapterList.innerHTML = "";
     const chapColIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
     const subChapColIdx = currentForm.columns.findIndex(c => c.type === 'sous-chapitre');
@@ -124,6 +133,7 @@ function renderSidebar() {
 }
 
 function renderTable() {
+    if (!tableContainer) return;
     tableContainer.innerHTML = "";
     const table = document.createElement('table');
     const thead = document.createElement('thead');
@@ -189,7 +199,91 @@ function renderTable() {
     if (activeFilters.subChapter) status.push(`Sous-chapitre: ${activeFilters.subChapter}`);
     if (status.length === 0) status.push("Vue Globale");
     if (currentSearch) status.push(`Recherche: "${currentSearch}"`);
-    statusIndicator.innerText = `${status.join(' | ')} (${visibleCount} lignes)`;
+    if (statusIndicator) statusIndicator.innerText = `${status.join(' | ')} (${visibleCount} lignes)`;
+}
+
+// Fonction pour déterminer si le texte doit être blanc ou noir en fonction du fond
+function getContrastColor(color) {
+    if(!color) return '';
+    let r, g, b;
+
+    // Support Hex (#rrggbb)
+    if (color.startsWith('#')) {
+        const hex = color.replace('#', '');
+        r = parseInt(hex.substr(0, 2), 16);
+        g = parseInt(hex.substr(2, 2), 16);
+        b = parseInt(hex.substr(4, 2), 16);
+    } 
+    // Support rgba(r, g, b, a) ou rgb(r, g, b)
+    else if (color.startsWith('rgb')) {
+        const vals = color.match(/\d+/g);
+        if(vals) {
+            r = parseInt(vals[0]);
+            g = parseInt(vals[1]);
+            b = parseInt(vals[2]);
+        }
+    } else {
+        return ''; // Couleur non reconnue, laisser le navigateur gérer
+    }
+
+    // Calcul de la luminance relative (YIQ)
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+
+function getComboColor(scheme, value, options) {
+    if (!scheme || !value || !options || options.length === 0) return '';
+    
+    const index = options.indexOf(value);
+    if (index === -1) return '';
+
+    // -- LOGIQUE COULEURS FIXES (NOUVEAU) --
+    // Alerte: Vert, Jaune, Orange, Rouge, Violet, Noir
+    // Rainbow: Rouge, Orange, Jaune, Vert, Bleu, Indigo, Violet
+    
+    const fixedSchemes = {
+        'alert': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
+        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
+    };
+
+    if (fixedSchemes[scheme]) {
+        const colors = fixedSchemes[scheme];
+        // Si l'index dépasse la liste, on prend le dernier
+        if (index >= colors.length) {
+            return colors[colors.length - 1];
+        }
+        return colors[index];
+    }
+
+    // -- LOGIQUE DEGRADEE (ANCIEN) --
+    
+    const baseColors = {
+        'blue': '59, 130, 246',   // #3b82f6
+        'green': '34, 197, 94',   // #22c55e
+        'red': '239, 68, 68',     // #ef4444
+        'purple': '168, 85, 247', // #a855f7
+        'orange': '249, 115, 22', // #f97316
+        'yellow': '234, 179, 8'   // #eab308
+    };
+
+    const rgb = baseColors[scheme];
+    if (!rgb) return '';
+
+    // Interpolation de l'opacité (Alpha)
+    // Item 1 (index 0) = 0.1
+    // Item N (index length-1) = 0.9
+    let alpha = 0.9; 
+    
+    if (options.length > 1) {
+        const startAlpha = 0.1;
+        const endAlpha = 0.9; 
+        
+        const step = (endAlpha - startAlpha) / (options.length - 1);
+        alpha = startAlpha + (index * step);
+    }
+
+    alpha = Math.round(alpha * 100) / 100;
+    return `rgba(${rgb}, ${alpha})`;
 }
 
 function renderCell(container, col, value, r, c) {
@@ -208,13 +302,31 @@ function renderCell(container, col, value, r, c) {
                 if (opt === value) o.selected = true;
                 sel.appendChild(o);
             });
+            
+            // Gestion de la couleur et du contraste
             const updateBg = (v) => {
-                const bg = (col.params?.colors || {})[v];
-                sel.style.backgroundColor = bg || '';
-                sel.style.color = bg ? '#1e293b' : '';
+                const colorScheme = col.params?.colorScheme;
+                
+                if (colorScheme && v) {
+                    const bg = getComboColor(colorScheme, v, options);
+                    sel.style.backgroundColor = bg;
+                    
+                    // Calcul du contraste (noir ou blanc)
+                    // Si on n'a pas de fond (cas d'erreur), on laisse par défaut
+                    if(bg) {
+                        sel.style.color = getContrastColor(bg);
+                    } else {
+                        sel.style.color = '';
+                    }
+                } else {
+                    sel.style.backgroundColor = '';
+                    sel.style.color = '';
+                }
             };
+
             sel.onchange = (e) => { updateValue(r, c, e.target.value); updateBg(e.target.value); };
-            updateBg(value); container.appendChild(sel); break;
+            updateBg(value); 
+            container.appendChild(sel); break;
         case 'qcm':
             const qcmDiv = document.createElement('div'); qcmDiv.className = 'qcm-container';
             const items = Array.isArray(value) ? value : (col.params?.options||[]).map(o=>({label:o,checked:false}));
