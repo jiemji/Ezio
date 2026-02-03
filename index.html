@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EZIO</title>
+    <title>EZIO - Audit & Pilotage IA</title>
     
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -16,34 +18,63 @@
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
             <div class="status-bar" id="statusIndicator">Prêt</div>
         </div>
+        
         <div class="controls">
-            <button id="btnShowApp" class="btn-secondary hidden">← Retour Audit</button>
-            <button id="btnShowCreator" class="btn-primary">Créer un JSON</button>
+            <button id="btnShowCreator" class="btn-secondary">Créer JSON</button>
+            <button id="btnShowApp" class="btn-secondary hidden">Audit</button>
+            <button id="btnShowDashboard" class="btn-secondary hidden">📊 Tableau de Bord</button>
 
             <div id="auditControls" class="controls-group">
+                <div class="separator"></div>
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
                 <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
-                <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinitialiser</button>
-                <label for="jsonInput" class="btn-secondary">Charger JSON</label>
+                <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
+                
+                <label for="jsonInput" class="btn-secondary">Charger</label>
                 <input type="file" id="jsonInput" accept=".json" hidden>
-                <button id="exportBtn" class="btn-primary">Exporter JSON</button>
+                
+                <button id="exportBtn" class="btn-primary">Exporter</button>
             </div>
         </div>
     </header>
 
     <main id="app-container">
+        
         <div id="audit-view" class="view-section">
             <aside id="sidebar" class="sidebar hidden">
                 <h3 class="sidebar-title">Navigation</h3>
-                <ul id="chapterList" class="chapter-list"></ul>
+                <ul id="chapterList" class="chapter-list">
+                    </ul>
             </aside>
 
             <div class="content-area">
                 <div id="tableContainer" class="table-responsive">
                     <div class="empty-state">
-                        <p>Aucune donnée. Chargez un fichier JSON pour commencer.</p>
+                        <p>Aucune donnée chargée.</p>
+                        <p>Importez un fichier JSON existant ou créez-en un nouveau.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="dashboard-view" class="view-section hidden">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <h2>Tableau de Bord</h2>
+                    <div class="dashboard-actions">
+                        <select id="kpiColSelect" class="config-input" style="width: 250px;">
+                            <option value="">-- Chargement des colonnes... --</option>
+                        </select>
+                        <select id="kpiTypeSelect" class="config-input" style="width: 150px;">
+                            <option value="pie">Camembert</option>
+                            <option value="bar">Barres</option>
+                            <option value="doughnut">Anneau</option>
+                        </select>
+                        <button id="btnAddWidget" class="btn-primary">+ Ajouter le widget</button>
+                    </div>
+                </div>
+                <div id="dashboardGrid" class="dashboard-grid">
+                    </div>
             </div>
         </div>
 
@@ -51,9 +82,9 @@
             <div class="creator-container">
                 <div class="creator-header">
                     <h2>Générateur de Formulaire</h2>
-                    <p>Importez un fichier CSV (séparateur virgule ou point-virgule) pour configurer les colonnes.</p>
+                    <p>Transformez votre fichier CSV en application d'audit intelligente.</p>
                     <div class="file-upload-box">
-                        <label for="csvInput" class="btn-primary">📂 Importer CSV</label>
+                        <label for="csvInput" class="btn-primary">📂 Importer un fichier CSV</label>
                         <input type="file" id="csvInput" accept=".csv" hidden>
                         <span id="csvFileName" class="file-name">Aucun fichier choisi</span>
                     </div>
@@ -66,14 +97,21 @@
                     </div>
                     
                     <div class="creator-actions">
-                        <button id="generateJsonBtn" class="btn-primary large">💾 Générer le JSON</button>
+                        <button id="generateJsonBtn" class="btn-primary large">💾 Générer et Charger le JSON</button>
                     </div>
                 </div>
             </div>
         </div>
+
     </main>
 
     <script src="api_ia.js"></script>
-    <script src="script.js"></script>
+    
+    <script src="app_shared.js"></script>
+    
+    <script src="app_creator.js"></script>
+    <script src="app_dashboard.js"></script>
+    <script src="app_audit.js"></script>
+
 </body>
 </html>
