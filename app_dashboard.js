@@ -38,68 +38,65 @@ function updateKpiSelectors() {
     
     currentForm.columns.forEach(col => {
         if(['combo', 'qcm'].includes(col.type)) {
-            const opt = new Option(col.label, col.id);
+            const opt = document.createElement('option');
+            opt.value = col.id;
+            opt.innerText = col.label;
             kpiColSelect.appendChild(opt);
         }
     });
 }
 
-// Fonction appelée globalement par app_shared.js
-window.renderDashboard = function() {
+function renderDashboard() {
     if(!dashboardGrid) return;
-    dashboardGrid.innerHTML = "";
     updateKpiSelectors();
     
+    // Nettoyer les anciens graphiques
     chartsInstances.forEach(c => c.destroy());
     chartsInstances = [];
+    dashboardGrid.innerHTML = "";
 
-    if(!currentForm.statics || currentForm.statics.length === 0) {
-        dashboardGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">
-            <p>Le tableau de bord est vide.</p>
-            <p>Ajoutez des widgets via le menu ci-dessus.</p>
-        </div>`;
+    if (!currentForm.statics || currentForm.statics.length === 0) {
+        dashboardGrid.innerHTML = `<div class="empty-state">Aucun indicateur configuré. Ajoutez-en un via le menu ci-dessus.</div>`;
         return;
     }
 
-    currentForm.statics.forEach((widgetConfig, index) => {
-        createWidget(widgetConfig, index);
+    currentForm.statics.forEach(widgetConfig => {
+        createWidgetCard(widgetConfig);
     });
-};
+}
 
-function createWidget(config, index) {
+function createWidgetCard(config) {
     const card = document.createElement('div');
-    card.className = 'widget-card';
+    card.className = 'dashboard-card';
     
     const header = document.createElement('div');
-    header.className = 'widget-header';
-    header.innerHTML = `<span class="widget-title">${config.title}</span>`;
+    header.className = 'card-header';
+    header.innerHTML = `<h3>${config.title}</h3><button class="btn-delete-widget" title="Supprimer">×</button>`;
     
-    const btnDel = document.createElement('button');
-    btnDel.className = 'btn-remove-widget';
-    btnDel.innerHTML = '×';
-    btnDel.onclick = () => {
-        if(confirm("Supprimer ce graphique ?")) {
-            currentForm.statics.splice(index, 1);
+    header.querySelector('.btn-delete-widget').onclick = () => {
+        if(confirm("Supprimer ce widget ?")) {
+            currentForm.statics = currentForm.statics.filter(s => s.id !== config.id);
             saveState();
             renderDashboard();
         }
     };
-    header.appendChild(btnDel);
-    
-    const chartContainer = document.createElement('div');
-    chartContainer.className = 'chart-container';
-    const canvas = document.createElement('canvas');
-    chartContainer.appendChild(canvas);
 
+    const content = document.createElement('div');
+    content.className = 'card-content';
+    const canvas = document.createElement('canvas');
+    content.appendChild(canvas);
+    
     card.appendChild(header);
-    card.appendChild(chartContainer);
+    card.appendChild(content);
     dashboardGrid.appendChild(card);
 
     // Données
     const colIdx = currentForm.columns.findIndex(c => c.id === config.columnId);
     if(colIdx === -1) return;
 
+    const colDef = currentForm.columns[colIdx];
     const counts = {};
+
     currentForm.rows.forEach(row => {
         const val = row[colIdx];
         if (typeof val === 'string' && val.trim() !== "") {
@@ -114,10 +111,23 @@ function createWidget(config, index) {
 
     const labels = Object.keys(counts);
     const dataValues = Object.values(counts);
-    const colDef = currentForm.columns[colIdx];
-    let backgroundColors = (colDef.params && colDef.params.colors) 
-        ? labels.map(l => colDef.params.colors[l] || '#cbd5e1')
-        : ['#2563eb', '#ef4444', '#059669', '#d97706', '#8b5cf6', '#ec4899'];
+    
+    // -- CALCUL DES COULEURS DYNAMIQUE --
+    let backgroundColors;
+
+    // Si c'est une Combo avec un schéma de couleur défini
+    if (colDef.type === 'combo' && colDef.params && colDef.params.colorScheme) {
+        backgroundColors = labels.map(label => {
+            // On récupère la couleur calculée pour ce label spécifique
+            const color = getComboColor(colDef.params.colorScheme, label, colDef.params.options);
+            // Fallback gris si le label n'est pas trouvé dans les options (ex: ancienne donnée)
+            return color || '#94a3b8'; 
+        });
+    } else {
+        // Palette par défaut si pas de schéma
+        const defaultPalette = ['#2563eb', '#ef4444', '#059669', '#d97706', '#8b5cf6', '#ec4899'];
+        backgroundColors = labels.map((_, i) => defaultPalette[i % defaultPalette.length]);
+    }
 
     const ctx = canvas.getContext('2d');
     const newChart = new Chart(ctx, {
@@ -125,7 +135,7 @@ function createWidget(config, index) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Occurrences',
+                label: 'Nombre',
                 data: dataValues,
                 backgroundColor: backgroundColors,
                 borderWidth: 1
@@ -134,9 +144,55 @@ function createWidget(config, index) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+                legend: { position: 'bottom' }
+            }
         }
     });
-    
     chartsInstances.push(newChart);
+}
+
+// Fonction utilitaire Dupliquée de app_audit.js pour garantir l'autonomie du module Dashboard
+function getComboColor(scheme, value, options) {
+    if (!scheme || !value || !options || options.length === 0) return '';
+    
+    const index = options.indexOf(value);
+    if (index === -1) return '';
+
+    // -- LOGIQUE COULEURS FIXES --
+    const fixedSchemes = {
+        'alert': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
+        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
+    };
+
+    if (fixedSchemes[scheme]) {
+        const colors = fixedSchemes[scheme];
+        if (index >= colors.length) return colors[colors.length - 1];
+        return colors[index];
+    }
+
+    // -- LOGIQUE DEGRADEE --
+    const baseColors = {
+        'blue': '59, 130, 246',   
+        'green': '34, 197, 94',   
+        'red': '239, 68, 68',     
+        'purple': '168, 85, 247', 
+        'orange': '249, 115, 22', 
+        'yellow': '234, 179, 8'   
+    };
+
+    const rgb = baseColors[scheme];
+    if (!rgb) return '';
+
+    // Interpolation (0.1 -> 0.9)
+    let alpha = 0.9; 
+    if (options.length > 1) {
+        const startAlpha = 0.1;
+        const endAlpha = 0.9; 
+        const step = (endAlpha - startAlpha) / (options.length - 1);
+        alpha = startAlpha + (index * step);
+    }
+
+    alpha = Math.round(alpha * 100) / 100;
+    return `rgba(${rgb}, ${alpha})`;
 }
