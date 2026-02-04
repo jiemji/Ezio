@@ -39,20 +39,110 @@ body.dark-mode {
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
 
-/* Header */
-header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 10; height: 60px; flex-shrink: 0; }
-.header-content { display: flex; align-items: center; gap: 1rem; }
-h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
-.badge-ia { background: linear-gradient(135deg, #059669, #34d399); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; }
-.status-bar { font-size: 0.85rem; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 1rem; height: 24px; display: flex; align-items: center; }
+/* --- NOUVEAU HEADER --- */
+header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1rem; /* Padding horizontal seulement, vertical géré par height */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    z-index: 10;
+    height: 60px; /* Hauteur fixe demandée */
+    flex-shrink: 0;
+    gap: 1rem;
+}
 
-.controls { display: flex; gap: 0.5rem; align-items: center; }
-.controls-group { display: flex; gap: 0.5rem; align-items: center; }
-.separator { width: 1px; height: 24px; background: var(--border); margin: 0 8px; }
+.header-left, .header-center, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 100%;
+}
 
-/* Search Input */
-.search-input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-main); width: 200px; font-size: 0.9rem; transition: width 0.2s ease; }
-.search-input:focus { width: 250px; outline: 2px solid var(--primary); border-color: transparent; }
+.header-center {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.header-right {
+    justify-content: flex-end;
+}
+
+/* Titre : Augmentation police (+2 crans) */
+header h1 {
+    font-size: 1.6rem; /* Anciennement 1.25rem */
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    line-height: 1;
+}
+
+.badge-ia {
+    background: linear-gradient(135deg, #059669, #34d399);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 800;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.separator-vertical {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 5px;
+}
+
+/* --- UNIFORMISATION BOUTONS HEADER --- */
+/* Force tous les contrôles du header à avoir la même hauteur et alignement */
+header button, 
+header .btn-primary, 
+header .btn-secondary, 
+header .btn-danger, 
+header label.btn-secondary,
+header input[type="text"] {
+    height: 36px !important;       
+    font-size: 0.9rem !important;  
+    line-height: 1 !important;     
+    padding: 0 12px !important;    
+    margin: 0;
+    display: inline-flex;          
+    align-items: center;           
+    justify-content: center;       
+    box-sizing: border-box;        
+    vertical-align: middle;
+}
+
+/* Cas particulier : Champ recherche */
+header .search-input {
+    width: 300px;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-main);
+}
+header .search-input:focus {
+    width: 350px;
+    outline: 2px solid var(--primary);
+    border-color: transparent;
+}
+
+/* Cas particulier : Bouton Burger Carré */
+header #toggleSidebarBtn {
+    width: 36px !important;
+    padding: 0 !important;
+    font-size: 1.2rem !important;
+}
+
+/* --- LE RESTE DU CSS (Main Layout, Sidebar, Tables...) RESTE INCHANGÉ --- */
 
 /* Main Layout */
 main { display: flex; flex: 1; overflow: hidden; position: relative; width: 100%; }
