@@ -1,0 +1,71 @@
+/* --- DASHBOARD STYLES --- */
+
+.dashboard-container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+/* GRID SYSTEM */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* CARDS */
+.widget-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+.widget-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.widget-title { font-weight: 700; color: var(--text-main); font-size: 1rem; }
+
+.btn-remove-widget {
+    background: transparent; color: var(--text-muted); border: none;
+    cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 0 4px;
+}
+.btn-remove-widget:hover { color: var(--danger); }
+
+/* CHART CONTAINER */
+.chart-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+}

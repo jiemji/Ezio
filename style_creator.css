@@ -1,0 +1,68 @@
+/* --- CREATOR VIEW STYLES --- */
+
+.creator-container { width: 100%; display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-color); }
+
+.creator-header { padding: 2rem; background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.creator-header h2 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+.creator-header p { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+.file-upload-box { display: flex; align-items: center; gap: 1rem; }
+.file-name { font-style: italic; color: var(--text-muted); }
+
+/* Zone de configuration avec Scroll géré par table-responsive */
+.creator-config { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--bg-color); }
+
+.creator-actions { padding: 1rem; border-top: 1px solid var(--border); background: var(--card-bg); text-align: center; flex-shrink: 0; z-index: 10; }
+.large-btn { padding: 10px 24px; font-size: 1rem; }
+
+/* TABLEAU CREATEUR : OVERRIDES SPECIFIQUES */
+#configTable {
+    width: max-content; /* Force le tableau à s'étendre au-delà de l'écran */
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* En-têtes et Cellules larges et fixes */
+#configTable th, 
+#configTable td {
+    width: 350px;      
+    min-width: 350px; 
+    max-width: 350px;  
+    vertical-align: top; 
+    padding: 12px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--readonly);
+}
+
+#configTable th {
+    background: var(--readonly);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid var(--border);
+}
+
+/* Inputs Creator */
+.config-input,
+.config-textarea { 
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 8px; 
+    border: 1px solid var(--border); 
+    border-radius: 4px; 
+    font-size: 0.9rem; 
+    background: var(--bg-color); 
+    color: var(--text-main); 
+    font-family: inherit;
+}
+
+.config-textarea { min-height: 100px; resize: vertical; }
+
+.config-checkbox-group { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 4px; background: var(--bg-color); }
+.config-checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+
+.param-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block; margin-top: 12px; margin-bottom: 6px; }
