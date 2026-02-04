@@ -1,198 +1,311 @@
 /**
  * EZIO - MODULE DASHBOARD
- * Gère l'affichage des graphiques et widgets.
+ * Gère l'affichage des graphiques.
+ * Focus : Analyse des données Combo (Global/Croisé Horizontal) et QCM (Horizontal).
  */
 
 let chartsInstances = [];
 
-// DOM Elements spécifiques Dashboard
+// DOM Elements
 const btnAddWidget = document.getElementById('btnAddWidget');
 const kpiColSelect = document.getElementById('kpiColSelect');
-const kpiTypeSelect = document.getElementById('kpiTypeSelect');
+const kpiTypeSelect = document.getElementById('kpiTypeSelect'); 
 const dashboardGrid = document.getElementById('dashboardGrid');
 
-if(btnAddWidget) {
+// --- 1. INITIALISATION & LISTENERS ---
+
+if (btnAddWidget) {
     btnAddWidget.onclick = () => {
         const colId = kpiColSelect.value;
-        const type = kpiTypeSelect.value;
-        if(!colId) return alert("Veuillez choisir une colonne.");
-        
+        const vizType = kpiTypeSelect.value; 
+
+        if (!colId) return alert("Veuillez choisir une colonne.");
+        if (!vizType) return alert("Veuillez choisir un format de graphique.");
+
         const col = currentForm.columns.find(c => c.id === colId);
+        if (!col) return;
+
+        if (!currentForm.statics) currentForm.statics = [];
         
-        if(!currentForm.statics) currentForm.statics = [];
         currentForm.statics.push({
             id: `widget_${Date.now()}`,
             columnId: colId,
-            type: type,
-            title: col ? col.label : "Indicateur"
+            vizType: vizType,
+            title: `${col.label} - ${getVizLabel(vizType)}`
         });
-        
-        saveState(); // Utilise fonction globale
+
+        saveState();
         renderDashboard();
     };
 }
 
-function updateKpiSelectors() {
-    if(!kpiColSelect) return;
-    kpiColSelect.innerHTML = '<option value="">-- Choisir une colonne --</option>';
-    
-    currentForm.columns.forEach(col => {
-        if(['combo', 'qcm'].includes(col.type)) {
-            const opt = document.createElement('option');
-            opt.value = col.id;
-            opt.innerText = col.label;
-            kpiColSelect.appendChild(opt);
+// Adaptation dynamique du Type de Graphique selon la Colonne choisie
+if (kpiColSelect) {
+    kpiColSelect.onchange = () => {
+        const colId = kpiColSelect.value;
+        kpiTypeSelect.innerHTML = '<option value="">-- Format --</option>';
+        
+        if (!colId) return;
+
+        const col = currentForm.columns.find(c => c.id === colId);
+        if (!col) return;
+
+        if (col.type === 'combo') {
+            // Groupe 1 : Analyse Globale
+            const grpGlobal = document.createElement('optgroup');
+            grpGlobal.label = "Analyse Globale";
+            grpGlobal.appendChild(new Option("Anneau (Donut)", "global_doughnut"));
+            grpGlobal.appendChild(new Option("Camembert (Pie)", "global_pie"));
+            grpGlobal.appendChild(new Option("Histogramme (Vertical)", "global_bar"));
+            kpiTypeSelect.add(grpGlobal);
+
+            // Groupe 2 : Analyse par Chapitre
+            const grpCross = document.createElement('optgroup');
+            grpCross.label = "Par Chapitre";
+            grpCross.appendChild(new Option("Empilement Horizontal", "cross_stacked"));
+            kpiTypeSelect.add(grpCross);
+        } 
+        else if (col.type === 'qcm') {
+            // Groupe 3 : QCM
+            kpiTypeSelect.add(new Option("Histogramme Horizontal (Top)", "qcm_horizontal"));
         }
-    });
+    };
 }
 
-function renderDashboard() {
-    if(!dashboardGrid) return;
-    updateKpiSelectors();
+function getVizLabel(type) {
+    if (type.includes('doughnut')) return "Global (Anneau)";
+    if (type.includes('pie')) return "Global (Pie)";
+    if (type.includes('stacked')) return "Par Chapitre";
+    if (type.includes('horizontal')) return "Total (Horizontal)";
+    if (type.includes('bar')) return "Global (Barres)";
+    return "Analyse";
+}
+
+function updateKpiSelectors() {
+    if (!kpiColSelect) return;
+    const currentVal = kpiColSelect.value;
     
-    // Nettoyer les anciens graphiques
+    kpiColSelect.innerHTML = '<option value="">-- Choisir une colonne --</option>';
+
+    // Uniquement les colonnes de données analysables
+    if (currentForm && currentForm.columns) {
+        currentForm.columns.forEach(col => {
+            if (['combo', 'qcm'].includes(col.type)) {
+                const opt = document.createElement('option');
+                opt.value = col.id;
+                opt.innerText = `[${col.type.toUpperCase()}] ${col.label}`;
+                kpiColSelect.appendChild(opt);
+            }
+        });
+    }
+
+    if (currentVal) {
+        kpiColSelect.value = currentVal;
+    } else {
+        kpiTypeSelect.innerHTML = '<option value="">-- D\'abord choisir une colonne --</option>';
+    }
+}
+
+// --- 2. MOTEUR DE RENDU ---
+
+function renderDashboard() {
+    updateKpiSelectors(); 
+
+    if (!dashboardGrid) return;
+    dashboardGrid.innerHTML = "";
+    
+    // Nettoyage instances
     chartsInstances.forEach(c => c.destroy());
     chartsInstances = [];
-    dashboardGrid.innerHTML = "";
 
     if (!currentForm.statics || currentForm.statics.length === 0) {
-        dashboardGrid.innerHTML = `<div class="empty-state">Aucun indicateur configuré. Ajoutez-en un via le menu ci-dessus.</div>`;
+        dashboardGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); padding: 3rem; border: 2px dashed var(--border); border-radius: 8px;">
+            <h3>Tableau de bord vide</h3>
+            <p>Sélectionnez une colonne ci-dessus pour générer un graphique.</p>
+        </div>`;
         return;
     }
 
-    currentForm.statics.forEach(widgetConfig => {
-        createWidgetCard(widgetConfig);
+    currentForm.statics.forEach((widget, index) => {
+        renderWidget(widget, index);
     });
 }
 
-function createWidgetCard(config) {
+function renderWidget(widget, index) {
     const card = document.createElement('div');
-    card.className = 'dashboard-card';
-    
-    const header = document.createElement('div');
-    header.className = 'card-header';
-    header.innerHTML = `<h3>${config.title}</h3><button class="btn-delete-widget" title="Supprimer">×</button>`;
-    
-    header.querySelector('.btn-delete-widget').onclick = () => {
-        if(confirm("Supprimer ce widget ?")) {
-            currentForm.statics = currentForm.statics.filter(s => s.id !== config.id);
-            saveState();
-            renderDashboard();
-        }
-    };
+    card.className = 'widget-card';
 
-    const content = document.createElement('div');
-    content.className = 'card-content';
-    const canvas = document.createElement('canvas');
-    content.appendChild(canvas);
+    // AJOUT: Gestion de la largeur auto pour les graphs horizontaux
+    if (widget.vizType === 'cross_stacked' || widget.vizType === 'qcm_horizontal') {
+        card.classList.add('widget-wide');
+    }
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'widget-header';
+    header.innerHTML = `<h3>${widget.title}</h3>`;
     
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn-icon danger';
+    btnDel.innerHTML = '🗑️';
+    btnDel.onclick = () => {
+        currentForm.statics.splice(index, 1);
+        saveState();
+        renderDashboard();
+    };
+    header.appendChild(btnDel);
     card.appendChild(header);
-    card.appendChild(content);
+
+    // Canvas
+    const canvasContainer = document.createElement('div');
+    canvasContainer.style.flex = "1";
+    canvasContainer.style.position = "relative";
+    // Hauteur min adaptée pour les horizontaux
+    canvasContainer.style.minHeight = card.classList.contains('widget-wide') ? "350px" : "250px"; 
+    canvasContainer.style.padding = "10px";
+    
+    const canvas = document.createElement('canvas');
+    canvasContainer.appendChild(canvas);
+    card.appendChild(canvasContainer);
     dashboardGrid.appendChild(card);
 
-    // Données
-    const colIdx = currentForm.columns.findIndex(c => c.id === config.columnId);
-    if(colIdx === -1) return;
-
-    const colDef = currentForm.columns[colIdx];
-    const counts = {};
-
-    currentForm.rows.forEach(row => {
-        const val = row[colIdx];
-        if (typeof val === 'string' && val.trim() !== "") {
-            counts[val] = (counts[val] || 0) + 1;
-        }
-        else if (Array.isArray(val)) {
-            val.forEach(item => {
-                if(item.checked) counts[item.label] = (counts[item.label] || 0) + 1;
-            });
-        }
-    });
-
-    const labels = Object.keys(counts);
-    const dataValues = Object.values(counts);
-    
-    // -- CALCUL DES COULEURS DYNAMIQUE --
-    let backgroundColors;
-
-    // Si c'est une Combo avec un schéma de couleur défini
-    if (colDef.type === 'combo' && colDef.params && colDef.params.colorScheme) {
-        backgroundColors = labels.map(label => {
-            // On récupère la couleur calculée pour ce label spécifique
-            const color = getComboColor(colDef.params.colorScheme, label, colDef.params.options);
-            // Fallback gris si le label n'est pas trouvé dans les options (ex: ancienne donnée)
-            return color || '#94a3b8'; 
-        });
+    // Generation Config
+    const config = prepareChartConfig(widget);
+    if (config) {
+        chartsInstances.push(new Chart(canvas, config));
     } else {
-        // Palette par défaut si pas de schéma
-        const defaultPalette = ['#2563eb', '#ef4444', '#059669', '#d97706', '#8b5cf6', '#ec4899'];
-        backgroundColors = labels.map((_, i) => defaultPalette[i % defaultPalette.length]);
+        canvasContainer.innerHTML = "<div style='text-align:center; margin-top:50px; color:red'>Erreur: Colonne introuvable</div>";
     }
-
-    const ctx = canvas.getContext('2d');
-    const newChart = new Chart(ctx, {
-        type: config.type,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Nombre',
-                data: dataValues,
-                backgroundColor: backgroundColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
-    chartsInstances.push(newChart);
 }
 
-// Fonction utilitaire Dupliquée de app_audit.js pour garantir l'autonomie du module Dashboard
-function getComboColor(scheme, value, options) {
-    if (!scheme || !value || !options || options.length === 0) return '';
-    
-    const index = options.indexOf(value);
-    if (index === -1) return '';
+/**
+ * Prépare la configuration Chart.js
+ */
+function prepareChartConfig(widget) {
+    const col = currentForm.columns.find(c => c.id === widget.columnId);
+    if (!col) return null;
 
-    // -- LOGIQUE COULEURS FIXES --
-    const fixedSchemes = {
-        'alert': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
-        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
-    };
+    const colIndex = currentForm.columns.findIndex(c => c.id === widget.columnId);
+    const rows = currentForm.rows;
+    const options = col.params?.options || [];
+    const vizType = widget.vizType;
 
-    if (fixedSchemes[scheme]) {
-        const colors = fixedSchemes[scheme];
-        if (index >= colors.length) return colors[colors.length - 1];
-        return colors[index];
+    // --- 1. COMBO : CROISÉ PAR CHAPITRE (Stacked Bar HORIZONTAL) ---
+    if (vizType === 'cross_stacked') {
+        const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
+        if (chapIdx === -1) return null;
+
+        const chapters = [...new Set(rows.map(r => r[chapIdx] || "Sans chapitre"))];
+        
+        const datasets = options.map(opt => {
+            const data = chapters.map(chap => {
+                return rows.filter(r => (r[chapIdx] || "Sans chapitre") === chap && r[colIndex] === opt).length;
+            });
+            
+            return {
+                label: opt,
+                data: data,
+                backgroundColor: getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
+            };
+        });
+
+        return {
+            type: 'bar',
+            data: { labels: chapters, datasets: datasets },
+            options: {
+                indexAxis: 'y', // Horizontal
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, beginAtZero: true },
+                    y: { stacked: true }
+                },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        };
     }
 
-    // -- LOGIQUE DEGRADEE --
-    const baseColors = {
-        'blue': '59, 130, 246',   
-        'green': '34, 197, 94',   
-        'red': '239, 68, 68',     
-        'purple': '168, 85, 247', 
-        'orange': '249, 115, 22', 
-        'yellow': '234, 179, 8'   
-    };
+    // --- 2. COMBO : GLOBAL (Pie, Doughnut, Bar) ---
+    if (vizType.startsWith('global_')) {
+        const counts = {};
+        rows.forEach(r => {
+            const val = r[colIndex] || "Non défini";
+            counts[val] = (counts[val] || 0) + 1;
+        });
 
-    const rgb = baseColors[scheme];
-    if (!rgb) return '';
+        const labels = options.length > 0 
+            ? options.filter(o => counts[o]) 
+            : Object.keys(counts);
+        
+        Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
 
-    // Interpolation (0.1 -> 0.9)
-    let alpha = 0.9; 
-    if (options.length > 1) {
-        const startAlpha = 0.1;
-        const endAlpha = 0.9; 
-        const step = (endAlpha - startAlpha) / (options.length - 1);
-        alpha = startAlpha + (index * step);
+        const data = labels.map(l => counts[l]);
+        const colors = labels.map(l => getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
+        
+        const type = vizType.split('_')[1]; // pie, doughnut, bar
+
+        return {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Occurrences',
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: type === 'bar' ? 'none' : 'right' } }
+            }
+        };
     }
 
-    alpha = Math.round(alpha * 100) / 100;
-    return `rgba(${rgb}, ${alpha})`;
+    // --- 3. QCM : HORIZONTAL BAR (Item Axis Y) ---
+    if (vizType === 'qcm_horizontal') {
+        const counts = {};
+        options.forEach(o => counts[o] = 0);
+
+        rows.forEach(r => {
+            const val = r[colIndex];
+            if (Array.isArray(val)) {
+                val.forEach(item => {
+                    if (item.checked) counts[item.label] = (counts[item.label] || 0) + 1;
+                });
+            }
+        });
+
+        const labels = options;
+        const data = labels.map(l => counts[l]);
+        const color = '#3b82f6'; 
+
+        return {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sélections',
+                    data: data,
+                    backgroundColor: color,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Horizontal
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        };
+    }
+
+    return null;
+}
+
+function getColorByIndex(i) {
+    const palette = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
+    return palette[i % palette.length];
 }

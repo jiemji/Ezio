@@ -5,33 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZIO - Audit & Pilotage IA</title>
     
-    <link rel="stylesheet" href="style_shared.css">    <link rel="stylesheet" href="style_creator.css">   <link rel="stylesheet" href="style_audit.css">     <link rel="stylesheet" href="style_dashboard.css"> <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="style_shared.css">    
+    <link rel="stylesheet" href="style_creator.css">   
+    <link rel="stylesheet" href="style_audit.css">     
+    <link rel="stylesheet" href="style_dashboard.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
-        <div class="header-content">
+        <div class="header-left">
             <button id="toggleSidebarBtn" class="btn-icon" title="Masquer/Afficher le menu">☰</button>
+            
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
-            <div class="status-bar" id="statusIndicator">Prêt</div>
+            
+            <div class="separator-vertical"></div>
+
+            <button id="btnShowCreator" class="btn-secondary">Créer JSON</button>
+            
+            <label for="jsonInput" class="btn-secondary">Charger</label>
+            <input type="file" id="jsonInput" accept=".json" hidden>
+            
+            <button id="exportBtn" class="btn-primary">Exporter</button>
+            <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
         </div>
         
-        <div class="controls">
-            <button id="btnShowCreator" class="btn-secondary">Créer JSON</button>
-            <button id="btnShowApp" class="btn-secondary hidden">Audit</button>
-            <button id="btnShowDashboard" class="btn-secondary hidden">📊 Tableau de Bord</button>
+        <div class="header-center">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
+        </div>
 
-            <div id="auditControls" class="controls-group">
-                <div class="separator"></div>
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
-                <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
-                <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
-                
-                <label for="jsonInput" class="btn-secondary">Charger</label>
-                <input type="file" id="jsonInput" accept=".json" hidden>
-                
-                <button id="exportBtn" class="btn-primary">Exporter</button>
-            </div>
+        <div class="header-right">
+            <button id="btnShowApp" class="btn-secondary">Audit</button>
+            <button id="btnShowDashboard" class="btn-secondary">📊 Tableau de Bord</button>
+            
+            <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
         </div>
     </header>
 
@@ -103,9 +110,7 @@
     </main>
 
     <script src="api_ia.js"></script>
-    
     <script src="app_shared.js"></script>
-    
     <script src="app_creator.js"></script>
     <script src="app_dashboard.js"></script>
     <script src="app_audit.js"></script>
