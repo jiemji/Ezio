@@ -1,9 +1,12 @@
 /**
  * EZIO - MODULE AUDIT
- * Gère l'affichage du formulaire, la sidebar et les interactions utilisateur.
+ * Gère l'affichage du formulaire, la sidebar, les interactions utilisateur,
+ * le tri par colonne et le filtrage.
  */
 
 let activeFilters = { chapter: null, subChapter: null };
+let columnFilters = {}; // Stocke les filtres par colonne: { colIndex: "valeur" }
+let currentSort = { colIndex: -1, direction: 'asc' }; // { colIndex: 2, direction: 'asc' | 'desc' }
 let currentSearch = ""; 
 
 // DOM Elements spécifiques Audit
@@ -39,11 +42,15 @@ if (jsonInput) {
                     currentForm = data;
                     if(!currentForm.statics) currentForm.statics = [];
                     
+                    // Reset états
                     activeFilters = { chapter: null, subChapter: null };
+                    columnFilters = {};
+                    currentSort = { colIndex: -1, direction: 'asc' };
                     currentSearch = "";
                     searchInput.value = "";
+                    
                     saveState();
-                    switchView('app'); // Utilise la fonction de app_shared.js
+                    if(typeof switchView === 'function') switchView('app');
                     renderApp();
                 }
             } catch (err) { alert("Erreur JSON : " + err.message); }
@@ -55,6 +62,7 @@ if (jsonInput) {
 // -- LOGIQUE DE RENDU --
 
 function updateValue(r, c, val) { 
+    // r est l'index original (absolu) dans currentForm.rows
     currentForm.rows[r][c] = val; 
     saveState(); 
 }
@@ -101,7 +109,11 @@ function renderSidebar() {
     const allItem = document.createElement('li');
     allItem.className = `chapter-item ${(!activeFilters.chapter) ? 'active' : ''}`;
     allItem.innerHTML = `<span>Vue Globale</span> <span class="count-badge">${totalCount}</span>`;
-    allItem.onclick = () => { activeFilters = { chapter: null, subChapter: null }; renderApp(); };
+    allItem.onclick = () => { 
+        activeFilters = { chapter: null, subChapter: null }; 
+        columnFilters = {}; // Reset filtres colonnes si on change de vue (optionnel)
+        renderApp(); 
+    };
     chapterList.appendChild(allItem);
 
     // Arborescence
@@ -110,7 +122,10 @@ function renderSidebar() {
         const liChap = document.createElement('li');
         liChap.className = `chapter-item ${isChapActive && !activeFilters.subChapter ? 'active' : ''}`;
         liChap.innerHTML = `<span>${chapName}</span> <span class="count-badge">${data.count}</span>`;
-        liChap.onclick = (e) => { activeFilters = { chapter: chapName, subChapter: null }; renderApp(); };
+        liChap.onclick = (e) => { 
+            activeFilters = { chapter: chapName, subChapter: null }; 
+            renderApp(); 
+        };
 
         const subUl = document.createElement('ul');
         subUl.className = `sub-chapter-list ${isChapActive ? 'open' : ''}`;
@@ -121,7 +136,11 @@ function renderSidebar() {
                 const isSubActive = isChapActive && activeFilters.subChapter === subName;
                 liSub.className = `sub-chapter-item ${isSubActive ? 'active' : ''}`;
                 liSub.innerText = `${subName} (${count})`;
-                liSub.onclick = (e) => { e.stopPropagation(); activeFilters = { chapter: chapName, subChapter: subName }; renderApp(); };
+                liSub.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    activeFilters = { chapter: chapName, subChapter: subName }; 
+                    renderApp(); 
+                };
                 subUl.appendChild(liSub);
             });
         }
@@ -130,6 +149,27 @@ function renderSidebar() {
         if (data.subChapters.size > 0) container.appendChild(subUl);
         chapterList.appendChild(container);
     });
+}
+
+function handleSort(cIdx) {
+    if (currentSort.colIndex === cIdx) {
+        // Toggle direction: asc -> desc -> null (off)
+        if (currentSort.direction === 'asc') currentSort.direction = 'desc';
+        else if (currentSort.direction === 'desc') { currentSort.colIndex = -1; currentSort.direction = 'asc'; }
+    } else {
+        currentSort.colIndex = cIdx;
+        currentSort.direction = 'asc';
+    }
+    renderTable();
+}
+
+function handleColumnFilter(cIdx, value) {
+    if (value === "") {
+        delete columnFilters[cIdx];
+    } else {
+        columnFilters[cIdx] = value;
+    }
+    renderTable();
 }
 
 function renderTable() {
@@ -150,42 +190,127 @@ function renderTable() {
         return size === 'S' ? 'col-s' : (size === 'M' ? 'col-m' : 'col-l');
     };
 
-    currentForm.columns.forEach(col => {
+    // 1. HEADER & LOGIQUE DE TRI/FILTRE UI
+    currentForm.columns.forEach((col, cIdx) => {
         if (col.visible === false) return;
         const th = document.createElement('th');
-        th.innerText = col.label;
-        th.className = getColClass(col);
+        th.className = getColClass(col) + " sortable-header";
+        
+        // Container Header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = "th-header-content";
+        
+        // Label + Icone Tri
+        const labelSpan = document.createElement('span');
+        let sortIcon = "↕"; 
+        if (currentSort.colIndex === cIdx) {
+            sortIcon = currentSort.direction === 'asc' ? "▲" : "▼";
+            th.classList.add('sorted');
+        }
+        labelSpan.innerText = `${col.label} ${sortIcon}`;
+        labelSpan.style.cursor = "pointer";
+        labelSpan.onclick = () => handleSort(cIdx);
+        
+        headerDiv.appendChild(labelSpan);
+
+        // Ajout filtre pour Combo
+        if (col.type === 'combo') {
+            const selectFilter = document.createElement('select');
+            selectFilter.className = "th-filter-select";
+            selectFilter.onclick = (e) => e.stopPropagation(); // Empêcher le tri quand on clique le select
+            
+            // Option vide (Tout)
+            selectFilter.appendChild(new Option("Tout", ""));
+            
+            // Options du combo
+            const opts = col.params?.options || [];
+            opts.forEach(opt => {
+                const o = new Option(opt, opt);
+                if (columnFilters[cIdx] === opt) o.selected = true;
+                selectFilter.appendChild(o);
+            });
+
+            selectFilter.onchange = (e) => handleColumnFilter(cIdx, e.target.value);
+            headerDiv.appendChild(selectFilter);
+        }
+
+        th.appendChild(headerDiv);
         trHead.appendChild(th);
     });
     thead.appendChild(trHead);
     table.appendChild(thead);
 
-    const tbody = document.createElement('tbody');
+    // 2. PRÉPARATION DES DONNÉES (PIPELINE)
     const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
     const subChapIdx = currentForm.columns.findIndex(c => c.type === 'sous-chapitre');
-    let visibleCount = 0;
 
-    currentForm.rows.forEach((row, rIdx) => {
-        if (activeFilters.chapter && chapIdx !== -1 && row[chapIdx] !== activeFilters.chapter) return;
-        if (activeFilters.subChapter && subChapIdx !== -1 && row[subChapIdx] !== activeFilters.subChapter) return;
+    // Étape A: Mapping pour garder l'index original (CRITIQUE pour updateValue)
+    let rowsToProcess = currentForm.rows.map((row, index) => ({ data: row, originalIndex: index }));
 
-        if (currentSearch) {
-            const rowText = row.map(cell => {
+    // Étape B: Filtrage Structurel (Chapitre / Sous-Chapitre)
+    if (activeFilters.chapter && chapIdx !== -1) {
+        rowsToProcess = rowsToProcess.filter(item => item.data[chapIdx] === activeFilters.chapter);
+    }
+    if (activeFilters.subChapter && subChapIdx !== -1) {
+        rowsToProcess = rowsToProcess.filter(item => item.data[subChapIdx] === activeFilters.subChapter);
+    }
+
+    // Étape C: Filtrage par Colonne (Combo)
+    Object.keys(columnFilters).forEach(keyIdx => {
+        const filterVal = columnFilters[keyIdx];
+        const cIdx = parseInt(keyIdx);
+        rowsToProcess = rowsToProcess.filter(item => item.data[cIdx] === filterVal);
+    });
+
+    // Étape D: Recherche Globale
+    if (currentSearch) {
+        rowsToProcess = rowsToProcess.filter(item => {
+            const rowText = item.data.map(cell => {
                 if (cell === null || cell === undefined) return "";
                 if (typeof cell === 'object') return JSON.stringify(cell);
                 return String(cell);
             }).join(" ").toLowerCase();
-            if (!rowText.includes(currentSearch)) return;
-        }
+            return rowText.includes(currentSearch);
+        });
+    }
 
+    // Étape E: Tri
+    if (currentSort.colIndex !== -1) {
+        rowsToProcess.sort((a, b) => {
+            const valA = a.data[currentSort.colIndex];
+            const valB = b.data[currentSort.colIndex];
+            
+            // Gestion des nuls
+            if (valA == null && valB == null) return 0;
+            if (valA == null) return 1;
+            if (valB == null) return -1;
+
+            let comparison = 0;
+            // Détection numérique ou string
+            if (!isNaN(parseFloat(valA)) && isFinite(valA) && !isNaN(parseFloat(valB)) && isFinite(valB)) {
+                comparison = parseFloat(valA) - parseFloat(valB);
+            } else {
+                comparison = String(valA).localeCompare(String(valB));
+            }
+
+            return currentSort.direction === 'asc' ? comparison : -comparison;
+        });
+    }
+
+    // 3. RENDU DES LIGNES
+    const tbody = document.createElement('tbody');
+    let visibleCount = 0;
+
+    rowsToProcess.forEach((item) => {
         visibleCount++;
         const tr = document.createElement('tr');
-        row.forEach((cell, cIdx) => {
+        item.data.forEach((cell, cIdx) => {
             const col = currentForm.columns[cIdx];
             if (col.visible === false) return; 
             const td = document.createElement('td');
             td.className = getColClass(col);
-            renderCell(td, col, cell, rIdx, cIdx);
+            // On passe item.originalIndex (r) pour que l'édition cible la bonne ligne en mémoire
+            renderCell(td, col, cell, item.originalIndex, cIdx);
             tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -194,11 +319,13 @@ function renderTable() {
     table.appendChild(tbody);
     tableContainer.appendChild(table);
     
+    // 4. STATUS INDICATOR
     let status = [];
-    if (activeFilters.chapter) status.push(`Chapitre: ${activeFilters.chapter}`);
-    if (activeFilters.subChapter) status.push(`Sous-chapitre: ${activeFilters.subChapter}`);
+    if (activeFilters.chapter) status.push(`Chap: ${activeFilters.chapter}`);
+    if (activeFilters.subChapter) status.push(`Sous-Chap: ${activeFilters.subChapter}`);
+    if (Object.keys(columnFilters).length > 0) status.push(`Filtres actifs: ${Object.keys(columnFilters).length}`);
     if (status.length === 0) status.push("Vue Globale");
-    if (currentSearch) status.push(`Recherche: "${currentSearch}"`);
+    if (currentSearch) status.push(`Rech: "${currentSearch}"`);
     if (statusIndicator) statusIndicator.innerText = `${status.join(' | ')} (${visibleCount} lignes)`;
 }
 
@@ -207,15 +334,12 @@ function getContrastColor(color) {
     if(!color) return '';
     let r, g, b;
 
-    // Support Hex (#rrggbb)
     if (color.startsWith('#')) {
         const hex = color.replace('#', '');
         r = parseInt(hex.substr(0, 2), 16);
         g = parseInt(hex.substr(2, 2), 16);
         b = parseInt(hex.substr(4, 2), 16);
-    } 
-    // Support rgba(r, g, b, a) ou rgb(r, g, b)
-    else if (color.startsWith('rgb')) {
+    } else if (color.startsWith('rgb')) {
         const vals = color.match(/\d+/g);
         if(vals) {
             r = parseInt(vals[0]);
@@ -223,10 +347,9 @@ function getContrastColor(color) {
             b = parseInt(vals[2]);
         }
     } else {
-        return ''; // Couleur non reconnue, laisser le navigateur gérer
+        return '';
     }
 
-    // Calcul de la luminance relative (YIQ)
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff';
 }
@@ -237,10 +360,6 @@ function getComboColor(scheme, value, options) {
     const index = options.indexOf(value);
     if (index === -1) return '';
 
-    // -- LOGIQUE COULEURS FIXES (NOUVEAU) --
-    // Alerte: Vert, Jaune, Orange, Rouge, Violet, Noir
-    // Rainbow: Rouge, Orange, Jaune, Vert, Bleu, Indigo, Violet
-    
     const fixedSchemes = {
         'alert': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
         'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
@@ -248,36 +367,21 @@ function getComboColor(scheme, value, options) {
 
     if (fixedSchemes[scheme]) {
         const colors = fixedSchemes[scheme];
-        // Si l'index dépasse la liste, on prend le dernier
-        if (index >= colors.length) {
-            return colors[colors.length - 1];
-        }
+        if (index >= colors.length) return colors[colors.length - 1];
         return colors[index];
     }
-
-    // -- LOGIQUE DEGRADEE (ANCIEN) --
     
     const baseColors = {
-        'blue': '59, 130, 246',   // #3b82f6
-        'green': '34, 197, 94',   // #22c55e
-        'red': '239, 68, 68',     // #ef4444
-        'purple': '168, 85, 247', // #a855f7
-        'orange': '249, 115, 22', // #f97316
-        'yellow': '234, 179, 8'   // #eab308
+        'blue': '59, 130, 246', 'green': '34, 197, 94', 'red': '239, 68, 68',
+        'purple': '168, 85, 247', 'orange': '249, 115, 22', 'yellow': '234, 179, 8'
     };
 
     const rgb = baseColors[scheme];
     if (!rgb) return '';
 
-    // Interpolation de l'opacité (Alpha)
-    // Item 1 (index 0) = 0.1
-    // Item N (index length-1) = 0.9
     let alpha = 0.9; 
-    
     if (options.length > 1) {
-        const startAlpha = 0.1;
-        const endAlpha = 0.9; 
-        
+        const startAlpha = 0.1; const endAlpha = 0.9; 
         const step = (endAlpha - startAlpha) / (options.length - 1);
         alpha = startAlpha + (index * step);
     }
@@ -303,24 +407,15 @@ function renderCell(container, col, value, r, c) {
                 sel.appendChild(o);
             });
             
-            // Gestion de la couleur et du contraste
             const updateBg = (v) => {
                 const colorScheme = col.params?.colorScheme;
-                
                 if (colorScheme && v) {
                     const bg = getComboColor(colorScheme, v, options);
                     sel.style.backgroundColor = bg;
-                    
-                    // Calcul du contraste (noir ou blanc)
-                    // Si on n'a pas de fond (cas d'erreur), on laisse par défaut
-                    if(bg) {
-                        sel.style.color = getContrastColor(bg);
-                    } else {
-                        sel.style.color = '';
-                    }
+                    if(bg) sel.style.color = getContrastColor(bg);
+                    else sel.style.color = '';
                 } else {
-                    sel.style.backgroundColor = '';
-                    sel.style.color = '';
+                    sel.style.backgroundColor = ''; sel.style.color = '';
                 }
             };
 

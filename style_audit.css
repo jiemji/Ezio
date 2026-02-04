@@ -17,6 +17,43 @@
 .col-qcm { width: 250px; min-width: 250px; }
 .col-ia { width: 500px; min-width: 500px; } 
 
+/* SORTING & FILTERING HEADERS */
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    vertical-align: top;
+    padding-bottom: 8px; /* Espace pour le select */
+}
+
+.sortable-header:hover {
+    background-color: var(--card-bg);
+}
+
+.th-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.th-filter-select {
+    width: 100%;
+    max-width: 95%;
+    font-size: 0.75rem;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin-top: 2px;
+    font-weight: normal;
+}
+
+.sortable-header.sorted {
+    color: var(--primary);
+}
+
 /* Cell Components */
 .col-reponse textarea { width: 100%; min-height: 60px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-main); resize: vertical; font-family: inherit; font-size: 0.9rem; }
 .col-reponse textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
