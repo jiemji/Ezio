@@ -139,41 +139,38 @@ function renderParamsCell(colIdx) {
     }
     
     // Combo / QCM (Restauration de la liste complète des couleurs)
-    if (['combo', 'qcm'].includes(cfg.type)) {
+    if (['combo'].includes(cfg.type)) {
         cell.appendChild(mkLabel("Options (une/ligne)"));
         const txt = document.createElement('textarea');
         txt.className = 'config-textarea';
         txt.value = Array.isArray(cfg.params.options) ? cfg.params.options.join('\n') : "";
         txt.onchange = (e) => { cfg.params.options = e.target.value.split('\n').map(x => x.trim()).filter(x => x); };
         cell.appendChild(txt);
+        cell.appendChild(mkLabel("Schéma de Couleurs"));
+        const cSel = document.createElement('select');
+        cSel.className = 'config-input';
         
-        if (cfg.type === 'combo') {
-            cell.appendChild(mkLabel("Schéma de Couleurs"));
-            const cSel = document.createElement('select');
-            cSel.className = 'config-input';
-            
-            const schemes = [
-                {k:'', v:'Aucun'},
-                {k:'alert3', v:'Alerte (3 coul)'}, 
-                {k:'alert6', v:'Alerte (6 coul)'},  
-                {k:'rainbow', v:'Arc-en-Ciel (7 coul.)'}, 
-                {k:'blue', v:'Bleu (Dégradé)'},
-                {k:'green', v:'Vert (Dégradé)'},
-                {k:'red', v:'Rouge (Dégradé)'},
-                {k:'purple', v:'Violet (Dégradé)'},
-                {k:'orange', v:'Orange (Dégradé)'},
-                {k:'yellow', v:'Jaune (Dégradé)'}
-            ];
+        const schemes = [
+            {k:'', v:'Aucun'},
+            {k:'alert3', v:'Alerte (3 coul)'}, 
+            {k:'alert6', v:'Alerte (6 coul)'},  
+            {k:'rainbow', v:'Arc-en-Ciel (7 coul.)'}, 
+            {k:'blue', v:'Bleu (Dégradé)'},
+            {k:'green', v:'Vert (Dégradé)'},
+            {k:'red', v:'Rouge (Dégradé)'},
+            {k:'purple', v:'Violet (Dégradé)'},
+            {k:'orange', v:'Orange (Dégradé)'},
+            {k:'yellow', v:'Jaune (Dégradé)'}
+        ];
 
-            schemes.forEach(sc => {
-                const o = document.createElement('option');
-                o.value = sc.k; o.innerText = sc.v;
-                if (cfg.params.colorScheme === sc.k) o.selected = true;
-                cSel.appendChild(o);
-            });
-            cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
-            cell.appendChild(cSel);
-        }
+        schemes.forEach(sc => {
+            const o = document.createElement('option');
+            o.value = sc.k; o.innerText = sc.v;
+            if (cfg.params.colorScheme === sc.k) o.selected = true;
+            cSel.appendChild(o);
+        });
+        cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
+        cell.appendChild(cSel);
     }
     
     // IA
@@ -185,6 +182,16 @@ function renderParamsCell(colIdx) {
         pInp.onchange = (e) => cfg.params.requete = e.target.value;
         cell.appendChild(pInp);
     }
+
+    // QCM (Information seulement, extraction automatique par app_audit)
+    if (cfg.type === 'qcm') {
+        const info = document.createElement('div');
+        info.className = 'param-info';
+        info.style.fontSize = '0.8em';
+        info.style.color = 'var(--primary)';
+        info.innerText = "Mode automatique : les options seront extraites des données de la colonne.";
+        cell.appendChild(info);
+    }
 }
 
 if(generateJsonBtn) {
@@ -195,7 +202,21 @@ if(generateJsonBtn) {
             return colObj;
         });
 
-        const finalRows = creatorData.rows;
+// Transformation des données : Conversion des QCM (String -> Array of Objects)
+        const finalRows = creatorData.rows.map(row => {
+            return row.map((val, idx) => {
+                const cfg = creatorData.configs[idx];
+                // Si la colonne est de type QCM et que la valeur est du texte
+                if (cfg.type === 'qcm' && typeof val === 'string') {
+                    return val.split('\n')
+                        .map(item => item.trim())
+                        .filter(item => item !== "")
+                        .map(label => ({ label: label, checked: false }));
+                }
+                return val; // Sinon on garde la valeur originale
+            });
+        });
+
         const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
         
         downloadJSON(finalJson, 'audit_config.json');

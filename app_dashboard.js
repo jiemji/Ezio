@@ -1,7 +1,7 @@
 /**
  * EZIO - MODULE DASHBOARD
  * Gère l'affichage des graphiques.
- * Focus : Analyse des données Combo (Global/Croisé Horizontal) et QCM (Horizontal).
+ * Focus : Analyse des données Combo (Global/Croisé Horizontal)
  */
 
 let chartsInstances = [];
@@ -65,10 +65,6 @@ if (kpiColSelect) {
             grpCross.appendChild(new Option("Empilement Horizontal", "cross_stacked"));
             kpiTypeSelect.add(grpCross);
         } 
-        else if (col.type === 'qcm') {
-            // Groupe 3 : QCM
-            kpiTypeSelect.add(new Option("Histogramme Horizontal (Top)", "qcm_horizontal"));
-        }
     };
 }
 
@@ -90,7 +86,7 @@ function updateKpiSelectors() {
     // Uniquement les colonnes de données analysables
     if (currentForm && currentForm.columns) {
         currentForm.columns.forEach(col => {
-            if (['combo', 'qcm'].includes(col.type)) {
+            if (['combo'].includes(col.type)) {
                 const opt = document.createElement('option');
                 opt.value = col.id;
                 opt.innerText = `[${col.type.toUpperCase()}] ${col.label}`;
@@ -136,7 +132,7 @@ function renderWidget(widget, index) {
     card.className = 'widget-card';
 
     // AJOUT: Gestion de la largeur auto pour les graphs horizontaux
-    if (widget.vizType === 'cross_stacked' || widget.vizType === 'qcm_horizontal') {
+    if (widget.vizType === 'cross_stacked') {
         card.classList.add('widget-wide');
     }
 
@@ -262,46 +258,6 @@ function prepareChartConfig(widget) {
             }
         };
     }
-
-    // --- 3. QCM : HORIZONTAL BAR (Item Axis Y) ---
-    if (vizType === 'qcm_horizontal') {
-        const counts = {};
-        options.forEach(o => counts[o] = 0);
-
-        rows.forEach(r => {
-            const val = r[colIndex];
-            if (Array.isArray(val)) {
-                val.forEach(item => {
-                    if (item.checked) counts[item.label] = (counts[item.label] || 0) + 1;
-                });
-            }
-        });
-
-        const labels = options;
-        const data = labels.map(l => counts[l]);
-        const color = '#3b82f6'; 
-
-        return {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Sélections',
-                    data: data,
-                    backgroundColor: color,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y', // Horizontal
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { x: { beginAtZero: true } },
-                plugins: { legend: { display: false } }
-            }
-        };
-    }
-
     return null;
 }
 
