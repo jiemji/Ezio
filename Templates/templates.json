@@ -1,25 +1,10 @@
 [
     {
-        "name": "Audit ISO 27002",
+        "name": "Audit ISO 42002 - SMIA",
+        "filename": "ISO42001.json"
+    },
+        {
+        "name": "Audit ISO 27001 - SMSI",
         "filename": "ISO27002.json"
-    },
-    {
-        "name": "Audit GHI",
-        "filename": "GHI.json"
-    },
-    {
-        "name": "Audit ISO 27002",
-        "filename": "ISO27002.json"
-    },
-    {
-        "name": "Audit GHI",
-        "filename": "GHI.json"
-    },    {
-        "name": "Audit ISO 27002",
-        "filename": "ISO27002.json"
-    },
-    {
-        "name": "Audit GHI",
-        "filename": "GHI.json"
     }
 ]
