@@ -154,8 +154,9 @@ function renderParamsCell(colIdx) {
             
             const schemes = [
                 {k:'', v:'Aucun'},
-                {k:'alert', v:'Alerte (Fixe)'},        
-                {k:'rainbow', v:'Arc-en-Ciel (Fixe)'}, 
+                {k:'alert3', v:'Alerte (3 coul)'}, 
+                {k:'alert6', v:'Alerte (6 coul)'},  
+                {k:'rainbow', v:'Arc-en-Ciel (7 coul.)'}, 
                 {k:'blue', v:'Bleu (Dégradé)'},
                 {k:'green', v:'Vert (Dégradé)'},
                 {k:'red', v:'Rouge (Dégradé)'},
