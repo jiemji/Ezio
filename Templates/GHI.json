@@ -1,0 +1,129 @@
+{
+  "columns": [
+    {
+      "id": "chapitre",
+      "label": "Chapitre",
+      "type": "question",
+      "visible": true
+    },
+    {
+      "id": "question",
+      "label": "Question",
+      "type": "question",
+      "visible": true
+    },
+    {
+      "id": "qcm",
+      "label": "QCM",
+      "type": "qcm",
+      "visible": true
+    },
+    {
+      "id": "combo",
+      "label": "Combo",
+      "type": "combo",
+      "visible": true,
+      "params": {
+        "options": [
+          "Conforme",
+          "peu conforme",
+          "pas conforme"
+        ],
+        "colorScheme": "alert3"
+      }
+    }
+  ],
+  "rows": [
+    [
+      "Chapitre 1",
+      "Quel jour est-il ?",
+      [
+        {
+          "label": "Lundi",
+          "checked": false
+        },
+        {
+          "label": "Mercredi",
+          "checked": false
+        },
+        {
+          "label": "Vendredi",
+          "checked": false
+        },
+        {
+          "label": "Dimanche",
+          "checked": false
+        }
+      ],
+      ""
+    ],
+    [
+      "Chapitre 2",
+      "Quel jour est-il ?",
+      [
+        {
+          "label": "Mardi",
+          "checked": false
+        },
+        {
+          "label": "Jeudi",
+          "checked": false
+        },
+        {
+          "label": "Samedi",
+          "checked": false
+        }
+      ],
+      ""
+    ],
+    [
+      "Chapitre 3",
+      "Quel mois est-il ?",
+      [
+        {
+          "label": "Janvier",
+          "checked": false
+        },
+        {
+          "label": "Février",
+          "checked": false
+        },
+        {
+          "label": "Mars",
+          "checked": false
+        },
+        {
+          "label": "Avril",
+          "checked": false
+        }
+      ],
+      ""
+    ]
+  ],
+  "statics": [
+    {
+      "id": "widget_1770326498605",
+      "columnId": "combo",
+      "vizType": "global_pie",
+      "title": "Combo - Global (Pie)"
+    },
+    {
+      "id": "widget_1770326511667",
+      "columnId": "combo",
+      "vizType": "global_doughnut",
+      "title": "Combo - Global (Anneau)"
+    },
+    {
+      "id": "widget_1770326514577",
+      "columnId": "combo",
+      "vizType": "global_pie",
+      "title": "Combo - Global (Pie)"
+    },
+    {
+      "id": "widget_1770326516904",
+      "columnId": "combo",
+      "vizType": "global_bar",
+      "title": "Combo - Global (Barres)"
+    }
+  ]
+}

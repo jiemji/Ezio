@@ -26,9 +26,8 @@
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
         </div>
         <div class="header-right">
-            <label for="jsonInput" class="btn-secondary">Charger</label>
-            <input type="file" id="jsonInput" accept=".json" hidden>
-            <button id="exportBtn" class="btn-primary">Exporter</button>
+            <button id="loadBtn" class="btn-secondary">Charger</button>
+            <button id="exportBtn" class="btn-primary">Sauver</button>
             <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
             <div class="separator-vertical"></div>
             <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
@@ -104,6 +103,26 @@
             </div>
         </div>
     </div>
+
+<div id="modalLoad" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Charger un Audit</h3>
+        <div class="load-options">
+            <div class="load-section">
+                <h4>Modèles (Templates)</h4><br>
+                <ul id="templateList" class="template-list">
+                    <li>Chargement des modèles...</li>
+                </ul>
+            </div>
+            <div class="load-section divider">
+                <h4>Fichier Local</h4><br>
+                <label for="jsonInput" class="btn btn-secondary">Parcourir mon poste</label>
+                <input type="file" id="jsonInput" accept=".json" hidden>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="api_ia.js"></script>
     <script src="app_shared.js"></script>

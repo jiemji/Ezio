@@ -9,7 +9,7 @@ let columnFilters = {}; // Stocke les filtres par colonne: { colIndex: "valeur" 
 let currentSort = { colIndex: -1, direction: 'asc' }; // { colIndex: 2, direction: 'asc' | 'desc' }
 let currentSearch = ""; 
 
-// DOM Elements spécifiques Audit
+// --- 1. DÉCLARATION DES ÉLÉMENTS DOM ---
 const tableContainer = document.getElementById('tableContainer');
 const statusIndicator = document.getElementById('statusIndicator');
 const sidebar = document.getElementById('sidebar');
@@ -18,6 +18,101 @@ const searchInput = document.getElementById('searchInput');
 const jsonInput = document.getElementById('jsonInput');
 const exportBtn = document.getElementById('exportBtn');
 
+// Nouveaux éléments pour la modale (Assurez-vous qu'ils sont dans index.html)
+const modalLoad = document.getElementById('modalLoad');
+const btnOpenLoad = document.getElementById('loadBtn'); 
+const templateList = document.getElementById('templateList');
+const closeModal = document.querySelector('.close-modal');
+
+// 1. Ouvrir la modale
+if (btnOpenLoad) {
+    btnOpenLoad.onclick = async () => {
+        if(modalLoad) modalLoad.style.display = "block";
+        if(templateList) {
+            templateList.innerHTML = "<li>Recherche des modèles...</li>";
+            try {
+                // Charge la liste depuis le serveur
+                const response = await fetch('templates/templates.json');
+                if (!response.ok) throw new Error("Fichier templates.json introuvable");
+                const templates = await response.json();
+                
+                templateList.innerHTML = templates.map(t => 
+                    `<li class="template-item" onclick="loadRemoteTemplate('${t.filename}')">
+                        ${t.name}
+                    </li>`
+                ).join('');
+            } catch (err) {
+                templateList.innerHTML = "<li style='color:red'>Aucun modèle disponible (dossier 'templates' manquant ?)</li>";
+            }
+        }
+    };
+}
+
+// 2. Charger un Template distant (Attaché à window pour le HTML dynamique)
+window.loadRemoteTemplate = async (filename) => {
+    try {
+        const response = await fetch(`templates/${filename}`);
+        if(!response.ok) throw new Error("Fichier introuvable");
+        const data = await response.json();
+        applyLoadedData(data, `Modèle chargé : ${filename}`);
+    } catch (err) {
+        alert("Erreur : Impossible de charger ce modèle.");
+    }
+};
+
+// 3. Charger un fichier Local
+if (jsonInput) {
+    jsonInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const data = JSON.parse(evt.target.result);
+                applyLoadedData(data, "Fichier local chargé avec succès");
+            } catch (err) {
+                alert("Erreur : Fichier JSON invalide.");
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // Reset pour permettre de recharger le même fichier
+    };
+}
+
+// 4. Fonction unifiée pour appliquer les données (Factorisation)
+function applyLoadedData(data, message) {
+    if (!data.columns || !data.rows) {
+        alert("Format de fichier invalide (Colonnes ou lignes manquantes).");
+        return;
+    }
+
+    currentForm = data;
+    if(!currentForm.statics) currentForm.statics = [];
+
+    // Reset des filtres
+    activeFilters = { chapter: null, subChapter: null };
+    columnFilters = {};
+    currentSort = { colIndex: -1, direction: 'asc' };
+    currentSearch = "";
+    if(searchInput) searchInput.value = "";
+
+    // Sauvegarde et Rendu
+    saveState();
+    if(typeof switchView === 'function') switchView('app');
+    
+    // C'EST ICI LA CLÉ : On appelle renderApp() qui existe dans votre fichier
+    renderApp(); 
+
+    // UI
+    if (modalLoad) modalLoad.style.display = "none";
+    if (statusIndicator) statusIndicator.textContent = message;
+}
+
+// Fermeture de la modale
+if (closeModal) closeModal.onclick = () => modalLoad.style.display = "none";
+window.onclick = (e) => { if (e.target == modalLoad) modalLoad.style.display = "none"; };
+
+//***************** */
 // Listeners spécifiques
 if (searchInput) {
     searchInput.oninput = (e) => {
@@ -30,35 +125,9 @@ if (exportBtn) {
     exportBtn.onclick = () => downloadJSON(currentForm, `export_${new Date().getTime()}.json`);
 }
 
-if (jsonInput) {
-    jsonInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
-                if (data.columns && data.rows) {
-                    currentForm = data;
-                    if(!currentForm.statics) currentForm.statics = [];
-                    
-                    // Reset états
-                    activeFilters = { chapter: null, subChapter: null };
-                    columnFilters = {};
-                    currentSort = { colIndex: -1, direction: 'asc' };
-                    currentSearch = "";
-                    searchInput.value = "";
-                    
-                    saveState();
-                    if(typeof switchView === 'function') switchView('app');
-                    renderApp();
-                }
-            } catch (err) { alert("Erreur JSON : " + err.message); }
-        };
-        reader.readAsText(file);
-    };
-}
 
+
+// Fin Modale
 // -- LOGIQUE DE RENDU --
 
 function updateValue(r, c, val) { 
