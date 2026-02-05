@@ -1,11 +1,10 @@
 /**
  * EZIO - MODULE CREATEUR
- * Gère l'import CSV et la configuration de la structure du JSON.
+ * Gère l'import JSON et la configuration complète (IA, Combo, QCM, Couleurs).
  */
 
 let creatorData = { headers: [], rows: [], configs: [] };
 
-// DOM Elements spécifiques Creator
 const csvInput = document.getElementById('csvInput');
 const csvFileName = document.getElementById('csvFileName');
 const creatorConfigDiv = document.getElementById('creatorConfig');
@@ -19,29 +18,33 @@ if(csvInput) {
         csvFileName.textContent = file.name;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            parseCSV(evt.target.result);
-            renderCreatorTable();
+            try {
+                const jsonData = JSON.parse(evt.target.result);
+                parseImportJSON(jsonData);
+                renderCreatorTable();
+            } catch (err) {
+                alert("Erreur de lecture du JSON : " + err.message);
+                console.error(err);
+            }
         };
-        reader.readAsText(file);
+        // Lecture forcée en UTF-8 pour respecter les accents
+        reader.readAsText(file, 'UTF-8');
     };
 }
 
-function parseCSV(text) {
-    const lines = text.trim().split(/\r?\n/);
-    if (lines.length < 1) return;
-    const separator = lines[0].includes(';') ? ';' : ',';
-    const rawRows = lines.map(line => line.split(separator).map(c => c.trim()));
-    
-    creatorData.headers = rawRows[0];
-    creatorData.rows = rawRows.slice(1);
-    
+function parseImportJSON(data) {
+    if (!Array.isArray(data) || data.length === 0) {
+        alert("Le fichier doit être un tableau d'objets JSON.");
+        return;
+    }
+    creatorData.headers = Object.keys(data[0]);
+    creatorData.rows = data.map(obj => creatorData.headers.map(h => obj[h] || ""));
     creatorData.configs = creatorData.headers.map(h => ({
         label: h,
         visible: true,
         type: 'question',
         params: {} 
     }));
-    
     if(creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
 }
 
@@ -88,7 +91,6 @@ function renderCreatorTable() {
             if (t === cfg.type) opt.selected = true;
             sel.appendChild(opt);
         });
-        
         sel.onchange = (e) => { 
             cfg.type = e.target.value; 
             renderParamsCell(idx); 
@@ -121,20 +123,14 @@ function renderParamsCell(colIdx) {
     if (!cfg.params) cfg.params = {};
     const mkLabel = (txt) => { const l = document.createElement('span'); l.className = 'param-label'; l.innerText = txt; return l; };
 
-    // Taille
+    // Taille (pour Question)
     if (['question', 'reference'].includes(cfg.type)) {
         cell.appendChild(mkLabel("Taille"));
         const sel = document.createElement('select');
         sel.className = 'config-input';
-        
-        const emptyOpt = document.createElement('option');
-        emptyOpt.value = ""; emptyOpt.innerText = "-- Choisir --";
-        if (!cfg.params.size) emptyOpt.selected = true;
-        sel.appendChild(emptyOpt);
-        
-        ['S', 'M', 'L'].forEach(s => {
+        ['', 'S', 'M', 'L'].forEach(s => {
             const o = document.createElement('option');
-            o.value = s; o.innerText = s;
+            o.value = s; o.innerText = s || "-- Choisir --";
             if (cfg.params.size === s) o.selected = true;
             sel.appendChild(o);
         });
@@ -142,7 +138,7 @@ function renderParamsCell(colIdx) {
         cell.appendChild(sel);
     }
     
-    // Combo / QCM
+    // Combo / QCM (Restauration de la liste complète des couleurs)
     if (['combo', 'qcm'].includes(cfg.type)) {
         cell.appendChild(mkLabel("Options (une/ligne)"));
         const txt = document.createElement('textarea');
@@ -187,28 +183,6 @@ function renderParamsCell(colIdx) {
         pInp.value = cfg.params.requete || "";
         pInp.onchange = (e) => cfg.params.requete = e.target.value;
         cell.appendChild(pInp);
-        
-        cell.appendChild(mkLabel("Cibles"));
-        const targetDiv = document.createElement('div');
-        targetDiv.className = 'config-checkbox-group';
-        creatorData.headers.forEach((h, hIdx) => {
-            if (hIdx === colIdx) return;
-            const d = document.createElement('div');
-            d.className = 'config-checkbox-item';
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            const slug = toSlug(h);
-            const currentTargets = cfg.params.cibles || [];
-            if (currentTargets.includes(slug)) cb.checked = true;
-            cb.onchange = (e) => {
-                if (!cfg.params.cibles) cfg.params.cibles = [];
-                if (e.target.checked) { if (!cfg.params.cibles.includes(slug)) cfg.params.cibles.push(slug); } 
-                else { cfg.params.cibles = cfg.params.cibles.filter(x => x !== slug); }
-            };
-            d.appendChild(cb); d.appendChild(document.createTextNode(h));
-            targetDiv.appendChild(d);
-        });
-        cell.appendChild(targetDiv);
     }
 }
 
@@ -216,26 +190,14 @@ if(generateJsonBtn) {
     generateJsonBtn.onclick = () => {
         const finalCols = creatorData.configs.map((cfg, idx) => {
             let colObj = { id: toSlug(cfg.label) || `col_${idx}`, label: cfg.label, type: cfg.type, visible: cfg.visible };
-            
-            if (Object.keys(cfg.params).length > 0) {
-                colObj.params = JSON.parse(JSON.stringify(cfg.params));
-            }
-            if (colObj.params && colObj.params.size) { colObj.size = colObj.params.size; delete colObj.params.size; }
-            else if (['question', 'reference'].includes(colObj.type)) { colObj.size = 'M'; } 
-
+            if (Object.keys(cfg.params).length > 0) colObj.params = JSON.parse(JSON.stringify(cfg.params));
             return colObj;
         });
 
-        const finalRows = creatorData.rows.map(row => {
-            return row.map((cellVal, cIdx) => {
-                const cfg = creatorData.configs[cIdx];
-                if (cfg.type === 'qcm') return (cfg.params.options || []).map(opt => ({ label: opt, checked: false }));
-                return cellVal;
-            });
-        });
-
+        const finalRows = creatorData.rows;
         const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
-        downloadJSON(finalJson, 'audit_v3.json');
+        
+        downloadJSON(finalJson, 'audit_config.json');
         
         if(confirm("JSON généré ! Charger dans l'application ?")) {
             currentForm = finalJson;

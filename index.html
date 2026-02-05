@@ -16,41 +16,30 @@
     <header>
         <div class="header-left">
             <button id="toggleSidebarBtn" class="btn-icon" title="Masquer/Afficher le menu">☰</button>
-            
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
-            
             <div class="separator-vertical"></div>
-
             <button id="btnShowCreator" class="btn-secondary">Créer JSON</button>
-            
             <label for="jsonInput" class="btn-secondary">Charger</label>
             <input type="file" id="jsonInput" accept=".json" hidden>
-            
             <button id="exportBtn" class="btn-primary">Exporter</button>
             <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
         </div>
-        
         <div class="header-center">
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
         </div>
-
         <div class="header-right">
             <button id="btnShowApp" class="btn-secondary">Audit</button>
             <button id="btnShowDashboard" class="btn-secondary">📊 Tableau de Bord</button>
-            
             <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
         </div>
     </header>
 
     <main id="app-container">
-        
         <div id="audit-view" class="view-section">
             <aside id="sidebar" class="sidebar hidden">
                 <h3 class="sidebar-title">Navigation</h3>
-                <ul id="chapterList" class="chapter-list">
-                    </ul>
+                <ul id="chapterList" class="chapter-list"></ul>
             </aside>
-
             <div class="content-area">
                 <div id="tableContainer" class="table-responsive">
                     <div class="empty-state">
@@ -77,8 +66,7 @@
                         <button id="btnAddWidget" class="btn-primary">+ Ajouter le widget</button>
                     </div>
                 </div>
-                <div id="dashboardGrid" class="dashboard-grid">
-                    </div>
+                <div id="dashboardGrid" class="dashboard-grid"></div>
             </div>
         </div>
 
@@ -86,34 +74,40 @@
             <div class="creator-container">
                 <div class="creator-header">
                     <h2>Générateur de Formulaire</h2>
-                    <p>Transformez votre fichier CSV en application d'audit intelligente.</p>
+                    <p>Transformez votre fichier JSON source en application d'audit intelligente.</p>
                     <div class="file-upload-box">
-                        <label for="csvInput" class="btn-primary">📂 Importer un fichier CSV</label>
-                        <input type="file" id="csvInput" accept=".csv" hidden>
+                        <label for="csvInput" class="btn-primary">📂 Importer un fichier JSON</label>
+                        <input type="file" id="csvInput" accept=".json" hidden>
                         <span id="csvFileName" class="file-name">Aucun fichier choisi</span>
                     </div>
                 </div>
-
                 <div id="creatorConfig" class="creator-config hidden">
                     <div class="table-responsive">
-                        <table id="configTable">
-                            </table>
+                        <table id="configTable"></table>
                     </div>
-                    
                     <div class="creator-actions">
                         <button id="generateJsonBtn" class="btn-primary large">💾 Générer et Charger le JSON</button>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
+
+    <div id="resetModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Confirmer la réinitialisation ?</h3>
+            <p>Toutes les données en cours seront effacées. Cette action est irréversible.</p>
+            <div class="modal-actions">
+                <button id="confirmResetBtn" class="btn-danger">Confirmer</button>
+                <button id="cancelResetBtn" class="btn-secondary">Annuler</button>
+            </div>
+        </div>
+    </div>
 
     <script src="api_ia.js"></script>
     <script src="app_shared.js"></script>
     <script src="app_creator.js"></script>
     <script src="app_dashboard.js"></script>
     <script src="app_audit.js"></script>
-
 </body>
 </html>
