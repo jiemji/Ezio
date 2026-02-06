@@ -75,6 +75,13 @@
 }
 .popup-wrapper:hover .popup-content { display: block; }
 
+/* FIX: Ensure popup in the first row shows BELOW the badge to avoid being hidden by the sticky header */
+tbody tr:first-child .popup-content {
+    bottom: auto;
+    top: 100%;
+    margin-top: 5px; /* Add a little spacing */
+}
+
 /* IA Cell & Scrollbar */
 .ia-cell { position: relative; }
 .btn-ia {
