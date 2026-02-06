@@ -11,7 +11,7 @@ const creatorConfigDiv = document.getElementById('creatorConfig');
 const configTable = document.getElementById('configTable');
 const generateJsonBtn = document.getElementById('generateJsonBtn');
 
-if(csvInput) {
+if (csvInput) {
     csvInput.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -43,15 +43,15 @@ function parseImportJSON(data) {
         label: h,
         visible: true,
         type: 'question',
-        params: {} 
+        params: {}
     }));
-    if(creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
 }
 
 function renderCreatorTable() {
-    if(!configTable) return;
+    if (!configTable) return;
     configTable.innerHTML = "";
-    
+
     // 1. Labels
     let trLabels = document.createElement('tr');
     trLabels.innerHTML = `<td style="font-weight:bold; color:var(--primary);">Label Colonne</td>`;
@@ -80,7 +80,7 @@ function renderCreatorTable() {
     let trType = document.createElement('tr');
     trType.innerHTML = `<td><strong>Type</strong></td>`;
     const types = ['question', 'chapitre', 'sous-chapitre', 'reponse', 'combo', 'qcm', 'popup', 'ia'];
-    
+
     creatorData.configs.forEach((cfg, idx) => {
         const td = document.createElement('td');
         const sel = document.createElement('select');
@@ -91,9 +91,9 @@ function renderCreatorTable() {
             if (t === cfg.type) opt.selected = true;
             sel.appendChild(opt);
         });
-        sel.onchange = (e) => { 
-            cfg.type = e.target.value; 
-            renderParamsCell(idx); 
+        sel.onchange = (e) => {
+            cfg.type = e.target.value;
+            renderParamsCell(idx);
         };
         td.appendChild(sel);
         trType.appendChild(td);
@@ -110,7 +110,7 @@ function renderCreatorTable() {
         trParams.appendChild(td);
     });
     configTable.appendChild(trParams);
-    
+
     creatorData.configs.forEach((_, idx) => renderParamsCell(idx));
 }
 
@@ -118,7 +118,7 @@ function renderParamsCell(colIdx) {
     const cell = document.getElementById(`params-cell-${colIdx}`);
     if (!cell) return;
     cell.innerHTML = "";
-    
+
     const cfg = creatorData.configs[colIdx];
     if (!cfg.params) cfg.params = {};
     const mkLabel = (txt) => { const l = document.createElement('span'); l.className = 'param-label'; l.innerText = txt; return l; };
@@ -137,7 +137,7 @@ function renderParamsCell(colIdx) {
         sel.onchange = (e) => cfg.params.size = e.target.value;
         cell.appendChild(sel);
     }
-    
+
     // Combo / QCM (Restauration de la liste complète des couleurs)
     if (['combo'].includes(cfg.type)) {
         cell.appendChild(mkLabel("Options (une/ligne)"));
@@ -149,18 +149,18 @@ function renderParamsCell(colIdx) {
         cell.appendChild(mkLabel("Schéma de Couleurs"));
         const cSel = document.createElement('select');
         cSel.className = 'config-input';
-        
+
         const schemes = [
-            {k:'', v:'Aucun'},
-            {k:'alert3', v:'Alerte (3 coul)'}, 
-            {k:'alert6', v:'Alerte (6 coul)'},  
-            {k:'rainbow', v:'Arc-en-Ciel (7 coul.)'}, 
-            {k:'blue', v:'Bleu (Dégradé)'},
-            {k:'green', v:'Vert (Dégradé)'},
-            {k:'red', v:'Rouge (Dégradé)'},
-            {k:'purple', v:'Violet (Dégradé)'},
-            {k:'orange', v:'Orange (Dégradé)'},
-            {k:'yellow', v:'Jaune (Dégradé)'}
+            { k: '', v: 'Aucun' },
+            { k: 'alert3', v: 'Alerte (3 coul)' },
+            { k: 'alert6', v: 'Alerte (6 coul)' },
+            { k: 'rainbow', v: 'Arc-en-Ciel (7 coul.)' },
+            { k: 'blue', v: 'Bleu (Dégradé)' },
+            { k: 'green', v: 'Vert (Dégradé)' },
+            { k: 'red', v: 'Rouge (Dégradé)' },
+            { k: 'purple', v: 'Violet (Dégradé)' },
+            { k: 'orange', v: 'Orange (Dégradé)' },
+            { k: 'yellow', v: 'Jaune (Dégradé)' }
         ];
 
         schemes.forEach(sc => {
@@ -172,7 +172,7 @@ function renderParamsCell(colIdx) {
         cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
         cell.appendChild(cSel);
     }
-    
+
     // IA
     if (cfg.type === 'ia') {
         cell.appendChild(mkLabel("Prompt"));
@@ -194,15 +194,23 @@ function renderParamsCell(colIdx) {
     }
 }
 
-if(generateJsonBtn) {
+if (generateJsonBtn) {
     generateJsonBtn.onclick = () => {
         const finalCols = creatorData.configs.map((cfg, idx) => {
             let colObj = { id: toSlug(cfg.label) || `col_${idx}`, label: cfg.label, type: cfg.type, visible: cfg.visible };
-            if (Object.keys(cfg.params).length > 0) colObj.params = JSON.parse(JSON.stringify(cfg.params));
+
+            // Extract 'size' to be at root level, not in params
+            let finalParams = { ...cfg.params };
+            if (finalParams.size) {
+                colObj.size = finalParams.size;
+                delete finalParams.size;
+            }
+
+            if (Object.keys(finalParams).length > 0) colObj.params = finalParams;
             return colObj;
         });
 
-// Transformation des données : Conversion des QCM (String -> Array of Objects)
+        // Transformation des données : Conversion des QCM (String -> Array of Objects)
         const finalRows = creatorData.rows.map(row => {
             return row.map((val, idx) => {
                 const cfg = creatorData.configs[idx];
@@ -218,14 +226,14 @@ if(generateJsonBtn) {
         });
 
         const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
-        
+
         downloadJSON(finalJson, 'audit_config.json');
-        
-        if(confirm("JSON généré ! Charger dans l'application ?")) {
+
+        if (confirm("JSON généré ! Charger dans l'application ?")) {
             currentForm = finalJson;
             saveState();
-            switchView('app'); 
-            renderApp();       
+            switchView('app');
+            renderApp();
         }
     };
 }

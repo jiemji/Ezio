@@ -14,30 +14,27 @@
     },
     {
       "id": "reference",
-      "label": "Référence",
+      "label": "Réf.",
       "type": "question",
       "visible": true,
-      "params": {
-        "size": "S"
-      }
+      "size": "S",
+      "params": {}
     },
     {
       "id": "exigence_controle",
       "label": "Exigence/Contrôle",
       "type": "question",
       "visible": true,
-      "params": {
-        "size": "M"
-      }
+      "size": "M",
+      "params": {}
     },
     {
       "id": "description",
       "label": "Description",
       "type": "question",
       "visible": true,
-      "params": {
-        "size": "L"
-      }
+      "size": "L",
+      "params": {}
     },
     {
       "id": "preuves",
