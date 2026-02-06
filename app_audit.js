@@ -32,7 +32,7 @@ if (btnOpenLoad) {
             templateList.innerHTML = "<li>Recherche des modèles...</li>";
             try {
                 // Charge la liste depuis le serveur
-                const response = await fetch('templates/templates.json');
+                const response = await fetch('./templates/templates.json');
                 if (!response.ok) throw new Error("Fichier templates.json introuvable");
                 const templates = await response.json();
                 
@@ -51,7 +51,7 @@ if (btnOpenLoad) {
 // 2. Charger un Template distant (Attaché à window pour le HTML dynamique)
 window.loadRemoteTemplate = async (filename) => {
     try {
-        const response = await fetch(`templates/${filename}`);
+        const response = await fetch(`./templates/${filename}`);
         if(!response.ok) throw new Error("Fichier introuvable");
         const data = await response.json();
         applyLoadedData(data, `Modèle chargé : ${filename}`);
