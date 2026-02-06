@@ -3,72 +3,63 @@
     {
       "id": "domaine",
       "label": "Domaine",
-      "type": "chapitre",
+      "type": "question",
       "visible": true
     },
     {
       "id": "typologie",
       "label": "Typologie",
-      "type": "sous-chapitre",
-      "visible": true
+      "type": "ia",
+      "visible": true,
+      "params": {
+        "cibles": [
+          "reference",
+          "constat",
+          "preuves"
+        ],
+        "requete": "analyse"
+      }
     },
     {
       "id": "reference",
       "label": "Référence",
       "type": "question",
-      "visible": true,
-      "params": {
-        "size": "S"
-      }
+      "visible": true
     },
     {
       "id": "exigence_controle",
       "label": "Exigence/Contrôle",
       "type": "question",
-      "visible": true,
-      "params": {
-        "size": "M"
-      }
+      "visible": true
     },
     {
       "id": "description",
       "label": "Description",
       "type": "question",
-      "visible": true,
-      "params": {
-        "size": "L"
-      }
+      "visible": true
     },
     {
       "id": "preuves",
       "label": "Preuves",
-      "type": "popup",
+      "type": "question",
       "visible": true
     },
     {
       "id": "constat",
       "label": "Constat",
-      "type": "reponse",
+      "type": "question",
       "visible": true
     },
     {
       "id": "conformite",
       "label": "Conformité",
-      "type": "combo",
-      "visible": true,
-      "params": {
-        "options": [
-          "Conforme",
-          "Bof",
-          "Nope"
-        ],
-        "colorScheme": "alert3"
-      }
+      "type": "question",
+      "visible": true
     },
     {
       "id": "recommandation",
       "label": "Recommandation",
-      "type": "reponse",
+      "type": "question",
       "visible": true
     }
   ],
