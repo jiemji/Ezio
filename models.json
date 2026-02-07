@@ -11,10 +11,10 @@
     "context_length": 32000
   },
   {
-    "nom": "Qwen3",
+    "nom": "Mockup",
     "description": "",
     "prompt": "Tu es un assistant expert...",
-    "provider": "lmstudio",
+    "provider": "mock",
     "endpoint": "http://192.168.0.163:1234/api/v1/chat",
     "apikey": "not-needed",
     "model": "qwen/qwen3-vl-8b",
