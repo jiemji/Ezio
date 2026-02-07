@@ -4,15 +4,13 @@
       "id": "domaine",
       "label": "Domaine",
       "type": "chapitre",
-      "visible": false,
-      "size": "S"
+      "visible": false
     },
     {
       "id": "typologie",
       "label": "Typologie",
       "type": "sous-chapitre",
-      "visible": false,
-      "size": "M"
+      "visible": false
     },
     {
       "id": "reference",
@@ -55,8 +53,8 @@
       "params": {
         "options": [
           "Conforme",
-          "Presque conforme",
-          "Pas du tout conforme"
+          "Peu Conforme",
+          "Pas Conforme"
         ],
         "colorScheme": "alert3"
       }
@@ -67,7 +65,13 @@
       "type": "ia",
       "visible": true,
       "params": {
-        "requete": "Donne moi 3 recommandations pour cette ligne"
+        "colonnes": [
+          "Description",
+          "Preuves",
+          "Constat"
+        ],
+        "modele": "Modèle local par défaut",
+        "requete": "Prends en compte la description de l'exigence, les preuves et le constat afin de produire 3 recommandations pour atteindre la conformité : \n- 1 quickwin\n- 1 action prioritaire\n- 1 action à moyens termes"
       }
     }
   ],

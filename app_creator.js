@@ -115,15 +115,15 @@ function renderCreatorTable() {
 }
 
 
-let availableModels = [];
+let creatorAvailableModels = [];
 
 // Chargement des modèles au démarrage
 async function loadModels() {
     try {
         const response = await fetch('models.json');
         if (response.ok) {
-            availableModels = await response.json();
-            if (!Array.isArray(availableModels)) availableModels = [];
+            creatorAvailableModels = await response.json();
+            if (!Array.isArray(creatorAvailableModels)) creatorAvailableModels = [];
         }
     } catch (e) {
         console.warn("Impossible de charger models.json", e);
@@ -295,7 +295,7 @@ function renderParamsCell(colIdx) {
         // Option vide par défaut
         mSel.appendChild(new Option("-- Choisir un modèle --", ""));
 
-        availableModels.forEach(m => {
+        creatorAvailableModels.forEach(m => {
             const opt = new Option(m.nom, m.nom); // On stocke le nom du modèle pour l'instant
             if (cfg.params.modele === m.nom) opt.selected = true;
             mSel.appendChild(opt);
@@ -315,3 +315,4 @@ function renderParamsCell(colIdx) {
         cell.appendChild(info);
     }
 }
+

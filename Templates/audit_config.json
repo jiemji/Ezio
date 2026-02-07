@@ -12,12 +12,13 @@
       "type": "ia",
       "visible": true,
       "params": {
-        "cibles": [
-          "reference",
-          "constat",
-          "preuves"
+        "colonnes": [
+          "Description",
+          "Exigence/Contrôle",
+          "Référence"
         ],
-        "requete": "analyse"
+        "modele": "Modèle local par défaut",
+        "requete": "Hello World"
       }
     },
     {

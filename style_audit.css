@@ -205,6 +205,10 @@ tbody tr:first-child .popup-content {
 /* IA Cell & Scrollbar */
 .ia-cell {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Bouton aligné à gauche */
 }
 
 .btn-ia {
@@ -220,7 +224,32 @@ tbody tr:first-child .popup-content {
     align-items: center;
 }
 
+.ia-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 0.9rem;
+
+    /* Background identique aux cell-readonly (Question) */
+    background-color: var(--readonly);
+
+    /* Couleurs spécifiques demandées */
+    /* Light mode default: Bleu très foncé */
+    color: #001a33;
+}
+
+/* Dark mode override */
+[data-theme="dark"] .ia-textarea {
+    /* Dark mode: Gris très clair */
+    color: #f0f0f0;
+}
+
 .ia-content {
+    /* Style legacy pour preview si utilisé */
     font-style: italic;
     color: var(--ia-text);
     line-height: 1.5;

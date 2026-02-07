@@ -463,13 +463,13 @@ function getComboColor(scheme, value, options) {
 
 
 // -- LOAD MODELS --
-let availableModels = [];
+let auditAvailableModels = [];
 async function loadModels() {
     try {
         const response = await fetch('models.json');
         if (response.ok) {
-            availableModels = await response.json();
-            if (!Array.isArray(availableModels)) availableModels = [];
+            auditAvailableModels = await response.json();
+            if (!Array.isArray(auditAvailableModels)) auditAvailableModels = [];
         }
     } catch (e) {
         console.warn("Impossible de charger models.json", e);
@@ -562,7 +562,7 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
     const modelName = col.params?.modele;
     if (!modelName) return alert("Aucun modèle IA configuré pour cette colonne.");
 
-    const modelConfig = availableModels.find(m => m.nom === modelName);
+    const modelConfig = auditAvailableModels.find(m => m.nom === modelName);
     if (!modelConfig) return alert(`Le modèle '${modelName}' est introuvable dans la configuration.`);
 
     // 2. Préparation du contexte (Colonnes sélectionnées)
