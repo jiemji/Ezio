@@ -235,7 +235,7 @@ tbody tr:first-child .popup-content {
     font-size: 0.9rem;
 
     /* Background identique aux cell-readonly (Question) */
-    background-color: var(--readonly);
+    background-color: var(--bg-color);
 
     /* Couleurs spécifiques demandées */
     /* Light mode default: Bleu très foncé */
@@ -243,7 +243,7 @@ tbody tr:first-child .popup-content {
 }
 
 /* Dark mode override */
-[data-theme="dark"] .ia-textarea {
+body.dark-mode .ia-textarea {
     /* Dark mode: Gris très clair */
     color: #f0f0f0;
 }
