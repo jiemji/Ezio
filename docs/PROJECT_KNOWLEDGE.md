@@ -11,7 +11,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 *   **JavaScript (Vanilla ES6+)** : Logique applicative native.
 *   **Librairies Externes** (via CDN) :
     *   `Chart.js` : Visualisation de données (Dashboard).
-    *   `Marked` : Rendu Markdown pour les réponses de l'IA.
+    *   `Marked` : Rendu Markdown pour les réponses de l'IA et les Popups informatives.
 *   **Stockage** : `localStorage` pour la persistance des données et `JSON` pour l'import/export.
 
 ---
