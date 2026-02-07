@@ -33,20 +33,78 @@ if (csvInput) {
 }
 
 function parseImportJSON(data) {
-    if (!Array.isArray(data) || data.length === 0) {
-        alert("Le fichier doit être un tableau d'objets JSON.");
+    // Détection si c'est un fichier de config complet (Ezio JSON) ou un simple tableau de données
+    if (data.columns && Array.isArray(data.columns) && data.rows && Array.isArray(data.rows)) {
+        // Cas 1 : Fichier Ezio complet (avec config)
+        creatorData.headers = data.columns.map(c => c.label);
+        creatorData.rows = data.rows;
+
+        // Reconstruction de la config
+        creatorData.configs = data.columns.map(col => ({
+            label: col.label,
+            visible: col.visible !== false, // défaut true
+            type: col.type || 'question',
+            params: col.params || {}
+        }));
+
+        // Restauration paramètre 'size' qui est au niveau racine dans le JSON final mais dans 'params' pour l'UI
+        data.columns.forEach((col, idx) => {
+            if (col.size) {
+                if (!creatorData.configs[idx].params) creatorData.configs[idx].params = {};
+                creatorData.configs[idx].params.size = col.size;
+            }
+        });
+        console.log("DEBUG: Configs loaded:", creatorData.configs);
+
+    } else if (Array.isArray(data) && data.length > 0) {
+        // Cas 2 : Simple tableau d'objets (Import brut)
+        creatorData.headers = Object.keys(data[0]);
+        creatorData.rows = data.map(obj => creatorData.headers.map(h => obj[h] || ""));
+        creatorData.configs = creatorData.headers.map(h => ({
+            label: h,
+            visible: true,
+            type: 'question',
+            params: {}
+        }));
+    } else {
+        alert("Format non reconnu. Le fichier doit être un export Ezio ou un tableau d'objets JSON.");
         return;
     }
-    creatorData.headers = Object.keys(data[0]);
-    creatorData.rows = data.map(obj => creatorData.headers.map(h => obj[h] || ""));
-    creatorData.configs = creatorData.headers.map(h => ({
-        label: h,
-        visible: true,
-        type: 'question',
-        params: {}
-    }));
     if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
 }
+
+// Fonction pour charger depuis l'état global (Audit en cours)
+window.loadFromGlobalState = function (currentForm) {
+    if (!currentForm || !currentForm.columns || !currentForm.rows) return;
+
+    // Si le créateur est déjà chargé avec ces données, on évite de recharger pour ne pas perdre d'éditions en cours ??
+    // Pour l'instant on recharge systématiquement pour garantir la synchro.
+
+    creatorData.headers = currentForm.columns.map(c => c.label);
+    creatorData.rows = currentForm.rows; // Attention référence par adressage, si on modifie creatorData.rows ça modifie currentForm.rows
+    // Pour éviter ça si on veut un "mode brouillon" dans le créateur :
+    // creatorData.rows = JSON.parse(JSON.stringify(currentForm.rows)); 
+    // Mais l'utilisateur veut peut-être éditer les DONNÉES aussi ? 
+    // Le code actuel du créateur régénère tout le JSON à la fin.
+    // Clonons pour être sûr de ne pas casser l'audit en temps réel si on annule.
+    creatorData.rows = JSON.parse(JSON.stringify(currentForm.rows));
+
+    creatorData.configs = currentForm.columns.map(col => {
+        const cfg = {
+            label: col.label,
+            visible: col.visible !== false,
+            type: col.type || 'question',
+            params: col.params ? JSON.parse(JSON.stringify(col.params)) : {}
+        };
+        // Restauration size
+        if (col.size) cfg.params.size = col.size;
+        return cfg;
+    });
+
+    renderCreatorTable();
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+    console.log("DEBUG: Creator synced with Global State");
+};
 
 function renderCreatorTable() {
     if (!configTable) return;
@@ -201,6 +259,7 @@ function renderParamsCell(colIdx) {
 
     // Combo / QCM (Restauration de la liste complète des couleurs)
     if (['combo'].includes(cfg.type)) {
+        console.log("DEBUG: Type Combo detected, params:", cfg.params);
         cell.appendChild(mkLabel("Options (une/ligne)"));
         const txt = document.createElement('textarea');
         txt.className = 'config-textarea';

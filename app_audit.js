@@ -49,14 +49,21 @@ if (btnOpenLoad) {
 }
 
 // 2. Charger un Template distant (Attaché à window pour le HTML dynamique)
+// 2. Charger un Template distant (Attaché à window pour le HTML dynamique)
 window.loadRemoteTemplate = async (filename) => {
     try {
         const response = await fetch(`./templates/${filename}`);
-        if (!response.ok) throw new Error("Fichier introuvable");
-        const data = await response.json();
-        applyLoadedData(data, `Modèle chargé : ${filename}`);
+        if (!response.ok) throw new Error(`Fichier introuvable (${response.status})`);
+        const text = await response.text();
+        try {
+            const data = JSON.parse(text);
+            applyLoadedData(data, `Modèle chargé : ${filename}`);
+        } catch (parseError) {
+            throw new Error(`JSON invalide: ${parseError.message}`);
+        }
     } catch (err) {
-        alert("Erreur : Impossible de charger ce modèle.");
+        console.error(err);
+        alert(`Erreur : Impossible de charger ce modèle.\nDétail: ${err.message}`);
     }
 };
 
