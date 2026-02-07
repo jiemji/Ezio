@@ -19,12 +19,10 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 ## 2. Architecture des Fichiers
 
 ### Core & Structure
-*   `index.html` : Point d'entrée unique. Contient la structure du SPA (Single Page Application) avec les différantes vues (`#audit-view`, `#dashboard-view`, `#creator-view`).
+*   `index.html` : Point d'entrée unique. Contient la structure du SPA (Single Page Application) avec les différantes vues (`#audit-view`, `#dashboard-view`, `#creator-view`, `#models-view`).
 *   `app_shared.js` :
-    *   Gestion de l'état global (`currentForm`).
-    *   Système de navigation (fonction `switchView`).
-    *   Persistance des données (`loadState` / `saveState`).
-    *   Utilitaires partagés.
+    *   Gestion de l'état global (`currentForm`) et de la navigation (`switchView`).
+    *   Point d'entrée pour la persistance (`loadState` / `saveState`).
 
 ### Modules Fonctionnels
 1.  **Module Audit (`app_audit.js`)** :
@@ -36,7 +34,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 2.  **Module IA (`api_ia.js`)** :
     *   Couche d'abstraction vers les LLMs.
     *   Supporte **LM Studio** (Local), **OpenAI**, **Groq**.
-    *   Gestion de la transformation des messages pour compatibilité (sérialisation du contexte JSON).
+    *   **Spécificité LM Studio** : Transforme le payload standard en une structure "plate" (`input: [{type:'text'}]`) pour maximiser la compatibilité avec les contextes longs locaux.
 
 3.  **Module Dashboard (`app_dashboard.js`)** :
     *   Génération de KPIs dynamiques basés sur les colonnes "Combo".
@@ -48,9 +46,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 ### Styles
 *   `style_shared.css` : Styles globaux, variables (couleurs, fonts), layout de base.
-*   `style_audit.css` : Styles spécifiques au tableau d'audit (cellules, filtres).
-*   `style_dashboard.css` : Grilles et cartes du tableau de bord.
-*   `style_creator.css` : Interface de configuration du générateur.
+*   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
 
 ---
 
@@ -67,8 +63,8 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
       "type": "combo", // ou 'question', 'ia', 'qcm'...
       "visible": true,
       "params": {
-        "options": ["Oui", "Non", "N/A"],
-        "colorScheme": "alert3"
+         "options": ["Oui", "Non", "N/A"],
+         "colorScheme": "alert3"
       }
     }
   ],
@@ -85,28 +81,60 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
 
 ---
 
-## 4. Fonctionnement de l'IA
+## 4. Gestion des Modèles (Templates)
 
-### Configuration (`models.json`)
-Fichier json définissant les modèles disponibles.
-*   **Provider** : `lmstudio`, `openai`, `groq`.
-*   **Endpoint** : URL de l'API (ex: `http://localhost:1234/api/v1/chat`).
-
-### Flux d'Exécution (RAG Contextuel)
-Lorsqu'un utilisateur clique sur "Générer" dans une cellule IA :
-1.  Le système récupère la configuration de la colonne (Prompt système, Colonnes de contexte).
-2.  Il extrait les données de la ligne courante pour les colonnes ciblées.
-3.  Il construit un payload enrichi envoyé à `api_ia.js`.
-4.  La réponse est affichée dans le `textarea` et rendue en Markdown.
+L'application permet de charger des modèles d'audit pré-configurés.
+*   `templates/templates.json` : Index listant les modèles disponibles (affiché dans la modale de chargement).
+*   `templates/*.json` : Fichiers contenant la structure (colonnes) et parfois des données pré-remplies.
 
 ---
 
-## 5. Guide de Développement
+## 5. Configuration & Modèles IA
 
-### Ajouter un nouveau type de colonne
-1.  **Frontend** : Ajouter le cas dans le `switch(col.type)` de `app_audit.js` (`renderCell`).
-2.  **Créateur** : Ajouter l'option dans la liste des types de `app_creator.js` et gérer ses paramètres spécifiques dans `renderParamsCell`.
+### Stockage (`models.json`)
+C'est le fichier maître pour la configuration des LLM. Il est chargé par `app_audit.js` et `app_creator.js`.
+```json
+[
+  {
+    "nom": "Modèle local",
+    "provider": "lmstudio",
+    "endpoint": "http://localhost:1234/api/v1/chat",
+    "model": "qwen-2.5-7b",
+    "prompt": "Tu es un auditeur expert..."
+  }
+]
+```
 
-### Ajouter un Provider IA
-1.  Modifier `api_ia.js` pour ajouter le cas dans la méthode `fetchLLM`.
-2.  Implémenter la logique spécifique de transformation de requête si nécessaire.
+### Note sur `config.json`
+Un fichier `config.json` était utilisé précédemment pour charger une configuration globale (`IA_CONFIG`). Bien que le code de chargement existe encore dans `app_shared.js` (souvent commenté ou inutilisé), la logique actuelle privilégie `models.json` pour une gestion multi-modèles plus flexible.
+
+---
+
+## 6. Détails Techniques - Flux IA
+
+Le système utilise une approche **RAG Contextuel (Retrieval-Augmented Generation)** simplifiée, opérant ligne par ligne.
+
+### Structure du Message (Interne)
+Dans `app_audit.js` (`runIA`), le message est construit ainsi :
+```javascript
+const messages = [
+    { "role": "system", "content": "Prompt Système (défini dans models.json)" },
+    { "role": "user", "content": [
+        "Prompt Utilisateur (défini dans la colonne)", 
+        { "Conformité": "Non", "Preuve": "..." } // Objet de contexte
+    ]}
+];
+```
+
+### Transformation pour l'API
+Le service `api_ia.js` adapte ce format selon le provider.
+*   **Standard (OpenAI/Groq)** : Sérialise le tableau `content` en une seule chaîne JSON stringifiée.
+*   **LM Studio (`lmStudioDirect`)** : Éclate le message en segments de texte distincts :
+    ```json
+    "input": [
+        { "type": "text", "content": "System Prompt..." },
+        { "type": "text", "content": "User Prompt..." },
+        { "type": "text", "content": "Conformité:\nNon" }
+    ]
+    ```
+    Cette méthode contourne certaines limitations de parsing des petits modèles locaux.

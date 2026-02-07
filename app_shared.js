@@ -19,6 +19,7 @@ const btnShowCreator = document.getElementById('btnShowCreator');
 const btnShowDashboard = document.getElementById('btnShowDashboard');
 const btnShowModels = document.getElementById('btnShowModels');
 const themeBtn = document.getElementById('themeBtn');
+const btnDocs = document.getElementById('btnDocs');
 const resetBtn = document.getElementById('resetBtn');
 const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
@@ -146,6 +147,10 @@ function switchView(view) {
 }
 
 // -- LISTENERS GLOBAUX --
+if (btnDocs) {
+    btnDocs.onclick = () => window.open('docs/documentation.html', '_blank');
+}
+
 themeBtn.onclick = () => {
     const isDark = document.body.classList.toggle('dark-mode');
     themeBtn.textContent = isDark ? '☀️' : '🌙';
