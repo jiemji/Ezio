@@ -56,7 +56,7 @@
           "Peu Conforme",
           "Pas Conforme"
         ],
-        "colorScheme": "alert3"
+        "colorScheme": "red"
       }
     },
     {
@@ -70,7 +70,7 @@
           "Preuves",
           "Constat"
         ],
-        "modele": "Modèle local par défaut",
+        "modele": "Qwen3",
         "requete": "Prends en compte la description de l'exigence, les preuves et le constat afin de produire 3 recommandations pour atteindre la conformité : \n- 1 quickwin\n- 1 action prioritaire\n- 1 action à moyens termes"
       }
     }
@@ -98,7 +98,7 @@
       ],
       "",
       "",
-      ""
+      "[La réponse est la suivante :]\n\n**Quickwin :**\n1. Mettre en place un processus de documentation et de suivi des enjeux externes et internes pertinents pour le SMIA. Cela permettra de s'assurer que tous les aspects importants sont pris en compte et documentés.\n\n**Action prioritaire :**\n2. Définir clairement les rôles de l'organisme vis-à-vis des systèmes d'IA (fournisseur, producteur, client). Cela implique la rédaction d'une documentation détaillée qui clarifie ces rôles et leurs implications pour le SMIA.\n\n**Action à moyens termes :**\n3. Élaborer un plan spécifique pour évaluer l'impact du changement climatique sur les opérations de l'organisme, en particulier dans le contexte du SMIA. Ce plan devrait inclure des stratégies d'adaptation et de mitigation pour s'assurer que le changement climatique est bien pris en compte dans la gestion des risques."
     ],
     [
       "Exigences",
