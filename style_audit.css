@@ -178,16 +178,46 @@
     bottom: 120%;
     left: 50%;
     transform: translateX(-50%);
-    width: 280px;
+    width: 320px;
+    /* Un peu plus large pour le contenu riche */
+    max-width: 400px;
     background: var(--text-main);
     color: var(--bg-color);
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     z-index: 100;
-    font-size: 0.8rem;
-    white-space: pre-line;
-    line-height: 1.4;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: left;
+}
+
+/* Styles pour le Markdown dans la popup */
+.popup-content p {
+    margin: 0 0 8px 0;
+}
+
+.popup-content p:last-child {
+    margin-bottom: 0;
+}
+
+.popup-content ul,
+.popup-content ol {
+    margin: 0 0 8px 0;
+    padding-left: 20px;
+}
+
+.popup-content li {
+    margin-bottom: 2px;
+}
+
+.popup-content strong {
+    font-weight: 700;
+    color: inherit;
+}
+
+.popup-content em {
+    font-style: italic;
 }
 
 .popup-wrapper:hover .popup-content {
@@ -206,45 +236,52 @@ tbody tr:first-child .popup-content {
 .ia-cell {
     position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    /* Input à gauche, bouton à droite */
     align-items: flex-start;
-    /* Bouton aligné à gauche */
+    gap: 8px;
 }
 
 .btn-ia {
     background: var(--ia-color);
     color: white;
     border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 0;
+    width: 20px;
+    /* Réduit de moitié (approx 36 -> 20) */
+    height: 20px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.75rem;
-    margin-bottom: 6px;
+    font-size: 0.8rem;
+    /* Ajusté */
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0;
+    /* Pas de marge */
+    margin-top: 4px;
+    /* Un petit alignement vertical si nécessaire avec le textarea */
 }
 
 .ia-textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 8px;
+    flex-grow: 1;
+    /* Prend tout l'espace restant */
+    min-height: 50px;
+    /* Hauteur ~2 lignes */
+    height: 50px;
+    padding: 6px;
     border: 1px solid var(--border);
     border-radius: 4px;
     resize: vertical;
     font-family: inherit;
     font-size: 0.9rem;
-
-    /* Background identique aux cell-readonly (Question) */
     background-color: var(--bg-color);
-
-    /* Couleurs spécifiques demandées */
-    /* Light mode default: Bleu très foncé */
     color: #001a33;
 }
 
 /* Dark mode override */
 body.dark-mode .ia-textarea {
-    /* Dark mode: Gris très clair */
     color: #f0f0f0;
 }
 
