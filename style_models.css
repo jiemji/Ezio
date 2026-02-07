@@ -1,0 +1,152 @@
+/* --- MODEL MANAGER VIEW STYLES --- */
+
+/* Adapting the prototype layout to existing .view-section container */
+#models-view {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+    /* Important: fill parent */
+}
+
+.manager-container {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+}
+
+.model-sidebar {
+    width: 300px;
+    background: var(--card-bg);
+    /* Use theme variables */
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.model-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.model-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.model-item:hover {
+    background: var(--menu-hover);
+}
+
+.model-item.active {
+    background: var(--menu-active-bg);
+    border-left: 3px solid var(--primary);
+}
+
+.model-item h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.model-item p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.sidebar-actions {
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    background: var(--bg-color);
+}
+
+.main-editor {
+    flex: 1;
+    padding: 20px;
+    background: var(--bg-color);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.editor-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Reusing generic form classes but scoped if needed */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    outline: 2px solid var(--primary);
+    border-color: transparent;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-col {
+    flex: 1;
+}
+
+.empty-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.status-bar {
+    padding: 10px;
+    background: var(--ia-bg);
+    color: var(--ia-text);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    border: 1px solid var(--ia-border);
+    display: none;
+}
