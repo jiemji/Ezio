@@ -1,6 +1,7 @@
 :root {
     /* --- THEME CLAIR --- */
-    --bg-color: #f8fafc;
+    --bg-color: #e8efeb;
+    /* Gris-vert clair pour réduire luminosité */
     --card-bg: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;

@@ -16,7 +16,8 @@ const sidebar = document.getElementById('sidebar');
 const chapterList = document.getElementById('chapterList');
 const searchInput = document.getElementById('searchInput');
 const jsonInput = document.getElementById('jsonInput');
-const exportBtn = document.getElementById('exportBtn');
+// exportBtn est déjà déclaré dans app_shared.js (global)
+// const exportBtn = document.getElementById('exportBtn');
 
 // Nouveaux éléments pour la modale (Assurez-vous qu'ils sont dans index.html)
 const modalLoad = document.getElementById('modalLoad');
@@ -528,36 +529,43 @@ function renderCell(container, col, value, r, c) {
             container.appendChild(qcmDiv); break;
         case 'popup':
             const w = document.createElement('div'); w.className = 'popup-wrapper';
-            w.innerHTML = `<div class="popup-badge">Preuves</div><div class="popup-content">${value || "Vide"}</div>`;
+            // Utilisation de marked.parse pour le rendu HTML du Markdown
+            let rawContent = value || "Vide";
+            // Remplacement des \n littéraux (ex: "\n" écrit dans le JSON) par de vrais sauts de ligne
+            if (typeof rawContent === 'string') {
+                rawContent = rawContent.replace(/\\n/g, '\n');
+            }
+            // breaks: true permet de transformer les \n simples en <br>
+            const renderedContent = marked.parse(rawContent, { breaks: true });
+            w.innerHTML = `<div class="popup-badge">Preuves</div><div class="popup-content">${renderedContent}</div>`;
             container.appendChild(w); break;
         case 'ia':
             const d = document.createElement('div'); d.className = 'ia-cell';
-            const b = document.createElement('button'); b.className = 'btn-ia'; b.innerHTML = "✨ Générer";
+            const b = document.createElement('button'); b.className = 'btn-ia'; b.innerHTML = "✨"; // Icone seule
+            b.title = "Générer avec l'IA";
             b.onclick = () => runIA(r, c, col, b, txtIA, preview);
 
             // Zone de saisie éditable
             const txtIA = document.createElement('textarea');
-            txtIA.className = 'ia-textarea'; // Assurez-vous d'avoir du CSS pour ça ou utilisez le style par défaut
+            txtIA.className = 'ia-textarea';
             txtIA.value = value || "";
-            txtIA.placeholder = "Le résultat de l'IA s'affichera ici...";
+            txtIA.placeholder = "IA...";
             txtIA.oninput = (e) => {
                 updateValue(r, c, e.target.value);
                 // Mise à jour de la prévisualisation Markdown en temps réel (optionnel mais sympa)
                 if (preview) preview.innerHTML = marked.parse(e.target.value);
             };
 
-            // Prévisualisation Markdown (Optionnel, garder pour l'affichage riche)
+            // Prévisualisation Markdown (Optionnel)
             const preview = document.createElement('div');
             preview.id = `ia-${r}-${c}`;
             preview.className = 'ia-content';
             preview.innerHTML = value ? marked.parse(value) : "";
-            // On masque la preview si on veut juste éditer, ou on l'affiche en dessous. 
-            // Pour l'instant, affichons les deux ou juste le textarea selon le besoin. 
-            // Le user a demandé "le champs qui accueillent le résultat de la requête IA soit un champs de saisie".
-            // Donc le textarea est prioritaire.
 
+            // Ordre : Bouton à GAUCHE, Input à DROITE
             d.appendChild(b);
             d.appendChild(txtIA);
+
             // d.appendChild(preview); // Décommenter si on veut garder le rendu MD en plus
             container.appendChild(d); break;
         default: container.innerText = value || ""; break;
@@ -587,11 +595,6 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
     }
 
     // 3. Construction du message (Format Spécifique Demandé)
-    // "messages": [
-    //   { "role": "system", "content": "ici tu reprendras le prompt du modèle..." },
-    //   { "role": "user", "content": [ "ici le prompt paramétré...", { "colonne 1" : "valeur..." } ] }
-    // ]
-
     const messages = [
         {
             "role": "system",
@@ -606,7 +609,8 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
         }
     ];
 
-    btn.innerText = "⏳"; btn.disabled = true;
+    const originalIcon = btn.innerHTML;
+    btn.innerHTML = "⏳"; btn.disabled = true;
     try {
         // On passe la config COMPLÈTE du modèle et les messages
         const res = await window.ApiService.fetchLLM(modelConfig, messages);
@@ -619,6 +623,6 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
     } catch (e) {
         alert("Erreur IA: " + e.message);
     } finally {
-        btn.innerText = "✨ Générer"; btn.disabled = false;
+        btn.innerHTML = "✨"; btn.disabled = false;
     }
 }
