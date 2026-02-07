@@ -1,34 +1,40 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZIO - Audit & Pilotage IA</title>
-    
-    <link rel="stylesheet" href="style_shared.css">    
-    <link rel="stylesheet" href="style_creator.css">   
-    <link rel="stylesheet" href="style_audit.css">     
-    <link rel="stylesheet" href="style_dashboard.css"> 
+
+    <link rel="stylesheet" href="style_shared.css">
+    <link rel="stylesheet" href="style_creator.css">
+    <link rel="stylesheet" href="style_audit.css">
+    <link rel="stylesheet" href="style_dashboard.css">
+    <link rel="stylesheet" href="style_models.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <header>
         <div class="header-left">
             <button id="toggleSidebarBtn" class="btn-icon" title="Masquer/Afficher le menu">☰</button>
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
             <div class="separator-vertical"></div>
-            <button id="btnShowApp" class="btn-secondary">Audit</button>
-            <button id="btnShowDashboard" class="btn-secondary">Tableau de Bord</button>
-            <button id="btnShowCreator" class="btn-secondary">Création</button>
+            <button id="loadBtn" class="btn-secondary">Charger</button>
+            <button id="exportBtn" class="btn-primary">Sauver</button>
+            <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
+
         </div>
         <div class="header-center">
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
         </div>
         <div class="header-right">
-            <button id="loadBtn" class="btn-secondary">Charger</button>
-            <button id="exportBtn" class="btn-primary">Sauver</button>
-            <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
+            <button id="btnShowApp" class="btn-primary">Audit</button>
+            <button id="btnShowDashboard" class="btn-primary">Tableau de Bord</button>
+            <div class="separator-vertical"></div>
+            <button id="btnShowCreator" class="btn-secondary">Formulaires</button>
+            <button id="btnShowModels" class="btn-secondary">Modèles</button>
             <div class="separator-vertical"></div>
             <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
         </div>
@@ -76,7 +82,7 @@
                     <h2>Générateur de Formulaire</h2>
                     <p>Transformez votre fichier JSON source en application d'audit intelligente.</p>
                     <div class="file-upload-box">
-                        <label for="csvInput" class="btn-primary">📂 Importer un fichier JSON</label>
+                        <label for="csvInput" class="btn-primary">📂 Importer un fichier de données</label>
                         <input type="file" id="csvInput" accept=".json" hidden>
                         <span id="csvFileName" class="file-name">Aucun fichier choisi</span>
                     </div>
@@ -89,6 +95,121 @@
                         <button id="generateJsonBtn" class="btn-primary large">💾 Générer et Charger le JSON</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- VIEW MODELS -->
+        <div id="models-view" class="view-section hidden">
+            <div class="manager-container">
+                <!-- SIDEBAR -->
+                <aside class="model-sidebar">
+                    <div class="sidebar-actions">
+                        <button id="btnNewModel" class="btn-primary" style="width: 100%;">+ Nouveau Modèle</button>
+                    </div>
+                    <div id="modelList" class="model-list">
+                        <!-- Items injectés par JS -->
+                    </div>
+                    <div class="sidebar-actions">
+                        <small style="color: var(--text-muted);">Stocké dans models.json</small>
+                    </div>
+                </aside>
+
+                <!-- MAIN EDITOR -->
+                <main id="editorArea" class="main-editor">
+                    <div id="statusMsg" class="status-bar"></div>
+
+                    <div id="emptyState" class="empty-selection">
+                        <p>Sélectionnez un modèle pour l'éditer ou créez-en un nouveau.</p>
+                    </div>
+
+                    <div id="editForm" class="hidden">
+                        <div class="editor-card">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Nom (Affiché)</label>
+                                        <input type="text" id="inpName" class="form-control"
+                                            placeholder="Ex: Assistant Audit">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <input type="text" id="inpDesc" class="form-control"
+                                            placeholder="Courte description...">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Prompt Système (Instructions de base)</label>
+                                <textarea id="inpPrompt" class="form-control" rows="5"
+                                    placeholder="Tu es un expert..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="editor-card">
+                            <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--primary);">Configuration
+                                Technique</h3>
+
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Fournisseur (Provider)</label>
+                                        <select id="inpProvider" class="form-control">
+                                            <option value="lmstudio">LM Studio (Local)</option>
+                                            <option value="openai">OpenAI</option>
+                                            <option value="groq">Groq</option>
+                                            <option value="mistral">Mistral AI</option>
+                                            <option value="custom">Custom (OpenAI Compatible)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>ID du Modèle (Technique)</label>
+                                        <input type="text" id="inpModelId" class="form-control"
+                                            placeholder="ex: gpt-4, mistral-small...">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Endpoint API</label>
+                                <input type="text" id="inpEndpoint" class="form-control"
+                                    placeholder="http://localhost:1234/api/v1/chat">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Clé API (API Key)</label>
+                                <input type="password" id="inpApiKey" class="form-control" placeholder="sk-...">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Température (0.0 - 1.0)</label>
+                                        <input type="number" id="inpTemp" class="form-control" step="0.1" min="0"
+                                            max="2" value="0.7">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label>Contexte (Tokens)</label>
+                                        <input type="number" id="inpContext" class="form-control" value="4096">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="editor-card"
+                            style="text-align: right; background: transparent; border: none; box-shadow: none; padding: 0;">
+                            <button id="btnDeleteModel" class="btn-danger">Supprimer</button>
+                            <button id="btnSaveModel" class="btn-primary" style="padding: 10px 20px;">💾 Enregistrer les
+                                modifications</button>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     </main>
@@ -104,30 +225,32 @@
         </div>
     </div>
 
-<div id="modalLoad" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h3>Charger un Audit</h3>
-        <div class="load-options">
-            <div class="load-section">
-                <h4>Modèles (Templates)</h4><br>
-                <ul id="templateList" class="template-list">
-                    <li>Chargement des modèles...</li>
-                </ul>
-            </div>
-            <div class="load-section divider">
-                <h4>Fichier Local</h4><br>
-                <label for="jsonInput" class="btn btn-secondary">Parcourir mon poste</label>
-                <input type="file" id="jsonInput" accept=".json" hidden>
+    <div id="modalLoad" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Charger un Audit</h3>
+            <div class="load-options">
+                <div class="load-section">
+                    <h4>Modèles (Templates)</h4><br>
+                    <ul id="templateList" class="template-list">
+                        <li>Chargement des modèles...</li>
+                    </ul>
+                </div>
+                <div class="load-section divider">
+                    <h4>Fichier Local</h4><br>
+                    <label for="jsonInput" class="btn btn-secondary">Parcourir mon poste</label>
+                    <input type="file" id="jsonInput" accept=".json" hidden>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <script src="api_ia.js"></script>
     <script src="app_shared.js"></script>
     <script src="app_creator.js"></script>
     <script src="app_dashboard.js"></script>
     <script src="app_audit.js"></script>
+    <script src="app_models.js"></script>
 </body>
+
 </html>
