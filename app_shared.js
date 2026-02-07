@@ -20,6 +20,8 @@ const btnShowDashboard = document.getElementById('btnShowDashboard');
 const btnShowModels = document.getElementById('btnShowModels');
 const themeBtn = document.getElementById('themeBtn');
 const resetBtn = document.getElementById('resetBtn');
+const loadBtn = document.getElementById('loadBtn');
+const exportBtn = document.getElementById('exportBtn');
 
 // -- STATE MANAGEMENT --
 const STORAGE_KEY = 'ezio_audit_data';
@@ -102,12 +104,22 @@ function switchView(view) {
     // 1. Masquer toutes les VUES (Contenu principal)
     [auditView, creatorView, dashboardView, modelsView].forEach(el => el.classList.add('hidden'));
 
-    // 2. Afficher la VUE demandée
-    // On ne touche PLUS à la visibilité des boutons (header), ils restent fixes.
+    // 2. Gestion de la visibilité des BOUTONS D'ACTION (Load/Save/Reset)
+    // Visibles pour Audit et Dashboard, Cachés pour Creator et Models
+    const actionBtns = [loadBtn, exportBtn, resetBtn];
+    if (view === 'app' || view === 'dashboard') {
+        actionBtns.forEach(btn => btn && btn.classList.remove('hidden'));
+    } else {
+        actionBtns.forEach(btn => btn && btn.classList.add('hidden'));
+    }
+
+    // 3. Gestion de l'état ACTIF des boutons de navigation
+    [btnShowApp, btnShowCreator, btnShowDashboard, btnShowModels].forEach(btn => btn && btn.classList.remove('btn-active-view'));
 
     if (view === 'creator') {
         creatorView.classList.remove('hidden');
         if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
+        if (btnShowCreator) btnShowCreator.classList.add('btn-active-view');
         // Sync with global state
         if (typeof loadFromGlobalState === 'function') {
             loadFromGlobalState(currentForm);
@@ -116,16 +128,19 @@ function switchView(view) {
     else if (view === 'dashboard') {
         dashboardView.classList.remove('hidden');
         if (toggleSidebarBtn) toggleSidebarBtn.classList.remove('hidden');
+        if (btnShowDashboard) btnShowDashboard.classList.add('btn-active-view');
         if (typeof renderDashboard === 'function') renderDashboard();
     }
     else if (view === 'models') {
         modelsView.classList.remove('hidden');
         if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
+        if (btnShowModels) btnShowModels.classList.add('btn-active-view');
         if (typeof initModelManager === 'function') initModelManager();
     }
     else { // APP (Audit) - Vue par défaut
         auditView.classList.remove('hidden');
         if (toggleSidebarBtn) toggleSidebarBtn.classList.remove('hidden');
+        if (btnShowApp) btnShowApp.classList.add('btn-active-view');
         if (typeof renderApp === 'function') renderApp();
     }
 }
