@@ -39,10 +39,61 @@ async function initModelManager() {
     document.getElementById('btnNewModel').onclick = createNewModel;
     document.getElementById('btnSaveModel').onclick = saveModelsToFile; // Sauvegarde JSON
     document.getElementById('btnDeleteModel').onclick = deleteCurrentModel;
+    document.getElementById('btnTestConnection').onclick = testConnection;
 
     // Chargement données
     await loadModelsData();
     renderModelList();
+}
+
+/**
+ * Teste la connexion et récupère la liste des modèles
+ */
+async function testConnection() {
+    const config = {
+        provider: domModels.inputs.provider.value,
+        endpoint: domModels.inputs.endpoint.value,
+        apiKey: domModels.inputs.apikey.value
+    };
+
+    showModelStatus("Test de connexion en cours...", "info");
+
+    // On vide le champ pour que la datalist affiche toutes les suggestions
+    domModels.inputs.model.value = "";
+
+    try {
+        const models = await ApiService.listModels(config);
+        console.log("DEBUG app_models: Models returned:", models);
+
+        // Remplissage du DataList
+        const dataList = document.getElementById('modelListOptions');
+        if (!dataList) {
+            console.error("DEBUG app_models: Element #modelListOptions introuvable !");
+            showModelStatus("Erreur interne : DataList introuvable", "error");
+            return;
+        }
+
+        dataList.innerHTML = "";
+
+        if (models.length === 0) {
+            showModelStatus("Connexion réussie, mais aucun modèle trouvé.", "warning");
+            return;
+        }
+
+        models.forEach(modelId => {
+            const opt = document.createElement('option');
+            opt.value = modelId;
+            dataList.appendChild(opt);
+        });
+
+        showModelStatus(`Succès ! ${models.length} modèles trouvés.`, "success");
+
+        // On rend le focus au champ pour faciliter la saisie/choix
+        domModels.inputs.model.focus();
+
+    } catch (e) {
+        showModelStatus("Erreur : " + e.message, "error");
+    }
 }
 
 async function loadModelsData() {
@@ -91,6 +142,10 @@ function selectModelItem(idx) {
     domModels.inputs.temperature.value = m.temperature || 0.7;
     domModels.inputs.context_length.value = m.context_length || 4096;
 
+    // Reset du DataList quand on change de modèle pour éviter la confusion ?
+    // Non, on le laisse vide ou utilisateur doit re-tester s'il veut la liste à jour
+    document.getElementById('modelListOptions').innerHTML = "";
+
     renderModelList();
 }
 
@@ -99,10 +154,10 @@ function createNewModel() {
         nom: "Nouveau Modèle",
         description: "",
         prompt: "Tu es un assistant expert...",
-        provider: "openai",
-        endpoint: "https://api.openai.com/v1/chat/completions",
-        apikey: "",
-        model: "gpt-4o",
+        provider: "lmstudio",
+        endpoint: "http://localhost:1234/v1/chat/completions",
+        apikey: "not-needed",
+        model: "model-identifier",
         temperature: 0.7,
         context_length: 8192
     };
@@ -140,7 +195,7 @@ function saveModelsToFile() {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 
-    showModelStatus("Fichier models.json généré. Veuillez remplacer l'ancien fichier.");
+    showModelStatus("Fichier models.json généré. Veuillez remplacer l'ancien fichier.", "success");
 }
 
 function deleteCurrentModel() {
@@ -154,9 +209,17 @@ function deleteCurrentModel() {
     renderModelList();
 }
 
-function showModelStatus(msg) {
+function showModelStatus(msg, type = 'info') {
     if (!domModels.status) return;
     domModels.status.innerText = msg;
     domModels.status.style.display = 'block';
+
+    // Style basique selon type
+    if (type === 'error') domModels.status.style.backgroundColor = '#fca5a5';
+    else if (type === 'success') domModels.status.style.backgroundColor = '#86efac';
+    else domModels.status.style.backgroundColor = '#bae6fd'; // info
+
+    domModels.status.style.color = '#1e293b';
+
     setTimeout(() => { domModels.status.style.display = 'none'; }, 4000);
 }

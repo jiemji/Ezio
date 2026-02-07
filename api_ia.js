@@ -156,6 +156,66 @@ const ApiService = {
         }
     },
 
+    /**
+     * Récupère la liste des modèles disponibles (GET /v1/models)
+     * Compatible OpenAI, Groq, LM Studio
+     */
+    async listModels(config) {
+        if (!config || !config.endpoint) throw new Error("Endpoint manquant.");
+
+        // Construction de l'URL pour /models
+        // On retire /chat/completions ou juste /chat si présent et on ajoute /models
+        let baseUrl = config.endpoint;
+
+        // Nettoyage robuste : on enlève la fin de l'URL liée au chat
+        baseUrl = baseUrl.replace(/\/chat\/completions\/?$/, '');
+        baseUrl = baseUrl.replace(/\/chat\/?$/, ''); // Cas LM Studio: .../v1/chat -> .../v1
+
+        // Retrait du slash final éventuel qui resterait
+        baseUrl = baseUrl.replace(/\/$/, '');
+
+        const url = `${baseUrl}/models`;
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (config.apiKey && config.apiKey !== 'not-needed') {
+                headers['Authorization'] = `Bearer ${config.apiKey}`;
+            }
+
+            const response = await fetch(url, { method: 'GET', headers });
+
+            if (!response.ok) {
+                // Si 404, peut-être que l'API n'expose pas /models (ex: certains proxies)
+                throw new Error(`Erreur ${response.status}: Impossible de lister les modèles.`);
+            }
+
+            const data = await response.json();
+            console.log("DEBUG: listModels API response", data);
+
+            // Standard OpenAI : { data: [ { id: "gpt-4" }, ... ] }
+            if (data.data && Array.isArray(data.data)) {
+                return data.data.map(m => m.id).sort();
+            }
+
+            // LM Studio (Specific) : { models: [ { id: "...", key: "..." }, ... ] }
+            // Note: LM Studio semble utiliser 'id' ou 'key' selon les versions
+            if (data.models && Array.isArray(data.models)) {
+                return data.models.map(m => m.id || m.key).sort();
+            }
+
+            // Autre format potentiel : Array direct ?
+            if (Array.isArray(data)) {
+                return data.map(m => m.id || m.key || m).sort();
+            }
+
+            console.warn("Format de liste modèles inconnu:", data);
+            return [];
+        } catch (e) {
+            console.error("Erreur listModels:", e);
+            throw e;
+        }
+    },
+
     extractContent(data) {
         if (data.output && Array.isArray(data.output)) {
             const msg = data.output.find(item => item.type === 'message');
