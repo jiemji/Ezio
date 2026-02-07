@@ -114,6 +114,67 @@ function renderCreatorTable() {
     creatorData.configs.forEach((_, idx) => renderParamsCell(idx));
 }
 
+
+let creatorAvailableModels = [];
+
+// Chargement des modèles au démarrage
+async function loadModels() {
+    try {
+        const response = await fetch('models.json');
+        if (response.ok) {
+            creatorAvailableModels = await response.json();
+            if (!Array.isArray(creatorAvailableModels)) creatorAvailableModels = [];
+        }
+    } catch (e) {
+        console.warn("Impossible de charger models.json", e);
+    }
+}
+loadModels();
+
+if (generateJsonBtn) {
+    generateJsonBtn.onclick = () => {
+        const finalCols = creatorData.configs.map((cfg, idx) => {
+            let colObj = { id: toSlug(cfg.label) || `col_${idx}`, label: cfg.label, type: cfg.type, visible: cfg.visible };
+
+            // Extract 'size' to be at root level, not in params
+            let finalParams = { ...cfg.params };
+            if (finalParams.size) {
+                colObj.size = finalParams.size;
+                delete finalParams.size;
+            }
+
+            if (Object.keys(finalParams).length > 0) colObj.params = finalParams;
+            return colObj;
+        });
+
+        // Transformation des données : Conversion des QCM (String -> Array of Objects)
+        const finalRows = creatorData.rows.map(row => {
+            return row.map((val, idx) => {
+                const cfg = creatorData.configs[idx];
+                // Si la colonne est de type QCM et que la valeur est du texte
+                if (cfg.type === 'qcm' && typeof val === 'string') {
+                    return val.split('\n')
+                        .map(item => item.trim())
+                        .filter(item => item !== "")
+                        .map(label => ({ label: label, checked: false }));
+                }
+                return val; // Sinon on garde la valeur originale
+            });
+        });
+
+        const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
+
+        downloadJSON(finalJson, 'audit_config.json');
+
+        if (confirm("JSON généré ! Charger dans l'application ?")) {
+            currentForm = finalJson;
+            saveState();
+            switchView('app');
+            renderApp();
+        }
+    };
+}
+
 function renderParamsCell(colIdx) {
     const cell = document.getElementById(`params-cell-${colIdx}`);
     if (!cell) return;
@@ -175,12 +236,73 @@ function renderParamsCell(colIdx) {
 
     // IA
     if (cfg.type === 'ia') {
+        // 1. Prompt (Requete)
         cell.appendChild(mkLabel("Prompt"));
         const pInp = document.createElement('textarea');
         pInp.className = 'config-textarea';
+        pInp.style.height = '60px';
         pInp.value = cfg.params.requete || "";
         pInp.onchange = (e) => cfg.params.requete = e.target.value;
         cell.appendChild(pInp);
+
+        // 2. Colonnes Cibles (Multi-select via checkbox list)
+        cell.appendChild(mkLabel("Colonnes contexte"));
+        const colListDiv = document.createElement('div');
+        colListDiv.style.maxHeight = '100px';
+        colListDiv.style.overflowY = 'auto';
+        colListDiv.style.border = '1px solid var(--border)';
+        colListDiv.style.padding = '5px';
+        colListDiv.style.marginBottom = '5px';
+        colListDiv.style.backgroundColor = 'var(--bg-color)';
+
+        if (!cfg.params.colonnes) cfg.params.colonnes = [];
+
+        creatorData.headers.forEach(h => {
+            // On ne propose pas la colonne elle-même (évite la récursion)
+            if (h === cfg.label) return;
+
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '5px';
+
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = cfg.params.colonnes.includes(h);
+            cb.onchange = (e) => {
+                if (e.target.checked) {
+                    if (!cfg.params.colonnes.includes(h)) cfg.params.colonnes.push(h);
+                } else {
+                    cfg.params.colonnes = cfg.params.colonnes.filter(c => c !== h);
+                }
+            };
+
+            const lbl = document.createElement('span');
+            lbl.innerText = h;
+            lbl.style.fontSize = '0.8rem';
+
+            div.appendChild(cb);
+            div.appendChild(lbl);
+            colListDiv.appendChild(div);
+        });
+        cell.appendChild(colListDiv);
+
+        // 3. Modèle (Dropdown)
+        cell.appendChild(mkLabel("Modèle IA"));
+        const mSel = document.createElement('select');
+        mSel.className = 'config-input';
+
+        // Option vide par défaut
+        mSel.appendChild(new Option("-- Choisir un modèle --", ""));
+
+        creatorAvailableModels.forEach(m => {
+            const opt = new Option(m.nom, m.nom); // On stocke le nom du modèle pour l'instant
+            if (cfg.params.modele === m.nom) opt.selected = true;
+            mSel.appendChild(opt);
+        });
+
+        mSel.onchange = (e) => cfg.params.modele = e.target.value;
+        cell.appendChild(mSel);
     }
 
     // QCM (Information seulement, extraction automatique par app_audit)
@@ -194,46 +316,3 @@ function renderParamsCell(colIdx) {
     }
 }
 
-if (generateJsonBtn) {
-    generateJsonBtn.onclick = () => {
-        const finalCols = creatorData.configs.map((cfg, idx) => {
-            let colObj = { id: toSlug(cfg.label) || `col_${idx}`, label: cfg.label, type: cfg.type, visible: cfg.visible };
-
-            // Extract 'size' to be at root level, not in params
-            let finalParams = { ...cfg.params };
-            if (finalParams.size) {
-                colObj.size = finalParams.size;
-                delete finalParams.size;
-            }
-
-            if (Object.keys(finalParams).length > 0) colObj.params = finalParams;
-            return colObj;
-        });
-
-        // Transformation des données : Conversion des QCM (String -> Array of Objects)
-        const finalRows = creatorData.rows.map(row => {
-            return row.map((val, idx) => {
-                const cfg = creatorData.configs[idx];
-                // Si la colonne est de type QCM et que la valeur est du texte
-                if (cfg.type === 'qcm' && typeof val === 'string') {
-                    return val.split('\n')
-                        .map(item => item.trim())
-                        .filter(item => item !== "")
-                        .map(label => ({ label: label, checked: false }));
-                }
-                return val; // Sinon on garde la valeur originale
-            });
-        });
-
-        const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
-
-        downloadJSON(finalJson, 'audit_config.json');
-
-        if (confirm("JSON généré ! Charger dans l'application ?")) {
-            currentForm = finalJson;
-            saveState();
-            switchView('app');
-            renderApp();
-        }
-    };
-}
