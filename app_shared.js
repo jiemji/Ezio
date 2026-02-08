@@ -29,6 +29,7 @@ const STORAGE_KEY = 'ezio_audit_data';
 let currentForm = {
     columns: [],
     rows: [],
+    rowMeta: [],
     statics: []
 };
 
@@ -85,6 +86,7 @@ function loadState() {
         try {
             currentForm = JSON.parse(saved);
             if (!currentForm.statics) currentForm.statics = [];
+            if (!currentForm.rowMeta) currentForm.rowMeta = []; // Init row metadata
             // Rendu initial si Audit est la vue active
             if (typeof renderApp === 'function') renderApp();
         } catch (e) {
