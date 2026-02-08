@@ -96,6 +96,12 @@ function applyLoadedData(data, message) {
 
     currentForm = data;
     if (!currentForm.statics) currentForm.statics = [];
+    if (!currentForm.rowMeta) currentForm.rowMeta = [];
+
+    // Sync metadata size with rows (in case logic file is loaded without meta)
+    while (currentForm.rowMeta.length < currentForm.rows.length) {
+        currentForm.rowMeta.push({});
+    }
 
     // Reset des filtres
     activeFilters = { chapter: null, subChapter: null };
@@ -268,6 +274,13 @@ function renderTable() {
     };
 
     // 1. HEADER & LOGIQUE DE TRI/FILTRE UI
+
+    // Colonne ACTIONS
+    const thAction = document.createElement('th');
+    thAction.className = "col-actions";
+    thAction.innerText = "";
+    trHead.appendChild(thAction);
+
     currentForm.columns.forEach((col, cIdx) => {
         if (col.visible === false) return;
         const th = document.createElement('th');
@@ -381,6 +394,35 @@ function renderTable() {
     rowsToProcess.forEach((item) => {
         visibleCount++;
         const tr = document.createElement('tr');
+
+        // Cellule ACTIONS
+        const tdAction = document.createElement('td');
+        tdAction.className = "col-actions";
+        const divBtns = document.createElement('div');
+        divBtns.className = 'action-buttons-container';
+
+        // Bouton "+" (Duplication)
+        const btnAdd = document.createElement('button');
+        btnAdd.className = "btn-row-action btn-add-row";
+        btnAdd.innerHTML = "+"; // Icone simple
+        btnAdd.title = "Dupliquer cette ligne";
+        btnAdd.onclick = () => duplicateRow(item.originalIndex);
+        divBtns.appendChild(btnAdd);
+
+        // Bouton "Poubelle" (Suppression) - Uniquement si ligne ajoutée
+        const meta = currentForm.rowMeta[item.originalIndex] || {};
+        if (meta.isAdded) {
+            const btnDel = document.createElement('button');
+            btnDel.className = "btn-row-action btn-delete-row";
+            btnDel.innerHTML = "🗑️";
+            btnDel.title = "Supprimer cette ligne";
+            btnDel.onclick = () => deleteRow(item.originalIndex);
+            divBtns.appendChild(btnDel);
+        }
+
+        tdAction.appendChild(divBtns);
+        tr.appendChild(tdAction);
+
         item.data.forEach((cell, cIdx) => {
             const col = currentForm.columns[cIdx];
             if (col.visible === false) return;
@@ -487,7 +529,21 @@ loadModels();
 
 function renderCell(container, col, value, r, c) {
     switch (col.type) {
-        case 'question': case 'chapitre': case 'sous-chapitre': case 'reference':
+        case 'question':
+            const meta = currentForm.rowMeta[r] || {};
+            if (meta.isAdded) {
+                // Editable question for added rows
+                const txt = document.createElement('textarea');
+                txt.value = value || "";
+                txt.className = "editable-question"; // Optional class for specific styling
+                txt.oninput = (e) => updateValue(r, c, e.target.value);
+                container.appendChild(txt);
+            } else {
+                // Readonly for original rows
+                container.classList.add('cell-readonly'); container.innerText = value || "";
+            }
+            break;
+        case 'chapitre': case 'sous-chapitre': case 'reference':
             container.classList.add('cell-readonly'); container.innerText = value || ""; break;
         case 'reponse':
             const txt = document.createElement('textarea'); txt.value = value || "";
@@ -624,5 +680,63 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
         alert("Erreur IA: " + e.message);
     } finally {
         btn.innerHTML = "✨"; btn.disabled = false;
+    }
+}
+
+// -- ROW MANAGEMENT --
+function duplicateRow(rIndex) {
+    rIndex = parseInt(rIndex, 10);
+    if (isNaN(rIndex) || rIndex < 0 || rIndex >= currentForm.rows.length) return;
+
+    // 1. Clone Data
+    const sourceRow = currentForm.rows[rIndex];
+    const newRow = [...sourceRow];
+
+    // 2. Reset Fields logic
+    currentForm.columns.forEach((col, cIdx) => {
+        if (col.type === 'reponse' || col.type === 'ia') {
+            newRow[cIdx] = ""; // Empty responses and IA
+        } else if (col.type === 'combo') {
+            newRow[cIdx] = ""; // Reset selection
+        } else if (col.type === 'qcm') {
+            // Reset QCM: Keep options but uncheck all
+            if (Array.isArray(newRow[cIdx])) {
+                newRow[cIdx] = newRow[cIdx].map(item => ({ ...item, checked: false }));
+            } else if (col.params?.options) {
+                newRow[cIdx] = col.params.options.map(o => ({ label: o, checked: false }));
+            } else {
+                newRow[cIdx] = [];
+            }
+        }
+        // 'question', 'chapitre', 'sous-chapitre', 'reference' -> Kept as is (cloned)
+    });
+
+    // 3. Insert Row
+    currentForm.rows.splice(rIndex + 1, 0, newRow);
+
+    // 4. Insert Metadata
+    const newMeta = { isAdded: true };
+    currentForm.rowMeta.splice(rIndex + 1, 0, newMeta);
+
+    // 5. Save & Render
+    saveState();
+    renderApp();
+}
+
+function deleteRow(rIndex) {
+    if (rIndex < 0 || rIndex >= currentForm.rows.length) return;
+
+    // Check if added
+    const meta = currentForm.rowMeta[rIndex];
+    if (!meta || !meta.isAdded) {
+        alert("Impossible de supprimer une ligne d'origine.");
+        return;
+    }
+
+    if (confirm("Supprimer cette ligne ?")) {
+        currentForm.rows.splice(rIndex, 1);
+        currentForm.rowMeta.splice(rIndex, 1);
+        saveState();
+        renderApp();
     }
 }
