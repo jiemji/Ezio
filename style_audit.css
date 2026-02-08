@@ -328,20 +328,22 @@ body.dark-mode .ia-textarea {
 }
 
 .btn-add-row {
-    background-color: var(--secondary);
-    color: var(--bg-color);
+    background-color: color-mix(in srgb, var(--primary), transparent 85%);
+    color: var(--primary);
     font-weight: bold;
 }
 
 .btn-add-row:hover {
     background-color: var(--primary);
+    color: white;
     transform: scale(1.1);
 }
 
 .btn-delete-row {
-    background-color: transparent;
+    background-color: color-mix(in srgb, var(--danger), transparent 85%);
     color: var(--danger);
-    border: 1px solid var(--danger);
+    border: none;
+    font-weight: bold;
 }
 
 .btn-delete-row:hover {

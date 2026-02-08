@@ -138,3 +138,29 @@ Le service `api_ia.js` adapte ce format selon le provider.
     ]
     ```
     Cette méthode contourne certaines limitations de parsing des petits modèles locaux.
+
+---
+
+## 7. Gestion Dynamique des Lignes
+
+### Fonctionnement
+*   **Duplication** : Utilisable sur toutes les lignes via le bouton `+`. La nouvelle ligne est une copie profonde (`deep copy`) des données, insérée immédiatement après la ligne source.
+*   **Contraintes** :
+    *   Les champs `Réponse`, `IA`, `Combo` (sélection) sont réinitialisés.
+    *   Les champs `Question` deviennent **éditables** (`textarea`) pour permettre la personnalisation.
+    *   Les `QCM` conservent les options mais sont décochés.
+*   **Suppression** : Uniquement possible pour les lignes ajoutées (identifiées par métadonnée).
+
+### Structure des Données (`rowMeta`)
+Pour distinguer les lignes d'origine des lignes ajoutées, une propriété `rowMeta` a été ajoutée à l'objet `currentForm`.
+```json
+{
+  "rows": [ ... ],
+  "rowMeta": [
+    {},              // Ligne d'origine (vide)
+    { "isAdded": true } // Ligne dupliquée
+  ]
+}
+```
+Ce tableau est synchronisé par index avec le tableau `rows`.
+
