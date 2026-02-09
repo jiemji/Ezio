@@ -1,0 +1,20 @@
+[
+  {
+    "id": "standard_excel_global",
+    "label": "Excel - Tableau Global",
+    "type": "excel",
+    "mode": "global"
+  },
+  {
+    "id": "standard_excel_chapters",
+    "label": "Excel - Par Chapitre",
+    "type": "excel",
+    "mode": "chapters"
+  },
+  {
+    "id": "standard_ppt_slides",
+    "label": "PowerPoint - Présentation",
+    "type": "ppt",
+    "mode": "slides"
+  }
+]

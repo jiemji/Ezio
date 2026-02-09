@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="style_models.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 
 <body>
@@ -22,7 +24,9 @@
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
             <div class="separator-vertical"></div>
             <button id="loadBtn" class="btn-secondary">Charger</button>
-            <button id="exportBtn" class="btn-primary">Sauver</button>
+            <button id="saveBtn" class="btn-primary">Sauver</button>
+            <button id="exportBtn" class="btn-primary" onclick="openExportModal()">Exporter</button>
+            <div class="separator-vertical"></div>
             <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
 
         </div>
@@ -259,11 +263,23 @@
         </div>
     </div>
 
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeExportModal">&times;</span>
+            <h3>Exporter les données</h3>
+            <p>Choisissez un format d'export :</p>
+            <div id="exportFormatList" class="export-list">
+                <!-- Formats injectés par JS -->
+            </div>
+        </div>
+    </div>
+
     <script src="api_ia.js"></script>
     <script src="app_shared.js"></script>
     <script src="app_creator.js"></script>
     <script src="app_dashboard.js"></script>
     <script src="app_audit.js"></script>
+    <script src="app_export.js"></script>
     <script src="app_models.js"></script>
 </body>
 
