@@ -135,9 +135,7 @@ if (searchInput) {
     };
 }
 
-if (exportBtn) {
-    exportBtn.onclick = () => downloadJSON(currentForm, `export_${new Date().getTime()}.json`);
-}
+// exportBtn.onclick is handled at the end of the file for the new Export Modal behavior
 
 
 
@@ -740,3 +738,6 @@ function deleteRow(rIndex) {
         renderApp();
     }
 }
+
+// --- EXPORT MANAGER ---
+// Moved to app_export.js

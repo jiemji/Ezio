@@ -23,6 +23,7 @@ const btnDocs = document.getElementById('btnDocs');
 const resetBtn = document.getElementById('resetBtn');
 const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
+const saveBtn = document.getElementById('saveBtn');
 
 // -- STATE MANAGEMENT --
 const STORAGE_KEY = 'ezio_audit_data';
@@ -109,7 +110,7 @@ function switchView(view) {
 
     // 2. Gestion de la visibilité des BOUTONS D'ACTION (Load/Save/Reset)
     // Visibles pour Audit et Dashboard, Cachés pour Creator et Models
-    const actionBtns = [loadBtn, exportBtn, resetBtn];
+    const actionBtns = [loadBtn, exportBtn, saveBtn, resetBtn];
     if (view === 'app' || view === 'dashboard') {
         actionBtns.forEach(btn => btn && btn.classList.remove('hidden'));
     } else {
@@ -180,5 +181,10 @@ function toSlug(str) {
 
 function downloadJSON(data, filename) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
