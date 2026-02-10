@@ -319,6 +319,11 @@
                 </li>
                 <li><strong>ID du Modèle</strong> : L'identifiant technique précis attendu par l'API (ex:
                     <code>gpt-4-turbo</code>, <code>mistral-7b-instruct</code>).
+                    <ul>
+                        <li><em>Nouveau :</em> Un bouton <strong>"Tester la connexion"</strong> permet de récupérer
+                            automatiquement la liste des modèles disponibles depuis le fournisseur et de les proposer
+                            dans une liste déroulante.</li>
+                    </ul>
                 </li>
                 <li><strong>Endpoint API</strong> : L'adresse URL du serveur d'inférence.</li>
                 <li><strong>Clé API (API Key)</strong> : Le mot de passe pour accéder au service (laisser ou mettre
@@ -454,7 +459,8 @@
                     <tr>
                         <td><code>app_*.js</code></td>
                         <td>Scripts</td>
-                        <td>Contiennent la logique de chaque module (Audit, Créateur, Tableau de bord, Modèles).</td>
+                        <td>Contiennent la logique de chaque module (Audit, Créateur, Tableau de bord, Modèles, Export).
+                        </td>
                     </tr>
                     <tr>
                         <td><code>api_ia.js</code></td>
