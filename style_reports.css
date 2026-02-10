@@ -1,0 +1,163 @@
+/* 
+ * EZIO - MODULE RAPPORTS
+ * Styles spécifiques à la vue Rapports
+ */
+
+/* Container principal de la vue rapports */
+.reports-container {
+    display: flex;
+    height: 100%;
+    /* Occupe toute la hauteur du parent (#reports-view) */
+    width: 100%;
+    overflow: hidden;
+    /* Pas de scroll global sur le container */
+}
+
+/* 
+ * SIDEBAR (Gauche)
+ * 3 sections verticales : Header, Rapports, Modules
+ */
+.reports-sidebar {
+    width: 300px;
+    /* Largeur fixe */
+    min-width: 300px;
+    background-color: var(--card-bg);
+    /* Cohérent avec le reste (Light: #fff, Dark: #1e293b) */
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 1. Header du Sidebar */
+.rpt-sidebar-header {
+    flex: 0 0 auto;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    background-color: var(--bg-color);
+    /* Légèrement différent du card-bg pour le header */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rpt-sidebar-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+/* 2. Liste des Rapports */
+.rpt-section-reports {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+}
+
+.rpt-section-reports .section-title {
+    padding: 0.5rem 1rem;
+    /* Utilisation de var(--readonly) qui est un gris très clair en light et un gris moyen en dark */
+    background-color: var(--readonly);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Zone scrollable pour la liste */
+.rpt-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: var(--card-bg);
+}
+
+/* 3. Liste des Modules */
+.rpt-section-modules {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* On garde le même fond que reports pour la cohérence, ou un léger tint si besoin */
+    background-color: var(--card-bg);
+}
+
+.rpt-section-modules .section-title {
+    padding: 0.5rem 1rem;
+    background-color: var(--readonly);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    /* border-top supprimé si on veut que ce soit collé au border-bottom de reports */
+}
+
+/* 
+ * STYLES DES ITEMS DE LISTE 
+ */
+.rpt-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: var(--card-bg);
+    /* Fond de carte */
+    border: 1px solid var(--border);
+    /* Bordure discrète */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-main);
+}
+
+/* Item Hover */
+.rpt-item:hover {
+    background-color: var(--menu-hover);
+    border-color: var(--text-muted);
+    /* Un peu plus visible au survol */
+}
+
+/* Item Selected (Actif) */
+.rpt-item.selected {
+    border: 2px solid var(--primary);
+    /* Bordure couleur primaire */
+    background-color: var(--menu-active-bg);
+    /* En dark mode, --menu-active-bg est sombre, --primary est bleu.
+       Si on veut une bordure "plus claire" en dark mode spécifique : */
+}
+
+/* Ajustement spécifique Dark Mode si nécessaire pour la bordure "plus claire" demandée */
+body.dark-mode .rpt-item.selected {
+    border-color: #fff;
+    /* Demande explicite utilisateur : bordure plus claire */
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Fond légèrement éclairci */
+}
+
+/* 
+ * MAIN CONTENT (Droite)
+ */
+.reports-main {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    background-color: var(--bg-color);
+    /* Fond général de l'app */
+    padding: 2rem;
+    color: var(--text-main);
+}
+
+.reports-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+}

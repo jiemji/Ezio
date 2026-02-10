@@ -11,6 +11,7 @@ const auditView = document.getElementById('audit-view');
 const creatorView = document.getElementById('creator-view');
 const dashboardView = document.getElementById('dashboard-view');
 const modelsView = document.getElementById('models-view');
+const reportsView = document.getElementById('reports-view');
 
 // -- UI ELEMENTS --
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
@@ -18,6 +19,7 @@ const btnShowApp = document.getElementById('btnShowApp');
 const btnShowCreator = document.getElementById('btnShowCreator');
 const btnShowDashboard = document.getElementById('btnShowDashboard');
 const btnShowModels = document.getElementById('btnShowModels');
+const btnShowReports = document.getElementById('btnShowReports');
 const themeBtn = document.getElementById('themeBtn');
 const btnDocs = document.getElementById('btnDocs');
 const resetBtn = document.getElementById('resetBtn');
@@ -113,12 +115,14 @@ if (btnShowCreator) btnShowCreator.onclick = () => switchView('creator');
 if (btnShowApp) btnShowApp.onclick = () => switchView('app');
 if (btnShowDashboard) btnShowDashboard.onclick = () => switchView('dashboard');
 if (btnShowModels) btnShowModels.onclick = () => switchView('models');
+if (btnShowReports) btnShowReports.onclick = () => switchView('reports');
 
 function switchView(view) {
     if (!creatorView || !auditView || !dashboardView || !modelsView) return;
 
     // 1. Masquer toutes les VUES (Contenu principal)
-    [auditView, creatorView, dashboardView, modelsView].forEach(el => el.classList.add('hidden'));
+    // 1. Masquer toutes les VUES (Contenu principal)
+    [auditView, creatorView, dashboardView, modelsView, reportsView].forEach(el => el && el.classList.add('hidden'));
 
     // 2. Gestion de la visibilité des BOUTONS D'ACTION (Load/Save/Reset)
     // Visibles pour Audit et Dashboard, Cachés pour Creator et Models
@@ -130,7 +134,8 @@ function switchView(view) {
     }
 
     // 3. Gestion de l'état ACTIF des boutons de navigation
-    [btnShowApp, btnShowCreator, btnShowDashboard, btnShowModels].forEach(btn => btn && btn.classList.remove('btn-active-view'));
+    // 3. Gestion de l'état ACTIF des boutons de navigation
+    [btnShowApp, btnShowCreator, btnShowDashboard, btnShowModels, btnShowReports].forEach(btn => btn && btn.classList.remove('btn-active-view'));
 
     if (view === 'creator') {
         creatorView.classList.remove('hidden');
@@ -152,6 +157,12 @@ function switchView(view) {
         if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
         if (btnShowModels) btnShowModels.classList.add('btn-active-view');
         if (typeof initModelManager === 'function') initModelManager();
+    }
+    else if (view === 'reports') {
+        if (reportsView) reportsView.classList.remove('hidden');
+        if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
+        if (btnShowReports) btnShowReports.classList.add('btn-active-view');
+        if (typeof loadReportsData === 'function') loadReportsData();
     }
     else { // APP (Audit) - Vue par défaut
         auditView.classList.remove('hidden');
