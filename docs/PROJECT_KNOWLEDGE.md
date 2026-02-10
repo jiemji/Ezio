@@ -44,6 +44,14 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   Outil de configuration pour transformer un JSON plat importé en structure Ezio.
     *   Définition des types de colonnes, paramètres IA (prompts), schémas de couleurs.
 
+5.  **Module Modèles (`app_models.js`)** :
+    *   Interface de gestion (CRUD) du fichier `models.json`.
+    *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider (si la route `GET /models` est standard/supporée).
+
+6.  **Module Export (`app_export.js`)** :
+    *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
+    *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
+
 ### Styles
 *   `style_shared.css` : Styles globaux, variables (couleurs, fonts), layout de base.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
