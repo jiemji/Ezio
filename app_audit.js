@@ -103,6 +103,11 @@ function applyLoadedData(data, message) {
         currentForm.rowMeta.push({});
     }
 
+    // Init notes if missing
+    if (!currentForm.notes) currentForm.notes = "";
+    // Update Notes UI
+    if (notesTextarea) notesTextarea.value = currentForm.notes;
+
     // Reset des filtres
     activeFilters = { chapter: null, subChapter: null };
     columnFilters = {};

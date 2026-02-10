@@ -11,7 +11,6 @@
       "label": "Réf",
       "type": "question",
       "visible": true,
-      "params": {},
       "size": "S"
     },
     {
@@ -25,7 +24,6 @@
       "label": "Description et Objectifs",
       "type": "question",
       "visible": true,
-      "params": {},
       "size": "L"
     },
     {
@@ -52,7 +50,7 @@
           "assez mature",
           "peu mature"
         ],
-        "colorScheme": "alert"
+        "colorScheme": "alert3"
       }
     },
     {
@@ -66,7 +64,7 @@
           "partiellement conforme",
           "non conforme"
         ],
-        "colorScheme": "alert"
+        "colorScheme": "alert3"
       }
     },
     {
@@ -78,7 +76,13 @@
         "cibles": [
           "ref",
           "titre_du_controle"
-        ]
+        ],
+        "colonnes": [
+          "Constats de l'auditeur",
+          "Preuves suggérées",
+          "Description et Objectifs"
+        ],
+        "modele": "Mockup"
       }
     }
   ],
@@ -150,18 +154,13 @@
       ""
     ]
   ],
-  "statics": [
-    {
-      "id": "widget_1770160420393",
-      "columnId": "niveau_de_maturite",
-      "type": "pie",
-      "title": "Niveau de maturité"
-    },
-    {
-      "id": "widget_1770160425571",
-      "columnId": "conformite",
-      "type": "bar",
-      "title": "Conformité"
-    }
+  "statics": [],
+  "rowMeta": [
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
   ]
 }
