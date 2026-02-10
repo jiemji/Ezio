@@ -25,13 +25,20 @@ const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
 const saveBtn = document.getElementById('saveBtn');
 
+// -- NOTES TOOL --
+const btnToggleNotes = document.getElementById('btnToggleNotes');
+const notesContainer = document.getElementById('notesContainer');
+const btnCloseNotes = document.getElementById('btnCloseNotes');
+const notesTextarea = document.getElementById('notesTextarea');
+
 // -- STATE MANAGEMENT --
 const STORAGE_KEY = 'ezio_audit_data';
 let currentForm = {
     columns: [],
     rows: [],
     rowMeta: [],
-    statics: []
+    statics: [],
+    notes: "" // Notes stockées
 };
 
 // -- INITIALISATION --
@@ -88,6 +95,11 @@ function loadState() {
             currentForm = JSON.parse(saved);
             if (!currentForm.statics) currentForm.statics = [];
             if (!currentForm.rowMeta) currentForm.rowMeta = []; // Init row metadata
+            if (!currentForm.notes) currentForm.notes = ""; // Init notes if missing
+
+            // Update Notes UI
+            if (notesTextarea) notesTextarea.value = currentForm.notes;
+
             // Rendu initial si Audit est la vue active
             if (typeof renderApp === 'function') renderApp();
         } catch (e) {
@@ -173,6 +185,78 @@ resetBtn.onclick = () => {
         location.reload(); // Le rechargement relancera switchView('app') via DOMContentLoaded
     }
 };
+
+if (saveBtn) {
+    saveBtn.onclick = () => {
+        saveState();
+        // Le comportement attendu est un export JSON
+        downloadJSON(currentForm, 'ezio_data.json');
+    };
+}
+
+// -- NOTES TOOL LISTENERS --
+if (btnToggleNotes && notesContainer) {
+    btnToggleNotes.onclick = () => {
+        notesContainer.classList.toggle('hidden');
+        if (!notesContainer.classList.contains('hidden')) {
+            if (notesTextarea) notesTextarea.focus();
+        }
+    };
+
+    // Drag Logic
+    const notesHeader = notesContainer.querySelector('.notes-header');
+    if (notesHeader) {
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        notesHeader.onmousedown = (e) => {
+            if (e.target.closest('button')) return; // Ignore close button
+
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            const rect = notesContainer.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            // Switch to absolute positioning relative to viewport
+            notesContainer.style.right = 'auto';
+            notesContainer.style.bottom = 'auto';
+            notesContainer.style.left = `${initialLeft}px`;
+            notesContainer.style.top = `${initialTop}px`;
+            notesContainer.style.transition = 'none'; // Disable transition for direct manipulation
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            notesContainer.style.left = `${initialLeft + dx}px`;
+            notesContainer.style.top = `${initialTop + dy}px`;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                notesContainer.style.transition = ''; // Restore transition
+            }
+        });
+    }
+}
+
+if (btnCloseNotes && notesContainer) {
+    btnCloseNotes.onclick = () => notesContainer.classList.add('hidden');
+}
+
+if (notesTextarea) {
+    notesTextarea.oninput = (e) => {
+        currentForm.notes = e.target.value;
+        // Optionnel : ne pas sauvegarder à chaque frappe pour perf, mais ici c'est léger
+        saveState();
+    };
+}
 
 // -- UTILS --
 function toSlug(str) {

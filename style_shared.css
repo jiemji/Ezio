@@ -478,3 +478,78 @@ body.menu-closed .sidebar {
     font-size: 24px;
     color: var(--text-muted);
 }
+
+/* --- NOTES TOOL --- */
+.notes-container {
+    position: fixed;
+    top: 70px;
+    /* Header height + spacing */
+    right: 20px;
+    width: 320px;
+    height: 400px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+}
+
+/* Override default .hidden (display:none) just for this element to keep flex layout */
+.notes-container.hidden {
+    display: flex !important;
+    transform: scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.notes-header {
+    background: var(--bg-color);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    /* Future proofing for draggable */
+}
+
+.notes-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.notes-header .btn-icon {
+    font-size: 1rem;
+    padding: 4px;
+    color: var(--text-muted);
+}
+
+.notes-header .btn-icon:hover {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 4px;
+}
+
+#notesTextarea {
+    flex: 1;
+    width: 100%;
+    border: none;
+    padding: 15px;
+    resize: none;
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    outline: none;
+}
+
+#notesTextarea:focus {
+    background: var(--menu-active-bg);
+}
