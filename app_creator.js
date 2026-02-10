@@ -32,6 +32,90 @@ if (csvInput) {
     };
 }
 
+// --- GESTION AJOUT COLONNE ---
+const btnOpenAddCol = document.getElementById('btnOpenAddCol');
+const addColumnModal = document.getElementById('addColumnModal');
+const closeAddColModalBtn = document.getElementById('closeAddColModal');
+const btnCancelAddCol = document.getElementById('btnCancelAddCol');
+const btnConfirmAddCol = document.getElementById('btnConfirmAddCol');
+const inpNewColName = document.getElementById('inpNewColName');
+
+if (btnOpenAddCol) {
+    btnOpenAddCol.onclick = () => {
+        if (addColumnModal) {
+            addColumnModal.classList.remove('hidden');
+            addColumnModal.style.display = 'block';
+            if (inpNewColName) {
+                inpNewColName.value = "";
+                inpNewColName.focus();
+            }
+        }
+    };
+}
+
+function closeAddColModal() {
+    if (addColumnModal) addColumnModal.style.display = 'none';
+}
+
+// Fermeture au clic en dehors (comme les autres modales)
+window.addEventListener('click', (e) => {
+    if (e.target == addColumnModal) closeAddColModal();
+});
+
+if (closeAddColModalBtn) closeAddColModalBtn.onclick = closeAddColModal;
+if (btnCancelAddCol) btnCancelAddCol.onclick = closeAddColModal;
+
+if (btnConfirmAddCol) {
+    btnConfirmAddCol.onclick = () => {
+        const name = inpNewColName.value.trim();
+        if (!name) return alert("Veuillez entrer un nom de colonne.");
+
+        // Vérification doublon
+        if (creatorData.headers.includes(name)) {
+            return alert("Une colonne porte déjà ce nom.");
+        }
+
+        addNewColumn(name);
+        closeAddColModal();
+    };
+}
+
+// Support touche Entrée dans le champ
+if (inpNewColName) {
+    inpNewColName.onkeyup = (e) => {
+        if (e.key === 'Enter') btnConfirmAddCol.click();
+    };
+}
+
+function addNewColumn(name) {
+    // 1. Ajouter au header
+    creatorData.headers.push(name);
+
+    // 2. Ajouter la config par défaut
+    creatorData.configs.push({
+        label: name,
+        visible: true,
+        type: 'question',
+        params: {}
+    });
+
+    // 3. Mettre à jour toutes les lignes existantes avec une valeur vide
+    // Si aucune ligne n'existe, on ne fait rien (les futures lignes auront la colonne)
+    creatorData.rows.forEach(row => {
+        row.push("");
+    });
+
+    // Si le tableau était vide (pas de lignes), on s'assure que la structure est prête
+    // (renderCreatorTable se base sur headers/configs donc c'est ok)
+
+    console.log(`Colonne '${name}' ajoutée.`);
+    renderCreatorTable();
+
+    // Afficher la zone de config si elle était cachée
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+}
+
+
 function parseImportJSON(data) {
     // Détection si c'est un fichier de config complet (Ezio JSON) ou un simple tableau de données
     if (data.columns && Array.isArray(data.columns) && data.rows && Array.isArray(data.rows)) {
@@ -220,15 +304,31 @@ if (generateJsonBtn) {
             });
         });
 
-        const finalJson = { columns: finalCols, rows: finalRows, statics: [] };
+        // Initialisation correcte des métadonnées
+        const finalJson = {
+            columns: finalCols,
+            rows: finalRows,
+            statics: [],
+            rowMeta: new Array(finalRows.length).fill(0).map(() => ({})) // Création des métadonnées vides pour chaque ligne
+        };
 
         downloadJSON(finalJson, 'audit_config.json');
 
         if (confirm("JSON généré ! Charger dans l'application ?")) {
+            // Mise à jour de l'état global
             currentForm = finalJson;
-            saveState();
+            saveState(); // Sauvegarde dans localStorage
+
+            // Basculer vers l'audit et forcer le rendu
             switchView('app');
-            renderApp();
+
+            // Appel explicite à renderApp pour être sûr (normalement switchView le fait déjà mais double sécurité)
+            if (typeof renderApp === 'function') {
+                renderApp();
+                // Petit hack : parfois le DOM n'est pas prêt si switchView fait des trucs async (ce qui n'est pas le cas ici mais bon)
+                // Si le tableau reste vide, c'est peut-être que rowMeta était manquant.
+                // Avec l'ajout de rowMeta ci-dessus, ça devrait régler le soucis d'affichage dans app_audit renderTable
+            }
         }
     };
 }

@@ -90,6 +90,8 @@
                         <label for="csvInput" class="btn-primary">📂 Importer un fichier de données</label>
                         <input type="file" id="csvInput" accept=".json" hidden>
                         <span id="csvFileName" class="file-name">Aucun fichier choisi</span>
+                        <div class="separator-vertical"></div>
+                        <button id="btnOpenAddCol" class="btn-secondary">+ Ajouter une colonne</button>
                     </div>
                 </div>
                 <div id="creatorConfig" class="creator-config hidden">
@@ -270,6 +272,23 @@
             <p>Choisissez un format d'export :</p>
             <div id="exportFormatList" class="export-list">
                 <!-- Formats injectés par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AJOUT COLONNE -->
+    <div id="addColumnModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeAddColModal">&times;</span>
+            <h3>Ajouter une colonne</h3>
+            <p>Entrez le nom de la nouvelle colonne :</p>
+            <div class="form-group">
+                <input type="text" id="inpNewColName" class="form-control" placeholder="Ex: Commentaires..."
+                    style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="modal-actions" style="margin-top: 1rem; justify-content: flex-end; display: flex; gap: 10px;">
+                <button id="btnCancelAddCol" class="btn-secondary">Annuler</button>
+                <button id="btnConfirmAddCol" class="btn-primary">Ajouter</button>
             </div>
         </div>
     </div>

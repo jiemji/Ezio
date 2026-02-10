@@ -43,6 +43,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 4.  **Module Créateur (`app_creator.js`)** :
     *   Outil de configuration pour transformer un JSON plat importé en structure Ezio.
     *   Définition des types de colonnes, paramètres IA (prompts), schémas de couleurs.
+    *   **Ajout dynamique de colonnes** : Possibilité d'étendre la structure existante directement depuis l'interface.
 
 5.  **Module Modèles (`app_models.js`)** :
     *   Interface de gestion (CRUD) du fichier `models.json`.
