@@ -12,6 +12,7 @@ const creatorView = document.getElementById('creator-view');
 const dashboardView = document.getElementById('dashboard-view');
 const modelsView = document.getElementById('models-view');
 const reportsView = document.getElementById('reports-view');
+const deliveriesView = document.getElementById('deliveries-view');
 
 // -- UI ELEMENTS --
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
@@ -20,6 +21,7 @@ const btnShowCreator = document.getElementById('btnShowCreator');
 const btnShowDashboard = document.getElementById('btnShowDashboard');
 const btnShowModels = document.getElementById('btnShowModels');
 const btnShowReports = document.getElementById('btnShowReports');
+const btnShowDeliveries = document.getElementById('btnShowDeliveries');
 const themeBtn = document.getElementById('themeBtn');
 const btnDocs = document.getElementById('btnDocs');
 const resetBtn = document.getElementById('resetBtn');
@@ -42,6 +44,9 @@ let currentForm = {
     statics: [],
     notes: "" // Notes stockées
 };
+
+// EXPOSE GLOBAL DATA FOR REPORTS MODULE
+window.EzioData = currentForm;
 
 // -- INITIALISATION --
 window.addEventListener('DOMContentLoaded', async () => {
@@ -95,6 +100,7 @@ function loadState() {
     if (saved) {
         try {
             currentForm = JSON.parse(saved);
+            window.EzioData = currentForm; // Update global reference
             if (!currentForm.statics) currentForm.statics = [];
             if (!currentForm.rowMeta) currentForm.rowMeta = []; // Init row metadata
             if (!currentForm.notes) currentForm.notes = ""; // Init notes if missing
@@ -116,13 +122,14 @@ if (btnShowApp) btnShowApp.onclick = () => switchView('app');
 if (btnShowDashboard) btnShowDashboard.onclick = () => switchView('dashboard');
 if (btnShowModels) btnShowModels.onclick = () => switchView('models');
 if (btnShowReports) btnShowReports.onclick = () => switchView('reports');
+if (btnShowDeliveries) btnShowDeliveries.onclick = () => switchView('deliveries');
 
 function switchView(view) {
     if (!creatorView || !auditView || !dashboardView || !modelsView) return;
 
     // 1. Masquer toutes les VUES (Contenu principal)
     // 1. Masquer toutes les VUES (Contenu principal)
-    [auditView, creatorView, dashboardView, modelsView, reportsView].forEach(el => el && el.classList.add('hidden'));
+    [auditView, creatorView, dashboardView, modelsView, reportsView, deliveriesView].forEach(el => el && el.classList.add('hidden'));
 
     // 2. Gestion de la visibilité des BOUTONS D'ACTION (Load/Save/Reset)
     // Visibles pour Audit et Dashboard, Cachés pour Creator et Models
@@ -135,7 +142,7 @@ function switchView(view) {
 
     // 3. Gestion de l'état ACTIF des boutons de navigation
     // 3. Gestion de l'état ACTIF des boutons de navigation
-    [btnShowApp, btnShowCreator, btnShowDashboard, btnShowModels, btnShowReports].forEach(btn => btn && btn.classList.remove('btn-active-view'));
+    [btnShowApp, btnShowCreator, btnShowDashboard, btnShowModels, btnShowReports, btnShowDeliveries].forEach(btn => btn && btn.classList.remove('btn-active-view'));
 
     if (view === 'creator') {
         creatorView.classList.remove('hidden');
@@ -162,7 +169,19 @@ function switchView(view) {
         if (reportsView) reportsView.classList.remove('hidden');
         if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
         if (btnShowReports) btnShowReports.classList.add('btn-active-view');
-        if (typeof loadReportsData === 'function') loadReportsData();
+        // Initialisation du module Reports
+        if (typeof AppReports !== 'undefined' && typeof AppReports.init === 'function') {
+            AppReports.init();
+        }
+    }
+    else if (view === 'deliveries') {
+        if (deliveriesView) deliveriesView.classList.remove('hidden');
+        if (toggleSidebarBtn) toggleSidebarBtn.classList.add('hidden');
+        if (btnShowDeliveries) btnShowDeliveries.classList.add('btn-active-view');
+        // Initialisation du module Livrables
+        if (typeof AppDeliveries !== 'undefined' && typeof AppDeliveries.init === 'function') {
+            AppDeliveries.init();
+        }
     }
     else { // APP (Audit) - Vue par défaut
         auditView.classList.remove('hidden');

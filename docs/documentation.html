@@ -350,7 +350,33 @@
                 <code>models.json</code> à la racine de l'application.
             </div>
 
-            <h3 id="notes-tool">1.5 Outil de Notes (Nouveau)</h3>
+            <h3 id="module-rapports">1.5 Module Rapports (Templates)</h3>
+            <p>Ce module permet de définir la <strong>structure</strong> de vos futurs livrables.</p>
+            <ul>
+                <li><strong>Templates</strong> : Créez des modèles réutilisables (ex: "Rapport d'Audit Interne").</li>
+                <li><strong>Modules</strong> : Ajoutez des blocs fonctionnels à votre modèle (Introduction, Synthèse,
+                    Analyse Swot...).</li>
+                <li><strong>Liste Verticale</strong> : Organisez l'ordre des sections par simple glisser-déposer ou via
+                    les flèches.</li>
+                <li><em>Attention :</em> Ce module ne sert qu'à la définition. Aucune génération d'IA ne se produit ici.
+                </li>
+            </ul>
+
+            <h3 id="module-livrables">1.6 Module Livrables (Génération)</h3>
+            <p>C'est ici que la magie opère. Transformez vos modèles en documents concrets.</p>
+            <ul>
+                <li><strong>Création</strong> : Sélectionnez un modèle existant pour créer un nouveau "Livrable".</li>
+                <li><strong>Mode Carte (Horizontal)</strong> : Chaque module du modèle devient une "carte" interactive.
+                </li>
+                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA spécifiquement pour ce rapport sans
+                    modifier le modèle d'origine.</li>
+                <li><strong>Génération (Tester / Générer)</strong> : Lancez l'IA module par module pour construire votre
+                    rapport étape par étape.</li>
+                <li><strong>Persistance</strong> : Vos livrables sont sauvegardés à l'intérieur de votre fichier d'audit
+                    (<code>.json</code>). Vous ne perdez jamais vos générations.</li>
+            </ul>
+
+            <h3 id="notes-tool">1.7 Outil de Notes</h3>
             <p>Un bloc-notes persistent est accessible à tout moment pour noter des idées, des rappels ou des minutes
                 pendant l'audit.</p>
             <ul>
@@ -604,7 +630,9 @@
                         <li><a href="#module-dashboard" class="sub-link">1.2 Tableau de Bord</a></li>
                         <li><a href="#module-createur" class="sub-link">1.3 Créateur</a></li>
                         <li><a href="#module-modeles" class="sub-link">1.4 Modèles IA</a></li>
-                        <li><a href="#notes-tool" class="sub-link">1.5 Notes</a></li>
+                        <li><a href="#module-rapports" class="sub-link">1.5 Rapports (Templates)</a></li>
+                        <li><a href="#module-livrables" class="sub-link">1.6 Livrables (Génération)</a></li>
+                        <li><a href="#notes-tool" class="sub-link">1.7 Notes</a></li>
                     </ul>
                 </li>
                 <li><a href="#logique-app">2. Logique Application</a>

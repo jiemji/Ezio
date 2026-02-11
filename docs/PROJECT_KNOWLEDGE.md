@@ -49,13 +49,25 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   Interface de gestion (CRUD) du fichier `models.json`.
     *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider (si la route `GET /models` est standard/supporée).
 
-6.  **Module Export (`app_export.js`)** :
+6.  **Module Rapports (`app_reports.js`)** :
+    *   Gestion des **Modèles de Rapports** (Templates).
+    *   Interface de définition de la structure : Ajout de modules re-utilisables dans une liste verticale.
+    *   *Note :* Ce module ne génère plus de contenu, il sert uniquement à définir la structure.
+
+7.  **Module Livrables (`app_deliveries.js`)** :
+    *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
+    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts et générer le contenu via l'IA.
+    *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé `.deliveries`.
+
+8.  **Module Export (`app_export.js`)** :
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 
 ### Styles
 *   `style_shared.css` : Styles globaux, variables (couleurs, fonts), layout de base.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
+*   `style_reports.css` : Styles pour l'éditeur de templates (Vertical).
+*   `style_deliveries.css` : Styles pour le générateur de livrables (Horizontal).
 
 ---
 
@@ -84,17 +96,26 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
   "statics": [
     // Widgets du Dashboard
     { "id": "widget_1", "vizType": "pie", "columnId": "col_1" }
+  ],
+  "deliveries": [
+    // Instances de rapports générés
+    {
+      "id": "dlv_123",
+      "name": "Rapport Mensuel - Janvier",
+      "structure": [ ... ] // Copie du template avec résultats
+    }
   ]
 }
 ```
 
 ---
 
-## 4. Gestion des Modèles (Templates)
+## 4. Gestion des Rapports & Livrables
 
-L'application permet de charger des modèles d'audit pré-configurés.
-*   `templates/templates.json` : Index listant les modèles disponibles (affiché dans la modale de chargement).
-*   `templates/*.json` : Fichiers contenant la structure (colonnes) et parfois des données pré-remplies.
+L'application distingue désormais la définition du modèle de l'exécution du rapport :
+
+*   **Rapports (Templates)** : Définis dans `reports.json`. Ce sont des structures vides (liste de modules).
+*   **Livrables (Instances)** : Stockés dans le fichier d'audit (`currentForm`). Ce sont des copies des templates, enrichies avec les prompts spécifiques et les résultats générés par l'IA. Cette architecture permet de modifier un rapport généré sans altérer le modèle original.
 
 ---
 
