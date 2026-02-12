@@ -1,7 +1,6 @@
 /* 
  * EZIO - MODULE LIVRABLES (DELIVERIES)
  * Styles spécifiques à la vue Livrables
- * Clone of style_reports.css but scoped and classes renamed
  */
 
 /* Container */
@@ -42,19 +41,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
-
-.dlv-section-list .section-title {
-    padding: 0.5rem 1rem;
-    background-color: var(--readonly);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .dlv-list-container {
@@ -112,6 +98,7 @@ body.dark-mode .sidebar-item.selected {
     flex: 1;
     height: 100%;
     overflow: hidden;
+    /* Prevent double scrollbars */
     background-color: var(--bg-color);
     display: flex;
     flex-direction: column;
@@ -135,36 +122,69 @@ body.dark-mode .sidebar-item.selected {
     align-items: center;
 }
 
+/* SCROLL CONTAINER */
 .dlv-editor-body {
     flex: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 1rem 2rem;
+    /* This element handles the scrolling for the whole page (horizontal & vertical) */
+    overflow: auto;
+
+    /* REMOVED PADDING HERE so scrollbars hit the edge of the screen */
+    padding: 0;
+
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    /* Ensure track sits inside */
     align-items: flex-start;
-    gap: 1.5rem;
 }
 
+/* CONTENT TRACK */
 .dlv-horizontal-track {
     display: flex;
     gap: 1.5rem;
-    padding-bottom: 1rem;
-    height: 100%;
+
+    /* MOVED PADDING HERE to space content from edges */
+    padding: 2rem;
+
+    /* Removed forced height/flex so it adapts to children (cards) */
+    /* flex: 1; */
+    /* min-height: 100%; */
+
+    height: auto;
+
+    /* Ensure track takes at least full width to allow scrolling if needed */
+    width: max-content;
+    min-width: 100%;
 }
 
 /* CARDS */
 .dlv-card {
-    flex: 0 0 400px;
-    min-width: 400px;
+    /* 
+       Updated Calculation:
+       (100vw - 300px sidebar - 450px buffer) / 3
+       Buffer accounts for: 
+       - Track Padding (4rem total)
+       - Card Gaps (3rem total)
+       - Scrollbar Width (approx 1rem)
+       - Extra safety margin
+    */
+    width: calc((100vw - 450px) / 3);
+
+    /* Reduced min-width to prevent forced overflow on smaller screens */
+    min-width: 300px;
+
+    flex: 0 0 auto;
+    /* No resizing via flex */
+
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    height: 95%;
-    overflow: hidden;
+
+    height: auto;
+    /* Allow vertical growth */
+    overflow: visible;
 }
 
 .dlv-card-header {
@@ -186,7 +206,7 @@ body.dark-mode .sidebar-item.selected {
 .dlv-card-body {
     flex: 1;
     padding: 15px;
-    overflow-y: auto;
+    overflow: visible;
 }
 
 .dlv-card-footer {
@@ -205,8 +225,8 @@ body.dark-mode .sidebar-item.selected {
     border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 0.9rem;
-    max-height: 300px;
-    overflow-y: auto;
+    overflow-y: visible;
+    /* Grow with content */
     text-align: left;
 }
 

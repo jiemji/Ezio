@@ -293,8 +293,7 @@ async function buildContext(scope, data) {
     });
 }
 
-function handleAddDelivery(e) {
-    e.stopPropagation();
+function handleAddDelivery() {
 
     const listHTML = availableTemplates.map(t => `
         <div class="template-item" data-id="${t.id}" style="padding:1rem; border-bottom:1px solid #eee; cursor:pointer;">

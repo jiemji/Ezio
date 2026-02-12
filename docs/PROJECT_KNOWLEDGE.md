@@ -19,12 +19,15 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 ## 2. Architecture des Fichiers
 
 ### Core & Structure
-*   `index.html` : Point d'entrée unique. Structure SPA (Single Page Application).
-*   `js/app_shared.js` : Gestion de l'état global (`currentForm`), navigation (`switchView`) et persistance.
+*   `index.html` : Point d'entrée unique. Charge le module principal via `<script type="module" src="js/main.js">`.
+*   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
 *   `js/core/` :
-    *   `Store.js` : Gestion centralisée du `localStorage`.
+    *   `State.js` : Gestion centralisée de l'état (`store`, `currentForm`). Remplace l'ancien `app_shared.js`.
+    *   `Store.js` : Classe de gestion du `localStorage` et du pattern Observer-Subscribe.
     *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, formatage, debounce...).
 *   `js/ui/` :
+    *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
+    *   `DOM.js` : Références centralisées aux éléments du DOM.
     *   `Modal.js` : Gestion des fenêtres modales.
     *   `Sidebar.js` : Gestion de la barre latérale et navigation.
 

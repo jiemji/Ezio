@@ -166,6 +166,14 @@ header #toggleSidebarBtn {
 /* --- LE RESTE DU CSS (Main Layout, Sidebar, Tables...) RESTE INCHANGÉ --- */
 
 /* Main Layout */
+.app-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
 main {
     display: flex;
     flex: 1;
