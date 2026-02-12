@@ -30,8 +30,8 @@ async function renderDeliveriesModule() {
     await loadTemplates();
     await loadModelsList();
 
-    if (!currentForm.deliveries) {
-        currentForm.deliveries = [];
+    if (!currentForm.reports) {
+        currentForm.reports = [];
     }
 
     renderSidebarList();
@@ -93,8 +93,8 @@ async function loadModelsList() {
 }
 
 function renderSidebarList() {
-    if (deliveriesSidebar && currentForm.deliveries) {
-        deliveriesSidebar.setItems(currentForm.deliveries);
+    if (deliveriesSidebar && currentForm.reports) {
+        deliveriesSidebar.setItems(currentForm.reports);
         deliveriesSidebar.setSelection(selection.id);
     }
 }
@@ -110,7 +110,7 @@ function renderMainView() {
         return;
     }
 
-    const delivery = currentForm.deliveries.find(d => d.id === selection.id);
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
     if (!delivery) return;
 
     const headerHTML = `
@@ -125,23 +125,36 @@ function renderMainView() {
     let trackHTML = `<div class="dlv-horizontal-track">`;
     const instances = delivery.structure || [];
 
+    // Pre-calculate chapter hierarchy for the selector
+    const hierarchy = buildChapterHierarchy();
+
     if (instances.length === 0) {
         trackHTML += `<div style="padding:2rem;">Ce livrable est vide.</div>`;
     }
 
     instances.forEach((inst, idx) => {
-        const sourceMod = (availableModules || []).find(m => m.id === inst.sourceId) || { name: 'Module', type: '?' };
+        const sourceModName = inst.name || ((availableModules || []).find(m => m.id === inst.sourceId) || { name: 'Module' }).name;
 
-        const config = inst.config || {};
-        const aiPrompt = config.ai ? (config.ai.prompt || '') : '';
-        const aiModel = config.ai ? (config.ai.model || '') : '';
+        // Ensure config structure exists
+        if (!inst.config) inst.config = {};
+        if (!inst.config.ai) inst.config.ai = {};
+        if (!inst.config.scope) inst.config.scope = { type: 'global', selection: [] };
+
+        const aiPrompt = inst.config.ai.prompt || '';
+        const aiModel = inst.config.ai.model || '';
+        const scopeType = inst.config.scope.type || 'global';
+
+        // Initialize columns config if missing (default to all)
+        if (!inst.config.columns) {
+            inst.config.columns = (currentForm.columns || []).map(c => c.id);
+        }
 
         trackHTML += `
             <div class="dlv-card" data-idx="${idx}">
                 <div class="dlv-card-header">
                      <div class="dlv-card-nav">
                         ${idx > 0 ? `<button class="btn-card-action btn-move-left" data-idx="${idx}" title="Reculer">&lt;</button>` : ''}
-                        <span style="font-weight:bold; font-size:0.9rem;">${idx + 1}. ${Utils.escapeHtml(sourceMod.name)}</span>
+                        <span style="font-weight:bold; font-size:0.9rem;">${idx + 1}. ${Utils.escapeHtml(sourceModName)}</span>
                         ${idx < instances.length - 1 ? `<button class="btn-card-action btn-move-right" data-idx="${idx}" title="Avancer">&gt;</button>` : ''}
                      </div>
                      <div class="dlv-card-actions">
@@ -150,8 +163,28 @@ function renderMainView() {
                 </div>
                 <div class="dlv-card-body">
                     <div class="form-group">
-                        <label>Prompt IA (Instance)</label>
-                        <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="6">${Utils.escapeHtml(aiPrompt)}</textarea>
+                        <label>Scope (Périmètre)</label>
+                        <select class="form-control slc-inst-scope" data-idx="${idx}">
+                            <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
+                            <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
+                        </select>
+                    </div>
+
+                    ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
+
+                    <div class="form-group">
+                        <label>Colonnes à inclure</label>
+                        ${renderColumnSelector(idx, inst.config.columns)}
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
+                        <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
+                        <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prompt IA</label>
+                        <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
                     </div>
                      <div class="form-group">
                         <label>Modèle IA</label>
@@ -163,7 +196,7 @@ function renderMainView() {
                 </div>
                 <div class="dlv-card-footer">
                      <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
-                     <div class="dlv-card-result">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
+                     <div class="dlv-card-result" contenteditable="true">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>
             </div>
         `;
@@ -180,7 +213,7 @@ function renderMainView() {
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {
         if (confirm("Supprimer ce livrable ?")) {
-            currentForm.deliveries = currentForm.deliveries.filter(d => d.id !== selection.id);
+            currentForm.reports = currentForm.reports.filter(d => d.id !== selection.id);
             selection = { id: null };
             store.save();
             renderSidebarList();
@@ -196,20 +229,205 @@ function renderMainView() {
     bindConfigInputs(delivery);
 }
 
+function buildChapterHierarchy() {
+    // Determine indexes for 'chapitre' and 'sous-chapitre' columns
+    let chapColIdx = -1;
+    let subChapColIdx = -1;
+
+    (currentForm.columns || []).forEach((col, idx) => {
+        if (col.type === 'chapitre') chapColIdx = idx;
+        if (col.type === 'sous-chapitre') subChapColIdx = idx;
+    });
+
+    if (chapColIdx === -1) return [];
+
+    const tree = {}; // Map<ChapterName, Set<SubChapterName>>
+
+    (currentForm.rows || []).forEach(row => {
+        const chap = row[chapColIdx] || 'Indéfini';
+        const sub = (subChapColIdx !== -1) ? (row[subChapColIdx] || 'Général') : 'Général';
+
+        if (!tree[chap]) tree[chap] = new Set();
+        tree[chap].add(sub);
+    });
+
+    return Object.keys(tree).map(chap => ({
+        name: chap,
+        subs: Array.from(tree[chap])
+    }));
+}
+
+function renderChapterSelector(idx, scopeType, hierarchy, selection) {
+    if (scopeType !== 'chapter') return '';
+
+    let html = `<div class="chapter-selector-container">`;
+
+    hierarchy.forEach((chap, cIdx) => {
+        // Check if all subs are selected to determine chapter check state
+        const allChecked = chap.subs.every(s => selection.includes(s));
+        const someChecked = !allChecked && chap.subs.some(s => selection.includes(s));
+
+        html += `
+            <div class="chap-item">
+                <label style="font-weight:bold; display:flex; align-items:center;">
+                    <input type="checkbox" class="chk-chapter" data-idx="${idx}" data-chap="${Utils.escapeHtml(chap.name)}" ${allChecked ? 'checked' : ''} style="margin-right:5px;">
+                    ${Utils.escapeHtml(chap.name)}
+                </label>
+                <div class="sub-list" style="margin-left: 20px;">
+        `;
+
+        chap.subs.forEach(sub => {
+            const isChecked = selection.includes(sub);
+            html += `
+                <label style="display:flex; align-items:center; font-size:0.9em;">
+                    <input type="checkbox" class="chk-subchap" data-idx="${idx}" data-sub="${Utils.escapeHtml(sub)}" ${isChecked ? 'checked' : ''} style="margin-right:5px;">
+                    ${Utils.escapeHtml(sub)}
+                </label>
+            `;
+        });
+
+        html += `</div></div>`;
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+function renderColumnSelector(idx, selectedCols) {
+    let html = `<div class="chapter-selector-container" style="max-height:150px;">`; // Reuse container style
+
+    (currentForm.columns || []).forEach(col => {
+        const isChecked = selectedCols.includes(col.id);
+        html += `
+            <label style="display:flex; align-items:center; margin-bottom:5px;">
+                <input type="checkbox" class="chk-col" data-idx="${idx}" data-colid="${col.id}" ${isChecked ? 'checked' : ''} style="margin-right:8px;">
+                ${Utils.escapeHtml(col.label)}
+            </label>
+        `;
+    });
+
+    html += `</div>`;
+    return html;
+}
+
 function bindConfigInputs(delivery) {
-    els.main.querySelectorAll('.txt-inst-prompt').forEach(txt => {
+    const main = els.main;
+
+    // Prompt
+    main.querySelectorAll('.txt-inst-prompt').forEach(txt => {
         txt.onchange = (e) => {
             const idx = parseInt(e.target.dataset.idx);
-            if (!delivery.structure[idx].config.ai) delivery.structure[idx].config.ai = {};
             delivery.structure[idx].config.ai.prompt = e.target.value;
             store.save();
         };
     });
-    els.main.querySelectorAll('.slc-inst-model').forEach(slc => {
+
+    // Model
+    main.querySelectorAll('.slc-inst-model').forEach(slc => {
         slc.onchange = (e) => {
             const idx = parseInt(e.target.dataset.idx);
-            if (!delivery.structure[idx].config.ai) delivery.structure[idx].config.ai = {};
             delivery.structure[idx].config.ai.model = e.target.value;
+            store.save();
+        };
+    });
+
+    // Scope Type
+    main.querySelectorAll('.slc-inst-scope').forEach(slc => {
+        slc.onchange = (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            delivery.structure[idx].config.scope.type = e.target.value;
+            if (e.target.value === 'global') {
+                delivery.structure[idx].config.scope.selection = []; // Clear selection if global
+            }
+            store.save();
+            renderMainView(); // Re-render to show/hide checkboxes
+        };
+    });
+
+    // Chapter Checkbox (Parent)
+    main.querySelectorAll('.chk-chapter').forEach(chk => {
+        chk.onclick = (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            const chapName = e.target.getAttribute('data-chap');
+            const hierarchy = buildChapterHierarchy(); // Rebuild is fast enough
+            const chap = hierarchy.find(c => c.name === chapName);
+
+            if (!chap) return;
+
+            let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+            if (e.target.checked) {
+                // Add all subs of this chapter
+                chap.subs.forEach(s => {
+                    if (!currentSelection.includes(s)) currentSelection.push(s);
+                });
+            } else {
+                // Remove all subs of this chapter
+                currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
+            }
+
+            delivery.structure[idx].config.scope.selection = currentSelection;
+            store.save();
+            renderMainView(); // Refresh UI states
+        };
+    });
+
+    // Sub-chapter Checkbox (Child)
+    main.querySelectorAll('.chk-subchap').forEach(chk => {
+        chk.onclick = (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            const subName = e.target.getAttribute('data-sub');
+            let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+            if (e.target.checked) {
+                if (!currentSelection.includes(subName)) currentSelection.push(subName);
+            } else {
+                currentSelection = currentSelection.filter(s => s !== subName);
+            }
+
+            delivery.structure[idx].config.scope.selection = currentSelection;
+            store.save();
+            renderMainView(); // Refresh UI states
+        };
+    });
+
+    // Column Checkbox
+    main.querySelectorAll('.chk-col').forEach(chk => {
+        chk.onclick = (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            const colId = e.target.getAttribute('data-colid');
+            let currentCols = delivery.structure[idx].config.columns || [];
+
+            if (e.target.checked) {
+                if (!currentCols.includes(colId)) currentCols.push(colId);
+            } else {
+                currentCols = currentCols.filter(c => c !== colId);
+            }
+
+            delivery.structure[idx].config.columns = currentCols;
+            store.save();
+            // No need to re-render main view for columns, state is visual enough
+        };
+    });
+
+    // Table Format Checkbox
+    main.querySelectorAll('.chk-format-table').forEach(chk => {
+        chk.onclick = (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
+            delivery.structure[idx].config.isTable = e.target.checked;
+            store.save();
+        };
+    });
+
+    // Result Edit (Blur)
+    main.querySelectorAll('.dlv-card-result').forEach(div => {
+        div.onblur = (e) => {
+            const card = div.closest('.dlv-card');
+            if (!card) return;
+            const idx = parseInt(card.dataset.idx);
+            // Save innerHTML to preserve formatting edits
+            delivery.structure[idx].result = div.innerHTML;
             store.save();
         };
     });
@@ -331,14 +549,15 @@ function createDeliveryFromTemplate(tplId) {
 
     const structureClone = (template.structure || []).map(item => {
         // Handle both old format (object) and new format (string ID)
-        let sourceId, config;
+        let sourceId, config, sourceMod;
 
         if (typeof item === 'string') {
             sourceId = item;
-            const sourceMod = availableModules.find(m => m.id === sourceId);
+            sourceMod = availableModules.find(m => m.id === sourceId);
             config = sourceMod ? JSON.parse(JSON.stringify(sourceMod.config || {})) : {};
         } else {
             sourceId = item.sourceId;
+            sourceMod = availableModules.find(m => m.id === sourceId);
             config = JSON.parse(JSON.stringify(item.config || {}));
         }
 
@@ -346,6 +565,8 @@ function createDeliveryFromTemplate(tplId) {
             sourceId: sourceId,
             instanceId: 'inst_' + Date.now() + Math.random().toString(36).substr(2, 5),
             config: config,
+            name: (sourceMod ? sourceMod.name : 'Module Inconnu'),
+            type: (sourceMod ? sourceMod.type : 'analysis'),
             result: null
         };
     });
@@ -357,8 +578,8 @@ function createDeliveryFromTemplate(tplId) {
         structure: structureClone
     };
 
-    if (!currentForm.deliveries) currentForm.deliveries = [];
-    currentForm.deliveries.push(newDelivery);
+    if (!currentForm.reports) currentForm.reports = [];
+    currentForm.reports.push(newDelivery);
     store.save();
 
     selection = { id: newId };

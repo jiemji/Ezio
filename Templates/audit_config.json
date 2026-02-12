@@ -154,6 +154,14 @@
       ""
     ]
   ],
+  "rowMeta": [
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
   "statics": [
     {
       "id": "widget_1770927828649",
@@ -180,15 +188,8 @@
       "title": "Conformité - Par Chapitre"
     }
   ],
-  "rowMeta": [
-    {},
-    {},
-    {},
-    {},
-    {},
-    {}
-  ],
   "notes": "TEST \nNOTE",
+  "deliveries": [],
   "reports": [
     {
       "id": "rpt_standard_iso",
@@ -200,14 +201,27 @@
           "instanceId": "inst_1770845603132y74oeon4d",
           "config": {
             "scope": {
-              "type": "chapter"
+              "type": "chapter",
+              "selection": [
+                "Protection malware",
+                "Entrées physiques",
+                "Sensibilisation"
+              ]
             },
             "ai": {
               "model": "redsage-qwen3-8b-ins-i1",
               "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
-            }
+            },
+            "columns": [
+              "domaine",
+              "ref",
+              "titre_du_controle",
+              "niveau_de_maturite",
+              "conformite",
+              "actions_recommandees_ia"
+            ]
           },
-          "result": "[Le présent rapport d'audit de sécurité est destiné à évaluer la robustesse des mesures de protection mises en place par [Nom de l'Organisation], une entreprise reconnue pour son engagement dans le secteur [secteur d'activité]. Fondée il y a plus de [nombre] années, [Nom de l'Organisation] s'est développée grâce à sa capacité à innover et à répondre aux besoins changeants des marchés. Avec un chiffre d'affaires annuel de [montant en millions €], elle emploie actuellement [nombre] personnes réparties dans plusieurs sites géographiques.\n\nL'audit de sécurité, réalisé par l'équipe d'experts de [Nom du Cabinet d'Audit], a pour objectif principal d'examiner la conformité des pratiques internes avec les normes et réglementations en vigueur. Il vise également à identifier les vulnérabilités potentielles dans le système informatique et physique, ainsi que les lacunes dans l'organisation de la gestion des risques liés à la sécurité.\n\nCe rapport présente une analyse détaillée des processus actuels, des recommandations pour améliorer la posture de sécurité de l'entreprise, et un plan d'action priorisé pour renforcer sa résilience face aux menaces évoluantes. Nous espérons que ces efforts contribueront à maintenir et à accroître la confiance des parties prenantes dans les capacités de [Nom de l'Organisation] à protéger ses actifs et son information.]"
+          "result": "[Le texte en français]\n\nIntroduction\n\nL'audit de sécurité que nous présentons ici est réalisé dans le cadre des responsabilités attribuées à l'organisation [Nom de l'organisation]. Cette organisation, reconnue pour son engagement envers la protection des informations confidentielles et sensibles, a mis en place un système d'information robuste qui gère une grande quantité de données critiques. L'objectif principal de cet audit est d'évaluer la conformité du système avec les normes et réglementations applicables, ainsi que l'efficacité des mesures de sécurité mises en œuvre pour protéger ces informations.\n\nL'audit couvre plusieurs domaines clés tels que les contrôles organisationnels, le contrôle d'accès, la sensibilisation du personnel, et les contrôles physiques et technologiques. Chaque domaine est analysé à travers des politiques spécifiques, des procédures de vérification, et des constats sur place pour identifier les points forts et les domaines nécessitant une amélioration.\n\nCe rapport détaille les résultats de l'audit, propose des recommandations basées sur les meilleures pratiques du secteur, et fournit un plan d'action pour renforcer la posture en matière de sécurité de [Nom de l'organisation]. L'objectif est non seulement de satisfaire aux exigences légales et réglementaires, mais aussi de garantir une gestion optimale des risques liés à la sécurité de l'information."
         },
         {
           "sourceId": "mod_compliance_iso",
@@ -219,7 +233,18 @@
             "ai": {
               "model": "redsage-qwen3-8b-ins-i1",
               "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
-            }
+            },
+            "columns": [
+              "domaine",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
+              "conformite",
+              "actions_recommandees_ia"
+            ]
           },
           "result": "[Les données nécessaires pour effectuer une analyse en détail ne sont pas fournies dans votre requête. Cependant, je peux vous aider à structurer l'analyse que vous souhaitez faire sur la conformité avec les normes ISO 27001.\n\nPour évaluer la conformité par rapport aux normes ISO 27001, il est important de suivre ces étapes :\n\n1. **Comprendre les exigences** : Familiarisez-vous avec tous les articles et clauses des normes ISO 27001.\n2. **Répertorier les contrôles pertinents** : Identifiez les contrôles spécifiques qui sont requis pour chaque clause de la norme.\n3. **Évaluer l'application** : Vérifiez si ces contrôles sont correctement appliqués et documentés dans votre organisation.\n4. **Identifier les points de non-conformité** :\n   - **Points de non-conformité majeurs** : Ces sont des écarts significatifs qui peuvent entraîner un échec total de l'atteinte d'un objectif de sécurité ou une violation importante des normes ISO 27001.\n   - **Points de non-conformité mineurs** : Ce sont des écarts moins importants, mais néanmoins nécessitant une attention et une correction.\n\n5. **Documenter les résultats** : Notez tous les points identifiés en tant que non-conformes, avec des descriptions détaillées et des recommandations pour la résolution.\n\nSi vous avez des données spécifiques à analyser, n'hésitez pas à me les fournir, et je serai heureux de vous aider plus en détail.]"
         },
@@ -233,7 +258,18 @@
             "ai": {
               "model": "redsage-qwen3-8b-ins-i1",
               "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
-            }
+            },
+            "columns": [
+              "domaine",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
+              "conformite",
+              "actions_recommandees_ia"
+            ]
           },
           "result": "[Voici un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés :\n\n1. **Évaluation des risques** : Réaliser une évaluation complète des risques actuels pour identifier les plus critiques.\n2. **Priorisation des actions** : Classer les actions à entreprendre en fonction de leur impact potentiel et du temps nécessaire pour leur réalisation.\n3. **Développement d'un plan correctif** :\n   - Identifier les ressources nécessaires (personnel, budget, matériel).\n   - Définir un calendrier précis avec des échéances clés.\n4. **Communication interne** : Informer tous les acteurs concernés sur le plan d'action et leurs rôles respectifs.\n5. **Formation et sensibilisation** : Organiser des formations pour s'assurer que toutes les personnes impliquées comprennent leur rôle dans la mise en œuvre du plan.\n6. **Suivi et évaluation** : Mettre en place un système de suivi régulier pour évaluer l'avancement des actions et ajuster le plan si nécessaire.\n\nCe plan permettra d'agir de manière efficace et ciblée, réduisant ainsi les risques associés aux non-conformités.]"
         },
@@ -247,20 +283,31 @@
             "ai": {
               "model": "redsage-qwen3-8b-ins-i1",
               "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
-            }
+            },
+            "columns": [
+              "domaine",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
+              "conformite",
+              "actions_recommandees_ia"
+            ]
           },
           "result": "[Les risques principaux basés sur les vulnérabilités détectées peuvent être classés comme suit :\n\n1. **Risques Élevés :**\n   - Vulnérabilités permettant l'exécution de code distant (Remote Code Execution, RCE)\n   - Failles d'authentification robuste (comme les vulnérabilités SQL Injection ou Cross-Site Scripting, XSS)\n   - Biais dans le contrôle des autorisations (insuffisance des contrôles d'accès)\n\n2. **Risques Moyens :**\n   - Vulnérabilités de configuration inappropriée (comme les ports fermés mais non sécurisés)\n   - Erreurs dans la gestion des journaux et des logs\n   - Problèmes de mise à jour logicielle non régulière\n\n3. **Risques Faibles :**\n   - Vulnérabilités liées aux paramètres par défaut (comme les mots de passe faibles)\n   - Erreurs mineures dans la documentation technique\n   - Mauvaises pratiques d'encodage des données]"
         }
       ]
     },
     {
-      "id": "rpt_exec_summary",
-      "name": "Rapport Exécutif",
-      "deletable": true,
+      "id": "dlv_1770931015242",
+      "name": "Audit Complet ISO 27001 (Copie)",
+      "created": "2026-02-12T21:16:55.242Z",
       "structure": [
         {
           "sourceId": "mod_intro",
-          "instanceId": "inst_1770845603132ce2tpf0mu",
+          "instanceId": "inst_177093101524215i14",
           "config": {
             "scope": {
               "type": "chapter"
@@ -269,11 +316,14 @@
               "model": "redsage-qwen3-8b-ins-i1",
               "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
             }
-          }
+          },
+          "name": "Introduction & Contexte",
+          "type": "analysis",
+          "result": null
         },
         {
           "sourceId": "mod_compliance_iso",
-          "instanceId": "inst_17708456031329ob7paqqy",
+          "instanceId": "inst_1770931015242xw7r5",
           "config": {
             "scope": {
               "type": "global"
@@ -282,11 +332,14 @@
               "model": "gpt-4",
               "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
             }
-          }
+          },
+          "name": "Analyse Conformité ISO 27001",
+          "type": "analysis",
+          "result": null
         },
         {
           "sourceId": "mod_action_plan",
-          "instanceId": "inst_1770845603132pgcx5s8dl",
+          "instanceId": "inst_1770931015242z1oxg",
           "config": {
             "scope": {
               "type": "global"
@@ -295,11 +348,14 @@
               "model": "gpt-4",
               "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
             }
-          }
+          },
+          "name": "Plan d'Action Recommandé",
+          "type": "analysis",
+          "result": null
         },
         {
           "sourceId": "mod_risks",
-          "instanceId": "inst_1770845603132i3phk5dqt",
+          "instanceId": "inst_1770931015242hv6o9",
           "config": {
             "scope": {
               "type": "global"
@@ -308,37 +364,14 @@
               "model": "gpt-4",
               "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
             }
-          }
-        },
-        {
-          "sourceId": "mod_compliance_iso",
-          "instanceId": "inst_177084560313223t3ggow8",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
-            }
-          }
-        },
-        {
-          "sourceId": "mod_compliance_iso",
-          "instanceId": "inst_1770845603132g3bmeqxja",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
-            }
-          }
+          },
+          "name": "Synthèse des Risques",
+          "type": "analysis",
+          "result": null
         },
         {
           "sourceId": "mod_risks",
-          "instanceId": "inst_1770845603132w6f4ex5oj",
+          "instanceId": "inst_1770931015242vo9yu",
           "config": {
             "scope": {
               "type": "global"
@@ -347,66 +380,10 @@
               "model": "gpt-4",
               "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
             }
-          }
-        },
-        {
-          "sourceId": "mod_risks",
-          "instanceId": "inst_1770845603132rtkkw2n37",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
-            }
-          }
-        },
-        {
-          "sourceId": "mod_action_plan",
-          "instanceId": "inst_1770845603132ymw96w4gh",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "rpt_compliance_focus",
-      "name": "Focus Conformité",
-      "deletable": true,
-      "structure": [
-        {
-          "sourceId": "mod_compliance_iso",
-          "instanceId": "inst_17708456031323byqs8x8o",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
-            }
-          }
-        },
-        {
-          "sourceId": "mod_action_plan",
-          "instanceId": "inst_1770845603132v1thlg4ob",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "gpt-4",
-              "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
-            }
-          }
+          },
+          "name": "Synthèse des Risques",
+          "type": "analysis",
+          "result": null
         }
       ]
     }

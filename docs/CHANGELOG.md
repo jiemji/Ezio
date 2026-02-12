@@ -20,6 +20,12 @@ Une refonte complète de l'architecture JavaScript a été effectuée pour passe
 - **UI Livrables** : Amélioration de l'ergonomie (cartes largeur 1/3, scrollbars page entière fixées aux bords de l'écran).
 - **Architecture** : Simplification de la structure `reports.json`. Les rapports sont maintenant définis par une simple liste d'IDs de modules au lieu d'objets de configuration complets. Logiciels d'import/export et de sauvegarde mis à jour en conséquence.
 
+### Fonctionnalités
+- **Livrables - Scope** : Ajout d'une configuration de périmètre (Global ou par Chapitre/Sous-chapitre) avec sélection hiérarchique.
+- **Livrables - Colonnes** : Ajout d'un sélecteur de colonnes pour choisir quelles données de l'audit envoyer à l'IA.
+- **Livrables - Format** : Ajout d'une option "Tableau" (booléen) pour demander un formatage spécifique.
+- **Livrables - Édition** : Le résultat généré par l'IA est maintenant directement éditable par l'utilisateur (avec sauvegarde automatique).
+
 ## [1.5.0] - 2026-02-11
 ### Fonctionnalités
 - **Module Livrables** : Ajout de la vue "Livrables" pour générer des rapports basés sur des modèles.

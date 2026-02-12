@@ -241,3 +241,23 @@ body.dark-mode .sidebar-item.selected {
     display: inline-block;
     margin-right: 5px;
 }
+
+/* CHAPTER SELECTOR (Scope) */
+.chapter-selector-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: var(--bg-color);
+    /* Adapts to dark mode */
+    border-radius: 4px;
+}
+
+.chap-item {
+    margin-bottom: 5px;
+}
+
+.sub-list {
+    margin-left: 20px;
+}

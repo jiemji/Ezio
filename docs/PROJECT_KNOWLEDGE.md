@@ -63,8 +63,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
-    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts et générer le contenu via l'IA.
-    *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé `.deliveries`.
+    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope) et les colonnes contextuelles.
+    *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
 
 8.  **Module Export (`app_export.js`)** :
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
@@ -109,7 +109,18 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
     {
       "id": "dlv_123",
       "name": "Rapport Mensuel - Janvier",
-      "structure": [ ... ] // Copie du template avec résultats
+      "structure": [ 
+          {
+              "sourceId": "mod_1",
+              "config": {
+                  "ai": { "prompt": "...", "model": "..." },
+                  "scope": { "type": "chapter", "selection": ["Chap A", "Chap B"] },
+                  "columns": ["col_1", "col_3"],
+                  "isTable": true
+              },
+              "result": "Contenu généré..."
+          }
+      ]
     }
   ]
 }
