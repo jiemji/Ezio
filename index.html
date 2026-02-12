@@ -5,18 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZIO - Audit & Pilotage IA</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style_shared.css">
+    <link rel="stylesheet" href="css/style_audit.css">
+    <link rel="stylesheet" href="css/style_creator.css">
+    <link rel="stylesheet" href="css/style_dashboard.css">
+    <link rel="stylesheet" href="css/style_models.css">
+    <link rel="stylesheet" href="css/style_reports.css">
+    <link rel="stylesheet" href="css/style_deliveries.css">
 
-    <link rel="stylesheet" href="style_shared.css">
-    <link rel="stylesheet" href="style_creator.css">
-    <link rel="stylesheet" href="style_audit.css">
-    <link rel="stylesheet" href="style_dashboard.css">
-    <link rel="stylesheet" href="style_models.css">
-    <link rel="stylesheet" href="style_reports.css">
-    <link rel="stylesheet" href="style_deliveries.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 
 <body>
@@ -27,7 +24,7 @@
             <div class="separator-vertical"></div>
             <button id="loadBtn" class="btn-secondary">Charger</button>
             <button id="saveBtn" class="btn-primary">Sauver</button>
-            <button id="exportBtn" class="btn-primary" onclick="openExportModal()">Exporter</button>
+            <button id="exportBtn" class="btn-primary">Exporter</button>
             <div class="separator-vertical"></div>
             <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
 
@@ -265,65 +262,6 @@
         </div>
     </div> <!-- FIN APP CONTAINER -->
 
-    <div id="resetModal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Confirmer la réinitialisation ?</h3>
-            <p>Toutes les données en cours seront effacées. Cette action est irréversible.</p>
-            <div class="modal-actions">
-                <button id="confirmResetBtn" class="btn-danger">Confirmer</button>
-                <button id="cancelResetBtn" class="btn-secondary">Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalLoad" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3>Charger un Audit</h3>
-            <div class="load-options">
-                <div class="load-section">
-                    <h4>Modèles (Templates)</h4><br>
-                    <ul id="templateList" class="template-list">
-                        <li>Chargement des modèles...</li>
-                    </ul>
-                </div>
-                <div class="load-section divider">
-                    <h4>Fichier Local</h4><br>
-                    <label for="jsonInput" class="btn btn-secondary">Parcourir mon poste</label>
-                    <input type="file" id="jsonInput" accept=".json" hidden>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="exportModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeExportModal">&times;</span>
-            <h3>Exporter les données</h3>
-            <p>Choisissez un format d'export :</p>
-            <div id="exportFormatList" class="export-list">
-                <!-- Formats injectés par JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL AJOUT COLONNE -->
-    <div id="addColumnModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeAddColModal">&times;</span>
-            <h3>Ajouter une colonne</h3>
-            <p>Entrez le nom de la nouvelle colonne :</p>
-            <div class="form-group">
-                <input type="text" id="inpNewColName" class="form-control" placeholder="Ex: Commentaires..."
-                    style="width: 100%; box-sizing: border-box;">
-            </div>
-            <div class="modal-actions" style="margin-top: 1rem; justify-content: flex-end; display: flex; gap: 10px;">
-                <button id="btnCancelAddCol" class="btn-secondary">Annuler</button>
-                <button id="btnConfirmAddCol" class="btn-primary">Ajouter</button>
-            </div>
-        </div>
-    </div>
-
     <!-- NOTES CONTAINER -->
     <div id="notesContainer" class="notes-container hidden">
         <div class="notes-header">
@@ -333,15 +271,14 @@
         <textarea id="notesTextarea" placeholder="Vos notes ici..."></textarea>
     </div>
 
-    <script src="api_ia.js"></script>
-    <script src="app_shared.js"></script>
-    <script src="app_creator.js"></script>
-    <script src="app_dashboard.js"></script>
-    <script src="app_audit.js"></script>
-    <script src="app_export.js"></script>
-    <script src="app_models.js"></script>
-    <script src="app_reports.js"></script>
-    <script src="app_deliveries.js"></script>
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+    <!-- App Module Entry Point -->
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>

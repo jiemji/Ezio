@@ -2,7 +2,7 @@
  * Service API IA - Version Finale Robuste
  * Gère : OpenAI, LM Studio (API standard & spécifique), Groq
  */
-const ApiService = {
+export const ApiService = {
     async fetchLLM(config, messages) {
         if (!config || !config.provider) throw new Error("Configuration IA manquante.");
 
@@ -232,5 +232,3 @@ const ApiService = {
         return "Format de réponse inconnu";
     }
 };
-
-window.ApiService = ApiService;

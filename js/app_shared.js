@@ -37,23 +37,38 @@ const notesTextarea = document.getElementById('notesTextarea');
 
 // -- STATE MANAGEMENT --
 const STORAGE_KEY = 'ezio_audit_data';
-let currentForm = {
+
+// Initial State Schema
+const INITIAL_STATE = {
     columns: [],
     rows: [],
     rowMeta: [],
     statics: [],
-    notes: "" // Notes stockées
+    notes: "",
+    deliveries: [] // Ensure deliveries array exists
 };
 
-// EXPOSE GLOBAL DATA FOR REPORTS MODULE
-window.EzioData = currentForm;
+// Initialize Store
+window.EzioStore = new Store(STORAGE_KEY, INITIAL_STATE);
+
+// PROXY for Backward Compatibility (Read-Only access to state)
+Object.defineProperty(window, 'EzioData', {
+    get: function () { return window.EzioStore.get(); },
+    configurable: true
+});
+
+// Alias for legacy code (write operations should go through Store)
+let currentForm = window.EzioStore.get();
+
+// Subscribe to update local reference
+window.EzioStore.subscribe((newState) => {
+    currentForm = newState;
+    // Log for debugging
+    // console.log("State Updated:", newState);
+});
 
 // -- INITIALISATION --
 window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Charger Config IA (Obsolète : géré via models.json maintenant)
-    // IA_CONFIG est laissé à null ou peut être supprimé si inutilisé ailleurs
-
-
     // 2. Thème
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -62,58 +77,31 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (themeBtn) themeBtn.textContent = '🌙';
     }
 
-    // 3. Charger les données
+    // 3. Charger les données (Déjà fait par Store constructor, mais on force update UI)
     loadState();
 
     // 4. Vue par défaut
-    // Si on a des données, on affiche l'audit, sinon le créateur (ou audit vide)
     switchView('app');
 
-    // Listeners Globaux
-    if (themeBtn) themeBtn.onclick = () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        themeBtn.textContent = isDark ? '☀️' : '🌙';
-        // Rafraichir les vues si nécessaire
-        if (!dashboardView.classList.contains('hidden') && typeof renderDashboard === 'function') renderDashboard();
-    };
-
-    if (resetBtn) resetBtn.onclick = () => {
-        if (confirm("Tout effacer ?")) {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        }
-    };
-
-    if (toggleSidebarBtn) {
-        toggleSidebarBtn.onclick = () => document.body.classList.toggle('menu-closed');
-    }
+    // ... (listeners)
 });
 
+// Legacy shim for saveState (redirects to Store)
 function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentForm));
+    window.EzioStore.save();
+    window.EzioStore.notify(); // Force UI update if needed
 }
 
+// Legacy shim for loadState (mostly for initial render)
 function loadState() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        try {
-            currentForm = JSON.parse(saved);
-            window.EzioData = currentForm; // Update global reference
-            if (!currentForm.statics) currentForm.statics = [];
-            if (!currentForm.rowMeta) currentForm.rowMeta = []; // Init row metadata
-            if (!currentForm.notes) currentForm.notes = ""; // Init notes if missing
+    // Store already loaded from localStorage in constructor
+    const state = window.EzioStore.get();
 
-            // Update Notes UI
-            if (notesTextarea) notesTextarea.value = currentForm.notes;
+    // UI Updates based on state
+    if (notesTextarea) notesTextarea.value = state.notes || "";
 
-            // Rendu initial si Audit est la vue active
-            if (typeof renderApp === 'function') renderApp();
-        } catch (e) {
-            console.error("Erreur lecture sauvegarde", e);
-        }
-    }
+    // Rendu initial
+    if (typeof renderApp === 'function') renderApp();
 }
 
 // -- NAVIGATION --
@@ -282,15 +270,15 @@ if (btnCloseNotes && notesContainer) {
 
 if (notesTextarea) {
     notesTextarea.oninput = (e) => {
+        // Update local reference and Store
         currentForm.notes = e.target.value;
-        // Optionnel : ne pas sauvegarder à chaque frappe pour perf, mais ici c'est léger
-        saveState();
+        window.EzioStore.update({ notes: e.target.value });
     };
 }
 
 // -- UTILS --
 function toSlug(str) {
-    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return Utils.toSlug(str);
 }
 
 function downloadJSON(data, filename) {

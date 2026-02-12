@@ -1,71 +1,77 @@
-/**
- * EZIO - MODULE DASHBOARD
- * Gère l'affichage des graphiques.
- * Focus : Analyse des données Combo (Global/Croisé Horizontal)
- */
+import { store, currentForm } from '../core/State.js';
+import { registerModuleInit } from '../ui/Navigation.js';
+import { Utils } from '../core/Utils.js';
 
 let chartsInstances = [];
 
-// DOM Elements
-const btnAddWidget = document.getElementById('btnAddWidget');
-const kpiColSelect = document.getElementById('kpiColSelect');
-const kpiTypeSelect = document.getElementById('kpiTypeSelect'); 
-const dashboardGrid = document.getElementById('dashboardGrid');
+export function initDashboard() {
+    registerModuleInit('dashboard', renderDashboard);
 
-// --- 1. INITIALISATION & LISTENERS ---
+    const btnAddWidget = document.getElementById('btnAddWidget');
+    const kpiColSelect = document.getElementById('kpiColSelect');
 
-if (btnAddWidget) {
-    btnAddWidget.onclick = () => {
-        const colId = kpiColSelect.value;
-        const vizType = kpiTypeSelect.value; 
+    if (btnAddWidget) {
+        btnAddWidget.onclick = () => {
+            const kpiColSelect = document.getElementById('kpiColSelect');
+            const kpiTypeSelect = document.getElementById('kpiTypeSelect');
 
-        if (!colId) return alert("Veuillez choisir une colonne.");
-        if (!vizType) return alert("Veuillez choisir un format de graphique.");
+            const colId = kpiColSelect.value;
+            const vizType = kpiTypeSelect.value;
 
-        const col = currentForm.columns.find(c => c.id === colId);
-        if (!col) return;
+            if (!colId) return alert("Veuillez choisir une colonne.");
+            if (!vizType) return alert("Veuillez choisir un format de graphique.");
 
-        if (!currentForm.statics) currentForm.statics = [];
-        
-        currentForm.statics.push({
-            id: `widget_${Date.now()}`,
-            columnId: colId,
-            vizType: vizType,
-            title: `${col.label} - ${getVizLabel(vizType)}`
-        });
+            const col = currentForm.columns.find(c => c.id === colId);
+            if (!col) return;
 
-        saveState();
-        renderDashboard();
-    };
-}
+            if (!currentForm.statics) currentForm.statics = [];
 
-// Adaptation dynamique du Type de Graphique selon la Colonne choisie
-if (kpiColSelect) {
-    kpiColSelect.onchange = () => {
-        const colId = kpiColSelect.value;
-        kpiTypeSelect.innerHTML = '<option value="">-- Format --</option>';
-        
-        if (!colId) return;
+            currentForm.statics.push({
+                id: `widget_${Date.now()}`,
+                columnId: colId,
+                vizType: vizType,
+                title: `${col.label} - ${getVizLabel(vizType)}`
+            });
 
-        const col = currentForm.columns.find(c => c.id === colId);
-        if (!col) return;
+            store.save(); // Direct save
+            renderDashboard();
+        };
+    }
 
-        if (col.type === 'combo') {
-            // Groupe 1 : Analyse Globale
-            const grpGlobal = document.createElement('optgroup');
-            grpGlobal.label = "Analyse Globale";
-            grpGlobal.appendChild(new Option("Anneau (Donut)", "global_doughnut"));
-            grpGlobal.appendChild(new Option("Camembert (Pie)", "global_pie"));
-            grpGlobal.appendChild(new Option("Histogramme (Vertical)", "global_bar"));
-            kpiTypeSelect.add(grpGlobal);
+    if (kpiColSelect) {
+        kpiColSelect.onchange = () => {
+            const kpiTypeSelect = document.getElementById('kpiTypeSelect');
+            const colId = kpiColSelect.value;
+            kpiTypeSelect.innerHTML = '<option value="">-- Format --</option>';
 
-            // Groupe 2 : Analyse par Chapitre
-            const grpCross = document.createElement('optgroup');
-            grpCross.label = "Par Chapitre";
-            grpCross.appendChild(new Option("Empilement Horizontal", "cross_stacked"));
-            kpiTypeSelect.add(grpCross);
-        } 
-    };
+            if (!colId) return;
+
+            const col = currentForm.columns.find(c => c.id === colId);
+            if (!col) return;
+
+            if (col.type === 'combo') {
+                const grpGlobal = document.createElement('optgroup');
+                grpGlobal.label = "Analyse Globale";
+                grpGlobal.appendChild(new Option("Anneau (Donut)", "global_doughnut"));
+                grpGlobal.appendChild(new Option("Camembert (Pie)", "global_pie"));
+                grpGlobal.appendChild(new Option("Histogramme (Vertical)", "global_bar"));
+                kpiTypeSelect.add(grpGlobal);
+
+                const grpCross = document.createElement('optgroup');
+                grpCross.label = "Par Chapitre";
+                grpCross.appendChild(new Option("Empilement Horizontal", "cross_stacked"));
+                kpiTypeSelect.add(grpCross);
+            }
+        };
+    }
+
+    // Subscribe to store updates
+    store.subscribe(() => {
+        const dashboardView = document.getElementById('dashboard-view');
+        if (dashboardView && !dashboardView.classList.contains('hidden')) {
+            renderDashboard();
+        }
+    });
 }
 
 function getVizLabel(type) {
@@ -78,12 +84,14 @@ function getVizLabel(type) {
 }
 
 function updateKpiSelectors() {
+    const kpiColSelect = document.getElementById('kpiColSelect');
+    const kpiTypeSelect = document.getElementById('kpiTypeSelect');
+
     if (!kpiColSelect) return;
     const currentVal = kpiColSelect.value;
-    
+
     kpiColSelect.innerHTML = '<option value="">-- Choisir une colonne --</option>';
 
-    // Uniquement les colonnes de données analysables
     if (currentForm && currentForm.columns) {
         currentForm.columns.forEach(col => {
             if (['combo'].includes(col.type)) {
@@ -102,15 +110,13 @@ function updateKpiSelectors() {
     }
 }
 
-// --- 2. MOTEUR DE RENDU ---
-
 function renderDashboard() {
-    updateKpiSelectors(); 
+    updateKpiSelectors();
 
+    const dashboardGrid = document.getElementById('dashboardGrid');
     if (!dashboardGrid) return;
     dashboardGrid.innerHTML = "";
-    
-    // Nettoyage instances
+
     chartsInstances.forEach(c => c.destroy());
     chartsInstances = [];
 
@@ -123,60 +129,57 @@ function renderDashboard() {
     }
 
     currentForm.statics.forEach((widget, index) => {
-        renderWidget(widget, index);
+        renderWidget(widget, index, dashboardGrid);
     });
 }
 
-function renderWidget(widget, index) {
+function renderWidget(widget, index, container) {
     const card = document.createElement('div');
     card.className = 'widget-card';
 
-    // AJOUT: Gestion de la largeur auto pour les graphs horizontaux
     if (widget.vizType === 'cross_stacked') {
         card.classList.add('widget-wide');
     }
 
-    // Header
     const header = document.createElement('div');
     header.className = 'widget-header';
-    header.innerHTML = `<h3>${widget.title}</h3>`;
-    
+    header.innerHTML = `<h3>${Utils.escapeHtml(widget.title)}</h3>`;
+
     const btnDel = document.createElement('button');
     btnDel.className = 'btn-icon danger';
     btnDel.innerHTML = '🗑️';
     btnDel.onclick = () => {
         currentForm.statics.splice(index, 1);
-        saveState();
+        store.save(); // Direct save
         renderDashboard();
     };
     header.appendChild(btnDel);
     card.appendChild(header);
 
-    // Canvas
     const canvasContainer = document.createElement('div');
     canvasContainer.style.flex = "1";
     canvasContainer.style.position = "relative";
-    // Hauteur min adaptée pour les horizontaux
-    canvasContainer.style.minHeight = card.classList.contains('widget-wide') ? "350px" : "250px"; 
+    canvasContainer.style.minHeight = card.classList.contains('widget-wide') ? "350px" : "250px";
     canvasContainer.style.padding = "10px";
-    
+
     const canvas = document.createElement('canvas');
     canvasContainer.appendChild(canvas);
     card.appendChild(canvasContainer);
-    dashboardGrid.appendChild(card);
+    container.appendChild(card);
 
-    // Generation Config
     const config = prepareChartConfig(widget);
     if (config) {
-        chartsInstances.push(new Chart(canvas, config));
+        // Assume Chart is global (loaded via CDN as per Utils/Knowledge)
+        if (window.Chart) {
+            chartsInstances.push(new window.Chart(canvas, config));
+        } else {
+            canvasContainer.innerHTML = "Chart.js library not loaded.";
+        }
     } else {
         canvasContainer.innerHTML = "<div style='text-align:center; margin-top:50px; color:red'>Erreur: Colonne introuvable</div>";
     }
 }
 
-/**
- * Prépare la configuration Chart.js
- */
 function prepareChartConfig(widget) {
     const col = currentForm.columns.find(c => c.id === widget.columnId);
     if (!col) return null;
@@ -186,18 +189,17 @@ function prepareChartConfig(widget) {
     const options = col.params?.options || [];
     const vizType = widget.vizType;
 
-    // --- 1. COMBO : CROISÉ PAR CHAPITRE (Stacked Bar HORIZONTAL) ---
     if (vizType === 'cross_stacked') {
         const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
         if (chapIdx === -1) return null;
 
         const chapters = [...new Set(rows.map(r => r[chapIdx] || "Sans chapitre"))];
-        
+
         const datasets = options.map(opt => {
             const data = chapters.map(chap => {
                 return rows.filter(r => (r[chapIdx] || "Sans chapitre") === chap && r[colIndex] === opt).length;
             });
-            
+
             return {
                 label: opt,
                 data: data,
@@ -209,7 +211,7 @@ function prepareChartConfig(widget) {
             type: 'bar',
             data: { labels: chapters, datasets: datasets },
             options: {
-                indexAxis: 'y', // Horizontal
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
@@ -221,7 +223,6 @@ function prepareChartConfig(widget) {
         };
     }
 
-    // --- 2. COMBO : GLOBAL (Pie, Doughnut, Bar) ---
     if (vizType.startsWith('global_')) {
         const counts = {};
         rows.forEach(r => {
@@ -229,16 +230,16 @@ function prepareChartConfig(widget) {
             counts[val] = (counts[val] || 0) + 1;
         });
 
-        const labels = options.length > 0 
-            ? options.filter(o => counts[o]) 
+        const labels = options.length > 0
+            ? options.filter(o => counts[o])
             : Object.keys(counts);
-        
+
         Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
 
         const data = labels.map(l => counts[l]);
         const colors = labels.map(l => getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
-        
-        const type = vizType.split('_')[1]; // pie, doughnut, bar
+
+        const type = vizType.split('_')[1];
 
         return {
             type: type,
@@ -264,4 +265,44 @@ function prepareChartConfig(widget) {
 function getColorByIndex(i) {
     const palette = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
     return palette[i % palette.length];
+}
+
+function getComboColor(scheme, value, options) {
+    // Re-use logic from app_audit.js or better, move to Utils.js
+    // For now, duplicate to avoid cross-module dependency issues if not in Utils
+    // Or simpler: move to Utils.js?
+    // Let's rely on duplication for speed, as Utils is already refactored.
+    // Or better: Use Utils.getComboColor? It is not in Utils.js yet.
+    // I will duplicate logic here.
+
+    if (!scheme || !value || !options || options.length === 0) return '';
+    const index = options.indexOf(value);
+    if (index === -1) return '';
+    const fixedSchemes = {
+        'alert6': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
+        'alert3': ['#22c55e', '#eab308', '#ef4444'],
+        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
+    };
+    if (fixedSchemes[scheme]) {
+        const colors = fixedSchemes[scheme];
+        if (index >= colors.length) return colors[colors.length - 1];
+        return colors[index];
+    }
+
+    // Gradients
+    const baseColors = {
+        'blue': '59, 130, 246', 'green': '34, 197, 94', 'red': '239, 68, 68',
+        'purple': '168, 85, 247', 'orange': '249, 115, 22', 'yellow': '234, 179, 8'
+    };
+    const rgb = baseColors[scheme];
+    if (rgb) {
+        let alpha = 0.9;
+        if (options.length > 1) {
+            const startAlpha = 0.1; const endAlpha = 0.9;
+            const step = (endAlpha - startAlpha) / (options.length - 1);
+            alpha = startAlpha + (index * step);
+        }
+        return `rgba(${rgb}, ${alpha})`;
+    }
+    return '';
 }

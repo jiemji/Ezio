@@ -19,19 +19,23 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 ## 2. Architecture des Fichiers
 
 ### Core & Structure
-*   `index.html` : Point d'entrée unique. Contient la structure du SPA (Single Page Application) avec les différantes vues (`#audit-view`, `#dashboard-view`, `#creator-view`, `#models-view`).
-*   `app_shared.js` :
-    *   Gestion de l'état global (`currentForm`) et de la navigation (`switchView`).
-    *   Point d'entrée pour la persistance (`loadState` / `saveState`).
+*   `index.html` : Point d'entrée unique. Structure SPA (Single Page Application).
+*   `js/app_shared.js` : Gestion de l'état global (`currentForm`), navigation (`switchView`) et persistance.
+*   `js/core/` :
+    *   `Store.js` : Gestion centralisée du `localStorage`.
+    *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, formatage, debounce...).
+*   `js/ui/` :
+    *   `Modal.js` : Gestion des fenêtres modales.
+    *   `Sidebar.js` : Gestion de la barre latérale et navigation.
 
-### Modules Fonctionnels
+### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :
     *   Cœur de l'application.
     *   Rendu dynamique du tableau d'audit (`renderTable`).
     *   Gestion des types de cellules : Texte, Combo (Couleurs), QCM, IA.
     *   Système de filtres (Chapitre/Sous-chapitre) et de tri.
 
-2.  **Module IA (`api_ia.js`)** :
+2.  **Module IA (`js/api/api_ia.js`)** :
     *   Couche d'abstraction vers les LLMs.
     *   Supporte **LM Studio** (Local), **OpenAI**, **Groq**.
     *   **Spécificité LM Studio** : Transforme le payload standard en une structure "plate" (`input: [{type:'text'}]`) pour maximiser la compatibilité avec les contextes longs locaux.
@@ -47,7 +51,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 5.  **Module Modèles (`app_models.js`)** :
     *   Interface de gestion (CRUD) du fichier `models.json`.
-    *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider (si la route `GET /models` est standard/supporée).
+    *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider.
 
 6.  **Module Rapports (`app_reports.js`)** :
     *   Gestion des **Modèles de Rapports** (Templates).
@@ -63,12 +67,12 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 
-### Styles
-*   `style_shared.css` : Styles globaux, variables (couleurs, fonts), layout de base.
+### Styles (`css/`)
+*   `style_shared.css` : Styles globaux, variables, layout de base.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
-*   `style_reports.css` : Styles pour l'éditeur de templates (Vertical).
-*   `style_deliveries.css` : Styles pour le générateur de livrables (Horizontal).
-
+*   `style_reports.css` : Styles pour l'éditeur de templates.
+*   `style_deliveries.css` : Styles pour le générateur de livrables.
+*   `style_models.css` : Styles pour la page modèles.
 ---
 
 ## 3. Structure des Données (JSON)

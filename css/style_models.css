@@ -32,7 +32,7 @@
     padding: 10px;
 }
 
-.model-item {
+.model-item, .sidebar-item {
     padding: 12px;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
@@ -41,11 +41,11 @@
     margin-bottom: 4px;
 }
 
-.model-item:hover {
+.model-item:hover, .sidebar-item:hover {
     background: var(--menu-hover);
 }
 
-.model-item.active {
+.model-item.active, .sidebar-item.selected {
     background: var(--menu-active-bg);
     border-left: 3px solid var(--primary);
 }

@@ -1,0 +1,396 @@
+import { DOM } from '../ui/DOM.js';
+import { Utils } from '../core/Utils.js';
+import { store, currentForm } from '../core/State.js';
+import { switchView, registerModuleInit } from '../ui/Navigation.js';
+import { Modal } from '../ui/Modal.js';
+import { renderAudit } from './app_audit.js'; // Optional: for direct re-render if needed, or rely on stored subscription
+
+let creatorData = { headers: [], rows: [], configs: [] };
+let creatorAvailableModels = [];
+
+export function initCreator() {
+    registerModuleInit('creator', loadFromGlobalState);
+
+    // Initial load models
+    loadModels();
+
+    // Listeners
+    const csvInput = document.getElementById('csvInput');
+    const csvFileName = document.getElementById('csvFileName');
+
+    if (csvInput) {
+        csvInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (csvFileName) csvFileName.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const jsonData = JSON.parse(evt.target.result);
+                    parseImportJSON(jsonData);
+                    renderCreatorTable();
+                } catch (err) {
+                    alert("Erreur de lecture du JSON : " + err.message);
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        };
+    }
+
+    const btnOpenAddCol = document.getElementById('btnOpenAddCol');
+    if (btnOpenAddCol) {
+        btnOpenAddCol.onclick = openAddColModal;
+    }
+
+    const generateJsonBtn = document.getElementById('generateJsonBtn');
+    if (generateJsonBtn) {
+        generateJsonBtn.onclick = generateAndLoad;
+    }
+}
+
+function loadFromGlobalState(currentFormState) {
+    if (!currentFormState || !currentFormState.columns || !currentFormState.rows) return;
+
+    creatorData.headers = currentFormState.columns.map(c => c.label);
+    creatorData.rows = JSON.parse(JSON.stringify(currentFormState.rows));
+
+    creatorData.configs = currentFormState.columns.map(col => {
+        const cfg = {
+            label: col.label,
+            visible: col.visible !== false,
+            type: col.type || 'question',
+            params: col.params ? JSON.parse(JSON.stringify(col.params)) : {}
+        };
+        if (col.size) cfg.params.size = col.size;
+        return cfg;
+    });
+
+    renderCreatorTable();
+    const creatorConfigDiv = document.getElementById('creatorConfig');
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+    // console.log("DEBUG: Creator synced with State");
+}
+
+function openAddColModal() {
+    const content = `
+        <p>Entrez le nom de la nouvelle colonne :</p>
+        <div class="form-group">
+            <input type="text" id="inpNewColName" class="form-control" placeholder="Ex: Commentaires..." style="width: 100%;">
+        </div>
+    `;
+    const modal = new Modal('modalAddCol', 'Ajouter une colonne', content, [
+        { label: 'Annuler', class: 'btn-secondary', onClick: (e, m) => m.close() },
+        {
+            label: 'Ajouter', class: 'btn-primary', onClick: (e, m) => {
+                const inp = document.getElementById('inpNewColName');
+                const name = inp ? inp.value.trim() : "";
+                if (!name) return alert("Veuillez entrer un nom de colonne.");
+
+                if (creatorData.headers.includes(name)) {
+                    return alert("Une colonne porte déjà ce nom.");
+                }
+
+                addNewColumn(name);
+                m.close();
+            }
+        }
+    ]);
+    modal.render();
+    setTimeout(() => {
+        const inp = document.getElementById('inpNewColName');
+        if (inp) {
+            inp.focus();
+            inp.onkeyup = (e) => {
+                if (e.key === 'Enter') {
+                    const btn = document.querySelector('#modalAddCol .btn-primary');
+                    if (btn) btn.click();
+                }
+            };
+        }
+    }, 100);
+}
+
+function addNewColumn(name) {
+    creatorData.headers.push(name);
+    creatorData.configs.push({
+        label: name,
+        visible: true,
+        type: 'question',
+        params: {}
+    });
+
+    creatorData.rows.forEach(row => {
+        row.push("");
+    });
+
+    renderCreatorTable();
+    const creatorConfigDiv = document.getElementById('creatorConfig');
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+}
+
+function parseImportJSON(data) {
+    const creatorConfigDiv = document.getElementById('creatorConfig');
+    if (data.columns && Array.isArray(data.columns) && data.rows && Array.isArray(data.rows)) {
+        // Ezio Full
+        creatorData.headers = data.columns.map(c => c.label);
+        creatorData.rows = data.rows;
+        creatorData.configs = data.columns.map(col => ({
+            label: col.label,
+            visible: col.visible !== false,
+            type: col.type || 'question',
+            params: col.params || {}
+        }));
+        data.columns.forEach((col, idx) => {
+            if (col.size) {
+                if (!creatorData.configs[idx].params) creatorData.configs[idx].params = {};
+                creatorData.configs[idx].params.size = col.size;
+            }
+        });
+    } else if (Array.isArray(data) && data.length > 0) {
+        // Raw Array
+        creatorData.headers = Object.keys(data[0]);
+        creatorData.rows = data.map(obj => creatorData.headers.map(h => obj[h] || ""));
+        creatorData.configs = creatorData.headers.map(h => ({
+            label: h,
+            visible: true,
+            type: 'question',
+            params: {}
+        }));
+    } else {
+        alert("Format non reconnu.");
+        return;
+    }
+    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+}
+
+function renderCreatorTable() {
+    const configTable = document.getElementById('configTable');
+    if (!configTable) return;
+    configTable.innerHTML = "";
+
+    // Labels
+    let trLabels = document.createElement('tr');
+    trLabels.innerHTML = `<td style="font-weight:bold; color:var(--primary);">Label Colonne</td>`;
+    creatorData.headers.forEach(h => {
+        const td = document.createElement('td');
+        td.innerHTML = `<span class="config-label">${Utils.escapeHtml(h)}</span>`;
+        trLabels.appendChild(td);
+    });
+    configTable.appendChild(trLabels);
+
+    // Visible
+    let trVisible = document.createElement('tr');
+    trVisible.innerHTML = `<td><strong>Visible ?</strong></td>`;
+    creatorData.configs.forEach((cfg) => {
+        const td = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = cfg.visible;
+        cb.onchange = (e) => { cfg.visible = e.target.checked; };
+        td.appendChild(cb);
+        trVisible.appendChild(td);
+    });
+    configTable.appendChild(trVisible);
+
+    // Type
+    let trType = document.createElement('tr');
+    trType.innerHTML = `<td><strong>Type</strong></td>`;
+    const types = ['question', 'chapitre', 'sous-chapitre', 'reponse', 'combo', 'qcm', 'popup', 'ia'];
+
+    creatorData.configs.forEach((cfg, idx) => {
+        const td = document.createElement('td');
+        const sel = document.createElement('select');
+        sel.className = 'config-input';
+        types.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.innerText = t.toUpperCase();
+            if (t === cfg.type) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        sel.onchange = (e) => {
+            cfg.type = e.target.value;
+            renderParamsCell(idx);
+        };
+        td.appendChild(sel);
+        trType.appendChild(td);
+    });
+    configTable.appendChild(trType);
+
+    // Params
+    let trParams = document.createElement('tr');
+    trParams.id = "tr-params";
+    trParams.innerHTML = `<td><strong>Paramètres</strong></td>`;
+    creatorData.configs.forEach((_, idx) => {
+        const td = document.createElement('td');
+        td.id = `params-cell-${idx}`;
+        trParams.appendChild(td);
+    });
+    configTable.appendChild(trParams);
+
+    creatorData.configs.forEach((_, idx) => renderParamsCell(idx));
+}
+
+function renderParamsCell(colIdx) {
+    const cell = document.getElementById(`params-cell-${colIdx}`);
+    if (!cell) return;
+    cell.innerHTML = "";
+
+    const cfg = creatorData.configs[colIdx];
+    if (!cfg.params) cfg.params = {};
+    const mkLabel = (txt) => { const l = document.createElement('span'); l.className = 'param-label'; l.innerText = txt; return l; };
+
+    if (['question', 'reference'].includes(cfg.type)) {
+        cell.appendChild(mkLabel("Taille"));
+        const sel = document.createElement('select');
+        sel.className = 'config-input';
+        ['', 'S', 'M', 'L'].forEach(s => {
+            const o = document.createElement('option');
+            o.value = s; o.innerText = s || "-- Choisir --";
+            if (cfg.params.size === s) o.selected = true;
+            sel.appendChild(o);
+        });
+        sel.onchange = (e) => cfg.params.size = e.target.value;
+        cell.appendChild(sel);
+    }
+
+    if (['combo'].includes(cfg.type)) {
+        cell.appendChild(mkLabel("Options (une/ligne)"));
+        const txt = document.createElement('textarea');
+        txt.className = 'config-textarea';
+        txt.value = Array.isArray(cfg.params.options) ? cfg.params.options.join('\n') : "";
+        txt.onchange = (e) => { cfg.params.options = e.target.value.split('\n').map(x => x.trim()).filter(x => x); };
+        cell.appendChild(txt);
+        cell.appendChild(mkLabel("Schéma de Couleurs"));
+        const cSel = document.createElement('select');
+        cSel.className = 'config-input';
+        const schemes = [
+            { k: '', v: 'Aucun' },
+            { k: 'alert3', v: 'Alerte (3 coul)' },
+            { k: 'alert6', v: 'Alerte (6 coul)' },
+            { k: 'rainbow', v: 'Arc-en-Ciel (7 coul.)' },
+            { k: 'blue', v: 'Bleu (Dégradé)' },
+            { k: 'green', v: 'Vert (Dégradé)' },
+            { k: 'red', v: 'Rouge (Dégradé)' },
+            { k: 'purple', v: 'Violet (Dégradé)' },
+            { k: 'orange', v: 'Orange (Dégradé)' },
+            { k: 'yellow', v: 'Jaune (Dégradé)' }
+        ];
+        schemes.forEach(sc => {
+            const o = document.createElement('option');
+            o.value = sc.k; o.innerText = sc.v;
+            if (cfg.params.colorScheme === sc.k) o.selected = true;
+            cSel.appendChild(o);
+        });
+        cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
+        cell.appendChild(cSel);
+    }
+
+    if (cfg.type === 'ia') {
+        cell.appendChild(mkLabel("Prompt"));
+        const pInp = document.createElement('textarea');
+        pInp.className = 'config-textarea';
+        pInp.style.height = '60px';
+        pInp.value = cfg.params.requete || "";
+        pInp.onchange = (e) => cfg.params.requete = e.target.value;
+        cell.appendChild(pInp);
+
+        cell.appendChild(mkLabel("Colonnes contexte"));
+        const colListDiv = document.createElement('div');
+        colListDiv.style.maxHeight = '100px';
+        colListDiv.style.overflowY = 'auto';
+        colListDiv.style.border = '1px solid var(--border)';
+        colListDiv.style.padding = '5px';
+        colListDiv.style.marginBottom = '5px';
+        colListDiv.style.backgroundColor = 'var(--bg-color)';
+
+        if (!cfg.params.colonnes) cfg.params.colonnes = [];
+
+        creatorData.headers.forEach(h => {
+            if (h === cfg.label) return;
+            const div = document.createElement('div');
+            div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '5px';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = cfg.params.colonnes.includes(h);
+            cb.onchange = (e) => {
+                if (e.target.checked) { if (!cfg.params.colonnes.includes(h)) cfg.params.colonnes.push(h); }
+                else { cfg.params.colonnes = cfg.params.colonnes.filter(c => c !== h); }
+            };
+            const lbl = document.createElement('span'); lbl.innerText = h; lbl.style.fontSize = '0.8rem';
+            div.appendChild(cb); div.appendChild(lbl); colListDiv.appendChild(div);
+        });
+        cell.appendChild(colListDiv);
+
+        cell.appendChild(mkLabel("Modèle IA"));
+        const mSel = document.createElement('select');
+        mSel.className = 'config-input';
+        mSel.appendChild(new Option("-- Choisir un modèle --", ""));
+        creatorAvailableModels.forEach(m => {
+            const opt = new Option(m.nom, m.nom);
+            if (cfg.params.modele === m.nom) opt.selected = true;
+            mSel.appendChild(opt);
+        });
+        mSel.onchange = (e) => cfg.params.modele = e.target.value;
+        cell.appendChild(mSel);
+    }
+
+    if (cfg.type === 'qcm') {
+        const info = document.createElement('div');
+        info.className = 'param-info';
+        info.style.fontSize = '0.8em';
+        info.style.color = 'var(--primary)';
+        info.innerText = "Mode automatique : les options seront extraites des données de la colonne.";
+        cell.appendChild(info);
+    }
+}
+
+async function loadModels() {
+    try {
+        const response = await fetch('models.json');
+        if (response.ok) {
+            creatorAvailableModels = await response.json();
+            if (!Array.isArray(creatorAvailableModels)) creatorAvailableModels = [];
+        }
+    } catch (e) {
+        console.warn("Impossible de charger models.json", e);
+    }
+}
+
+function generateAndLoad() {
+    const finalCols = creatorData.configs.map((cfg, idx) => {
+        let colObj = { id: Utils.toSlug(cfg.label) || `col_${idx}`, label: cfg.label, type: cfg.type, visible: cfg.visible };
+        let finalParams = { ...cfg.params };
+        if (finalParams.size) {
+            colObj.size = finalParams.size;
+            delete finalParams.size;
+        }
+        if (Object.keys(finalParams).length > 0) colObj.params = finalParams;
+        return colObj;
+    });
+
+    const finalRows = creatorData.rows.map(row => {
+        return row.map((val, idx) => {
+            const cfg = creatorData.configs[idx];
+            if (cfg.type === 'qcm' && typeof val === 'string') {
+                return val.split('\n').map(item => item.trim()).filter(x => x).map(label => ({ label: label, checked: false }));
+            }
+            return val;
+        });
+    });
+
+    const finalJson = {
+        columns: finalCols,
+        rows: finalRows,
+        statics: [],
+        rowMeta: new Array(finalRows.length).fill(0).map(() => ({}))
+    };
+
+    Utils.downloadJSON(finalJson, 'audit_config.json');
+
+    if (confirm("JSON généré ! Charger dans l'application ?")) {
+        store.set(finalJson);
+        switchView('app');
+        // renderAudit() handled by subscription
+    }
+}
