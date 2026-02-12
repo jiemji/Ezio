@@ -79,20 +79,33 @@ const AppDeliveries = (() => {
     }
 
     async function loadTemplates() {
+        // 1. Try LocalStorage (Sync with AppReports)
+        const saved = localStorage.getItem('ezio_reports_data');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                availableTemplates = data.reports || [];
+                window.EzioReportsModules = data.modules || [];
+                console.log("AppDeliveries: Templates loaded from LocalStorage");
+                return;
+            } catch (e) {
+                console.error("AppDeliveries: Error parsing LocalStorage", e);
+            }
+        }
+
+        // 2. Fallback to reports.json
         try {
             const res = await fetch('reports.json');
             if (res.ok) {
                 const json = await res.json();
                 availableTemplates = json.reports || [];
-                // We also need availableModules to resolve module names later!
-                // Let's store them loosely or fetch them.
-                // For simplicity, let's attach modules to templates or store global.
-                // We'll trust existing `AppReports` logic or Fetch again?
-                // Fetch again to be independent.
                 window.EzioReportsModules = json.modules || [];
+                console.log("AppDeliveries: Templates loaded from reports.json");
             }
         } catch (e) {
             console.error("AppDeliveries: Error loading reports.json", e);
+            // Show error in sidebar if critical
+            if (els.listDeliveries) els.listDeliveries.innerHTML = `<div style="padding:10px; color:red;">Erreur chargement modèles</div>`;
         }
     }
 
