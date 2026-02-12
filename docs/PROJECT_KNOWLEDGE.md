@@ -121,8 +121,8 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
 
 L'application distingue désormais la définition du modèle de l'exécution du rapport :
 
-*   **Rapports (Templates)** : Définis dans `reports.json`. Ce sont des structures vides (liste de modules).
-*   **Livrables (Instances)** : Stockés dans le fichier d'audit (`currentForm`). Ce sont des copies des templates, enrichies avec les prompts spécifiques et les résultats générés par l'IA. Cette architecture permet de modifier un rapport généré sans altérer le modèle original.
+*   **Rapports (Templates)** : Définis dans `reports.json`. Ce sont des structures simplifiées contenant uniquement la liste des IDs des modules à inclure (ex: `["mod_intro", "mod_compliance"]`).
+*   **Livrables (Instances)** : Stockés dans le fichier d'audit (`currentForm`). Ce sont des copies complètes des modules, enrichies avec les prompts spécifiques et les résultats générés par l'IA. Au moment de la création d'un livrable, l'application récupère la configuration par défaut de chaque module depuis la bibliothèque.
 
 ---
 

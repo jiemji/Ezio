@@ -329,11 +329,23 @@ function createDeliveryFromTemplate(tplId) {
 
     const newId = 'dlv_' + Date.now();
 
-    const structureClone = (template.structure || []).map(inst => {
+    const structureClone = (template.structure || []).map(item => {
+        // Handle both old format (object) and new format (string ID)
+        let sourceId, config;
+
+        if (typeof item === 'string') {
+            sourceId = item;
+            const sourceMod = availableModules.find(m => m.id === sourceId);
+            config = sourceMod ? JSON.parse(JSON.stringify(sourceMod.config || {})) : {};
+        } else {
+            sourceId = item.sourceId;
+            config = JSON.parse(JSON.stringify(item.config || {}));
+        }
+
         return {
-            sourceId: inst.sourceId,
+            sourceId: sourceId,
             instanceId: 'inst_' + Date.now() + Math.random().toString(36).substr(2, 5),
-            config: JSON.parse(JSON.stringify(inst.config || {})),
+            config: config,
             result: null
         };
     });

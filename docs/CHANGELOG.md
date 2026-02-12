@@ -18,6 +18,7 @@ Une refonte complète de l'architecture JavaScript a été effectuée pour passe
 - **Livrables** : Correction d'un bug bloquant l'ajout de nouveaux livrables (problème de propagation d'événement).
 - **Export** : Refonte du module export en ES6.
 - **UI Livrables** : Amélioration de l'ergonomie (cartes largeur 1/3, scrollbars page entière fixées aux bords de l'écran).
+- **Architecture** : Simplification de la structure `reports.json`. Les rapports sont maintenant définis par une simple liste d'IDs de modules au lieu d'objets de configuration complets. Logiciels d'import/export et de sauvegarde mis à jour en conséquence.
 
 ## [1.5.0] - 2026-02-11
 ### Fonctionnalités

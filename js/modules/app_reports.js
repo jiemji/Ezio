@@ -136,7 +136,22 @@ async function loadModelsList() {
 }
 
 function saveToLocalStorage() {
-    localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reportsData));
+    // Create a deep copy to avoid modifying the active state
+    const dataToSave = JSON.parse(JSON.stringify(reportsData));
+
+    // Simplify the structure for storage (just module IDs)
+    dataToSave.reports.forEach(rpt => {
+        if (rpt.structure && Array.isArray(rpt.structure)) {
+            rpt.structure = rpt.structure.map(item => {
+                // If it's already a string, keep it
+                if (typeof item === 'string') return item;
+                // Otherwise extract the sourceId
+                return item.sourceId;
+            });
+        }
+    });
+
+    localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(dataToSave));
 }
 
 function renderSidebarLists() {
@@ -459,5 +474,20 @@ function showAddModuleModal(report) {
 }
 
 function downloadReportsJSON() {
-    Utils.downloadJSON(reportsData, 'reports.json');
+    // Create a deep copy to avoid modifying the active state
+    const dataToExport = JSON.parse(JSON.stringify(reportsData));
+
+    // Simplify the structure for export (just module IDs)
+    dataToExport.reports.forEach(rpt => {
+        if (rpt.structure && Array.isArray(rpt.structure)) {
+            rpt.structure = rpt.structure.map(item => {
+                // If it's already a string (shouldn't be in memory, but safe to check), keep it
+                if (typeof item === 'string') return item;
+                // Otherwise extract the sourceId
+                return item.sourceId;
+            });
+        }
+    });
+
+    Utils.downloadJSON(dataToExport, 'reports.json');
 }
