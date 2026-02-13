@@ -70,6 +70,11 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 8.  **Module Export (`app_export.js`)** :
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
+73: 
+74: 9.  **Module Output Word (`app_output_word.js`)** :
+75:     *   **Export Word Avancé** : Génère des fichiers `.docx` depuis les données de l'application.
+76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
+77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
 ### Styles (`css/`)
 *   `style_shared.css` : Styles globaux, variables, layout de base.

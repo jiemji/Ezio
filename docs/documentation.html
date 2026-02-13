@@ -368,13 +368,28 @@
                 <li><strong>Création</strong> : Sélectionnez un modèle existant pour créer un nouveau "Livrable".</li>
                 <li><strong>Mode Carte (Horizontal)</strong> : Chaque module du modèle devient une "carte" interactive.
                 </li>
-                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA, sélectionnez les colonnes et activez l'option <strong>"Tableau"</strong> pour inclure les données sources directement dans le rapport généré.</li>
+                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA, sélectionnez les colonnes et activez
+                    l'option <strong>"Tableau"</strong> pour inclure les données sources directement dans le rapport
+                    généré.</li>
                 <li><strong>Génération (Tester / Générer)</strong> : Lancez l'IA module par module pour construire votre
                     rapport étape par étape.</li>
                 <li><strong>Persistance</strong> : Vos livrables sont sauvegardés à l'intérieur de votre fichier d'audit
                     (<code>.json</code>). Vous ne perdez jamais vos générations.</li>
-                <li><strong>Export</strong> : Le bouton <strong>"Télécharger le Rapport"</strong> génère un fichier unique
-                    (<code>.md</code>) contenant tout votre livrable, prêt à être ouvert dans Word ou un éditeur Markdown.
+                <li><strong>Export</strong> : Le bouton <strong>"Télécharger le Rapport"</strong> génère un fichier
+                    unique
+                    (<code>.md</code>) contenant tout votre livrable, prêt à être ouvert dans Word ou un éditeur
+                    Markdown.
+                </li>
+                <li><strong>Export Word Avancé (Modèles)</strong> :
+                    <ul>
+                        <li>Vous pouvez charger un fichier Word existant (<code>.docx</code> ou <code>.dotx</code>) via
+                            le bouton <strong>"📂 Modèle Word"</strong>.</li>
+                        <li>Ezio va générer le rapport et l'injecter à l'intérieur de ce modèle.</li>
+                        <li>Si le modèle contient le texte <code>{{CONTENT}}</code>, le rapport remplacera ce texte.
+                            Sinon, il sera ajouté à la fin du document.</li>
+                        <li>Cela permet de conserver votre mise en page (Page de garde, En-têtes, Pieds de page,
+                            Marges...).</li>
+                    </ul>
                 </li>
             </ul>
 
@@ -474,7 +489,8 @@
             <p>L'application utilise deux types d'IA :</p>
             <ul>
                 <li><strong>IA Contextuelle (Audit)</strong> : Opère ligne par ligne pour une assistance précise.</li>
-                <li><strong>IA Globale (Livrables)</strong> : Opère sur un ensemble de lignes (Scope) pour générer des synthèses ou des rapports, en se basant sur un tableau de données structuré.</li>
+                <li><strong>IA Globale (Livrables)</strong> : Opère sur un ensemble de lignes (Scope) pour générer des
+                    synthèses ou des rapports, en se basant sur un tableau de données structuré.</li>
             </ul>
             <p><strong>Détail IA Contextuelle (Audit) :</strong></p>
             <ul>

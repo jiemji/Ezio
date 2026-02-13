@@ -5,6 +5,7 @@ import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
 import { downloadDeliveryWord } from './app_output_word.js';
+import { downloadDeliveryPpt } from './app_outputppt.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -124,11 +125,28 @@ function renderMainView() {
                     <span id="lblTemplateName" style="font-size:0.8rem; color:var(--text-muted);">Aucun modèle</span>
                 </div>
                 <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
+                <div style="display:flex; flex-direction:column; margin-right:10px;">
+                    <select id="slcPptTemplate" class="form-control" style="font-size:0.8rem; padding:2px; margin-bottom:2px; width:150px;">
+                        <option value="default">Style Standard</option>
+                    </select>
+                    <button id="btnDownloadPpt" class="btn-primary small" style="width:100%; background-color:#c43e1c; border-color:#c43e1c;">📊 PPT</button>
+                </div>
                 <button id="btnDownloadWord" class="btn-primary small" style="margin-right:10px;">📄 Télécharger (Word)</button>
-                <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer ce Livrable</button>
+                <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer</button>
             </div>
         </div>
     `;
+
+    // Load PPT templates list for the dropdown
+    fetch('ppt_config.json')
+        .then(res => res.json())
+        .then(config => {
+            const slc = document.getElementById('slcPptTemplate');
+            if (slc && config.templates) {
+                slc.innerHTML = config.templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            }
+        })
+        .catch(err => console.warn("Erreur chargement liste templates PPT", err));
 
     let trackHTML = `<div class="dlv-horizontal-track">`;
     const instances = delivery.structure || [];
@@ -242,6 +260,11 @@ function renderMainView() {
 
     document.getElementById('btnDownloadWord').addEventListener('click', () => {
         downloadDeliveryWord(delivery, templateBuffer);
+    });
+
+    document.getElementById('btnDownloadPpt').addEventListener('click', () => {
+        const tplId = document.getElementById('slcPptTemplate').value;
+        downloadDeliveryPpt(delivery, tplId);
     });
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {
