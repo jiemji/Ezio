@@ -76,6 +76,11 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
 77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
+10. **Module Output PPT (`app_outputppt.js`)** :
+    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS`.
+    *   **Templating JSON** : Système de templates défini par `ppt_config.json`. Permet de déclarer des "Masters" (Titres, Contenu) avec des positions absolues, des couleurs et des polices, sans toucher au code.
+    *   **Parsing Markdown** : Convertit le Markdown (Titres, Textes, Tableaux) en éléments natifs PowerPoint (Shapes, Tables) avec gestion basique du débordement.
+
 ### Styles (`css/`)
 *   `style_shared.css` : Styles globaux, variables, layout de base.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
