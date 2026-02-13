@@ -5,6 +5,7 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 ## [Non Publié] - En cours
 ### Ajouts
 - Création de ce fichier `CHANGELOG.md` pour le suivi historique.
+- **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres.
 
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
@@ -12,6 +13,7 @@ Une refonte complète de l'architecture JavaScript a été effectuée pour passe
 - **Modularisation** : Tous les fichiers JavaScript (`js/modules/`, `js/core/`, `js/ui/`) sont désormais des modules (`export` / `import`).
 - **Point d'entrée** : Création de `js/main.js` qui orchestre l'initialisation de l'application.
 - **Nettoyage** : Suppression de `js/app_shared.js` (legacy) et nettoyage de `index.html`.
+- **Refactoring** : Extraction de la logique d'export Word dans `js/modules/app_output_word.js`.
 - **État Global** : Centralisation de la gestion d'état dans `js/core/State.js` (Pattern Singleton/Store).
 
 ### Corrections

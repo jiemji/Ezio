@@ -4,6 +4,7 @@ import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
+import { downloadDeliveryWord } from './app_output_word.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -117,7 +118,8 @@ function renderMainView() {
         <div class="dlv-editor-header">
             <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
             <div class="dlv-actions">
-                <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger le Rapport</button>
+                <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
+                <button id="btnDownloadWord" class="btn-primary small" style="margin-right:10px;">📄 Télécharger (Word)</button>
                 <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer ce Livrable</button>
             </div>
         </div>
@@ -214,6 +216,10 @@ function renderMainView() {
 
     document.getElementById('btnDownloadReport').addEventListener('click', () => {
         downloadDeliveryReport(delivery);
+    });
+
+    document.getElementById('btnDownloadWord').addEventListener('click', () => {
+        downloadDeliveryWord(delivery);
     });
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {
@@ -651,4 +657,3 @@ function downloadDeliveryReport(delivery) {
     const filename = `${Utils.toSlug(delivery.name)}.md`;
     Utils.downloadFile(mdContent, filename, 'text/markdown');
 }
-
