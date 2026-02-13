@@ -154,23 +154,18 @@ body.dark-mode .sidebar-item.selected {
     /* Ensure track takes at least full width to allow scrolling if needed */
     width: max-content;
     min-width: 100%;
+
+    /* Align items to start so they don't stretch to the height of the container */
+    align-items: flex-start;
 }
 
 /* CARDS */
 .dlv-card {
     /* 
-       Updated Calculation:
-       (100vw - 300px sidebar - 450px buffer) / 3
-       Buffer accounts for: 
-       - Track Padding (4rem total)
-       - Card Gaps (3rem total)
-       - Scrollbar Width (approx 1rem)
-       - Extra safety margin
+       Updated Calculation: Fixed Width as requested
     */
-    width: calc((100vw - 450px) / 3);
-
-    /* Reduced min-width to prevent forced overflow on smaller screens */
-    min-width: 300px;
+    width: 732px;
+    min-width: 732px;
 
     flex: 0 0 auto;
     /* No resizing via flex */
@@ -204,7 +199,7 @@ body.dark-mode .sidebar-item.selected {
 }
 
 .dlv-card-body {
-    flex: 1;
+    /* flex: 1; Removed to let the body adapt to content height */
     padding: 15px;
     overflow: visible;
 }
@@ -234,6 +229,28 @@ body.dark-mode .sidebar-item.selected {
 .dlv-card-result h2 {
     font-size: 1rem;
     margin: 0.5rem 0;
+}
+
+/* Make tables scrollable horizontally */
+.dlv-card-result table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    /* Encourage horizontal scrolling for dense data */
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.dlv-card-result th,
+.dlv-card-result td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+}
+
+.dlv-card-result th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
 }
 
 .rpt-loading {

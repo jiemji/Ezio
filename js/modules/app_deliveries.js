@@ -484,10 +484,17 @@ async function generateModule(delivery, index) {
 
         const response = await ApiService.fetchLLM(modelConfig, messages);
 
-        instance.result = response;
+        // Si l'option "Tableau" est cochée, on préfixe la réponse avec le tableau de contexte
+        let finalResult = response;
+        if (instance.config.isTable) {
+            // Utilisation de balises HTML <br> pour forcer l'espacement visuel après le tableau Markdown
+            finalResult = contextData + "\n\n<br><br>\n\n" + response;
+        }
+
+        instance.result = finalResult;
         store.save();
 
-        resultContainer.innerHTML = window.marked ? window.marked.parse(response) : response;
+        resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
 
     } catch (e) {
         console.error("Generation Error", e);

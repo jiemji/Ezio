@@ -73,7 +73,12 @@ Fichier maître situé à la racine.
     | :--- | :--- |
     | Politique MDP ? | Non Conforme |
     | Sauvegardes ? | Conforme |
+    | Politique MDP ? | Non Conforme |
+    | Sauvegardes ? | Conforme |
     ```
+*   **Format de Sortie :**
+    *   Si l'option **"Tableau"** est cochée : Le résultat inclut le tableau de contexte préfixé, suivi d'un double saut de ligne (`<br><br>`), puis de l'analyse.
+    *   Sinon : Uniquement l'analyse/texte généré.
 
 ### Implémentation Technique (`app_deliveries.js`)
 *   **Fonction Clé :** `generateModule(delivery, index)`
@@ -86,6 +91,7 @@ Fichier maître situé à la racine.
     1.  `buildContext` retourne une string.
     2.  Message composite envoyé à l'API.
     3.  Résultat injecté dans une `div contenteditable`.
+        *   *Note Implémentation* : Si `config.isTable` est actif, on concatène `contextData + "\n\n<br><br>\n\n" + response`.
 
 ---
 
@@ -117,4 +123,6 @@ Le service unifie les appels vers différents fournisseurs.
 
 ## 6. Styles
 *   `style_audit.css` : Gestion des cellules IA interactives.
-*   `style_deliveries.css` : Gestion des cartes de livrables et des indicateurs de chargement.
+*   `style_deliveries.css` :
+    *   Gestion des cartes de livrables (Largeur fixe de **732px**).
+    *   Conteneur de résultats avec **scroll horizontal** pour les tableaux larges.
