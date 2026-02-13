@@ -1,0 +1,280 @@
+/* 
+ * EZIO - MODULE LIVRABLES (DELIVERIES)
+ * Styles spécifiques à la vue Livrables
+ */
+
+/* Container */
+.deliveries-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* SIDEBAR */
+.deliveries-sidebar {
+    width: 300px;
+    min-width: 300px;
+    background-color: var(--card-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    z-index: 10;
+}
+
+.dlv-sidebar-header {
+    flex: 0 0 auto;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    background-color: var(--bg-color);
+}
+
+.dlv-sidebar-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.dlv-section-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dlv-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: var(--card-bg);
+}
+
+/* Items */
+.dlv-item,
+.sidebar-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.dlv-item:hover,
+.sidebar-item:hover {
+    background-color: var(--menu-hover);
+    border-color: var(--text-muted);
+}
+
+.dlv-item.selected,
+.sidebar-item.selected {
+    border: 2px solid var(--primary);
+    background-color: var(--menu-active-bg);
+}
+
+body.dark-mode .dlv-item.selected,
+body.dark-mode .sidebar-item.selected {
+    border-color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dlv-name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.dlv-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* MAIN CONTENT */
+.deliveries-main {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    /* Prevent double scrollbars */
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.deliveries-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+}
+
+/* HORIZONTAL EDITOR */
+.dlv-editor-header {
+    flex: 0 0 auto;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* SCROLL CONTAINER */
+.dlv-editor-body {
+    flex: 1;
+    /* This element handles the scrolling for the whole page (horizontal & vertical) */
+    overflow: auto;
+
+    /* REMOVED PADDING HERE so scrollbars hit the edge of the screen */
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+    /* Ensure track sits inside */
+    align-items: flex-start;
+}
+
+/* CONTENT TRACK */
+.dlv-horizontal-track {
+    display: flex;
+    gap: 1.5rem;
+
+    /* MOVED PADDING HERE to space content from edges */
+    padding: 2rem;
+
+    /* Removed forced height/flex so it adapts to children (cards) */
+    /* flex: 1; */
+    /* min-height: 100%; */
+
+    height: auto;
+
+    /* Ensure track takes at least full width to allow scrolling if needed */
+    width: max-content;
+    min-width: 100%;
+
+    /* Align items to start so they don't stretch to the height of the container */
+    align-items: flex-start;
+}
+
+/* CARDS */
+.dlv-card {
+    /* 
+       Updated Calculation: Fixed Width as requested
+    */
+    width: 732px;
+    min-width: 732px;
+
+    flex: 0 0 auto;
+    /* No resizing via flex */
+
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+    height: auto;
+    /* Allow vertical growth */
+    overflow: visible;
+}
+
+.dlv-card-header {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dlv-card-nav,
+.dlv-card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.dlv-card-body {
+    /* flex: 1; Removed to let the body adapt to content height */
+    padding: 15px;
+    overflow: visible;
+}
+
+.dlv-card-footer {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    border-top: 1px solid var(--border);
+    background-color: var(--bg-secondary);
+    text-align: center;
+}
+
+/* RESULT AREA */
+.dlv-card-result {
+    margin-top: 1rem;
+    padding: 10px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    overflow-y: visible;
+    /* Grow with content */
+    text-align: left;
+}
+
+.dlv-card-result h1,
+.dlv-card-result h2 {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+}
+
+/* Make tables scrollable horizontally */
+.dlv-card-result table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    /* Encourage horizontal scrolling for dense data */
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.dlv-card-result th,
+.dlv-card-result td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+}
+
+.dlv-card-result th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+}
+
+.rpt-loading {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* CHAPTER SELECTOR (Scope) */
+.chapter-selector-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: var(--bg-color);
+    /* Adapts to dark mode */
+    border-radius: 4px;
+}
+
+.chap-item {
+    margin-bottom: 5px;
+}
+
+.sub-list {
+    margin-left: 20px;
+}

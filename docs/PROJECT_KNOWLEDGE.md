@@ -19,19 +19,26 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 ## 2. Architecture des Fichiers
 
 ### Core & Structure
-*   `index.html` : Point d'entrée unique. Contient la structure du SPA (Single Page Application) avec les différantes vues (`#audit-view`, `#dashboard-view`, `#creator-view`, `#models-view`).
-*   `app_shared.js` :
-    *   Gestion de l'état global (`currentForm`) et de la navigation (`switchView`).
-    *   Point d'entrée pour la persistance (`loadState` / `saveState`).
+*   `index.html` : Point d'entrée unique. Charge le module principal via `<script type="module" src="js/main.js">`.
+*   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
+*   `js/core/` :
+    *   `State.js` : Gestion centralisée de l'état (`store`, `currentForm`). Remplace l'ancien `app_shared.js`.
+    *   `Store.js` : Classe de gestion du `localStorage` et du pattern Observer-Subscribe.
+    *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, formatage, debounce...).
+*   `js/ui/` :
+    *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
+    *   `DOM.js` : Références centralisées aux éléments du DOM.
+    *   `Modal.js` : Gestion des fenêtres modales.
+    *   `Sidebar.js` : Gestion de la barre latérale et navigation.
 
-### Modules Fonctionnels
+### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :
     *   Cœur de l'application.
     *   Rendu dynamique du tableau d'audit (`renderTable`).
     *   Gestion des types de cellules : Texte, Combo (Couleurs), QCM, IA.
     *   Système de filtres (Chapitre/Sous-chapitre) et de tri.
 
-2.  **Module IA (`api_ia.js`)** :
+2.  **Module IA (`js/api/api_ia.js`)** :
     *   Couche d'abstraction vers les LLMs.
     *   Supporte **LM Studio** (Local), **OpenAI**, **Groq**.
     *   **Spécificité LM Studio** : Transforme le payload standard en une structure "plate" (`input: [{type:'text'}]`) pour maximiser la compatibilité avec les contextes longs locaux.
@@ -47,16 +54,29 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 5.  **Module Modèles (`app_models.js`)** :
     *   Interface de gestion (CRUD) du fichier `models.json`.
-    *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider (si la route `GET /models` est standard/supporée).
+    *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider.
 
-6.  **Module Export (`app_export.js`)** :
+6.  **Module Rapports (`app_reports.js`)** :
+    *   Gestion des **Modèles de Rapports** (Templates).
+    *   Interface de définition de la structure : Ajout de modules re-utilisables dans une liste verticale.
+    *   *Note :* Ce module ne génère plus de contenu, il sert uniquement à définir la structure.
+
+7.  **Module Livrables (`app_deliveries.js`)** :
+    *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
+    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope), les colonnes contextuelles et l'option **"Tableau"** (inclure les données sources dans la réponse).
+    *   **Export** : Possibilité de télécharger le livrable complet (concaténation de tous les modules) au format **Markdown** (`.md`).
+    *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
+
+8.  **Module Export (`app_export.js`)** :
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 
-### Styles
-*   `style_shared.css` : Styles globaux, variables (couleurs, fonts), layout de base.
+### Styles (`css/`)
+*   `style_shared.css` : Styles globaux, variables, layout de base.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
-
+*   `style_reports.css` : Styles pour l'éditeur de templates.
+*   `style_deliveries.css` : Styles pour le générateur de livrables.
+*   `style_models.css` : Styles pour la page modèles.
 ---
 
 ## 3. Structure des Données (JSON)
@@ -84,17 +104,37 @@ L'état de l'application (`currentForm`) repose sur une structure JSON standardi
   "statics": [
     // Widgets du Dashboard
     { "id": "widget_1", "vizType": "pie", "columnId": "col_1" }
+  ],
+  "deliveries": [
+    // Instances de rapports générés
+    {
+      "id": "dlv_123",
+      "name": "Rapport Mensuel - Janvier",
+      "structure": [ 
+          {
+              "sourceId": "mod_1",
+              "config": {
+                  "ai": { "prompt": "...", "model": "..." },
+                  "scope": { "type": "chapter", "selection": ["Chap A", "Chap B"] },
+                  "columns": ["col_1", "col_3"],
+                  "isTable": true
+              },
+              "result": "Contenu généré..."
+          }
+      ]
+    }
   ]
 }
 ```
 
 ---
 
-## 4. Gestion des Modèles (Templates)
+## 4. Gestion des Rapports & Livrables
 
-L'application permet de charger des modèles d'audit pré-configurés.
-*   `templates/templates.json` : Index listant les modèles disponibles (affiché dans la modale de chargement).
-*   `templates/*.json` : Fichiers contenant la structure (colonnes) et parfois des données pré-remplies.
+L'application distingue désormais la définition du modèle de l'exécution du rapport :
+
+*   **Rapports (Templates)** : Définis dans `reports.json`. Ce sont des structures simplifiées contenant uniquement la liste des IDs des modules à inclure (ex: `["mod_intro", "mod_compliance"]`).
+*   **Livrables (Instances)** : Stockés dans le fichier d'audit (`currentForm`). Ce sont des copies complètes des modules, enrichies avec les prompts spécifiques et les résultats générés par l'IA. Au moment de la création d'un livrable, l'application récupère la configuration par défaut de chaque module depuis la bibliothèque.
 
 ---
 
@@ -147,6 +187,15 @@ Le service `api_ia.js` adapte ce format selon le provider.
     ]
     ```
     Cette méthode contourne certaines limitations de parsing des petits modèles locaux.
+
+### Flux IA - Module Livrables (IA Globale)
+Le module Livrables utilise un **RAG Global (Batch)** :
+1.  **Construction du Contexte** :
+    *   Récupère les lignes selon le Scope (Global/Chapitre).
+    *   Filtre les colonnes sélectionnées.
+    *   Génère un **Tableau Markdown** (`| Col1 | Col2 |...`).
+2.  **Message Utilisateur** : Composite `[Instruction, Tableau Markdown]`.
+3.  **Sortie** : Si l'option "Tableau" est active, le tableau Markdown est préfixé à l'analyse générée.
 
 ---
 

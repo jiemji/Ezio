@@ -2,7 +2,7 @@
  * Service API IA - Version Finale Robuste
  * Gère : OpenAI, LM Studio (API standard & spécifique), Groq
  */
-const ApiService = {
+export const ApiService = {
     async fetchLLM(config, messages) {
         if (!config || !config.provider) throw new Error("Configuration IA manquante.");
 
@@ -115,13 +115,20 @@ const ApiService = {
                             inputPayload.push({ type: "text", content: String(promptStr) });
                         }
 
-                        // B. Les colonnes du contexte
+                        // B. Les colonnes du contexte (Object)
                         if (contextObj && typeof contextObj === 'object') {
                             Object.entries(contextObj).forEach(([colName, colValue]) => {
                                 inputPayload.push({
                                     type: "text",
                                     content: `${colName}:\n${colValue}`
                                 });
+                            });
+                        }
+                        // C. Les colonnes du contexte (String / Markdown Table)
+                        else if (typeof contextObj === 'string') {
+                            inputPayload.push({
+                                type: "text",
+                                content: contextObj
                             });
                         }
                     } else {
@@ -232,5 +239,3 @@ const ApiService = {
         return "Format de réponse inconnu";
     }
 };
-
-window.ApiService = ApiService;
