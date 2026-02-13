@@ -467,7 +467,7 @@ async function generateModule(delivery, index) {
         const auditData = currentForm;
         if (!auditData.rows) throw new Error("Aucune donnée d'audit.");
 
-        const contextData = await buildContext(instance.config.scope, auditData);
+        const contextData = await buildContext(instance.config.scope, instance.config.columns, auditData);
 
         const prompt = instance.config.ai.prompt || "Analyse ces données.";
         const modelKey = instance.config.ai.model;
@@ -479,7 +479,7 @@ async function generateModule(delivery, index) {
 
         const messages = [
             { role: 'system', content: prompt },
-            { role: 'user', content: JSON.stringify(contextData) }
+            { role: 'user', content: [prompt, contextData] } // Envoi sous forme tableau [Instruction, ContexteMD]
         ];
 
         const response = await ApiService.fetchLLM(modelConfig, messages);
@@ -498,17 +498,53 @@ async function generateModule(delivery, index) {
     }
 }
 
-async function buildContext(scope, data) {
-    const labels = data.columns.map(c => c.label);
-    let rows = data.rows;
-    return rows.map(row => {
-        const obj = {};
-        row.forEach((cell, idx) => {
-            const label = labels[idx] || `Col_${idx}`;
-            if (cell !== null && cell !== "") obj[label] = cell;
-        });
-        return obj;
+async function buildContext(scope, columnsIds, data) {
+    if (!data || !data.rows || !data.columns) return "";
+
+    // 1. Filtrer les colonnes à inclure
+    const colsToInclude = [];
+    data.columns.forEach((col, idx) => {
+        if (columnsIds.includes(col.id)) {
+            colsToInclude.push({ label: col.label, index: idx });
+        }
     });
+
+    if (colsToInclude.length === 0) return "Aucune donnée (aucune colonne sélectionnée).";
+
+    // 2. Filtrer les lignes (Scope)
+    let rows = data.rows;
+    if (scope && scope.type === 'chapter' && scope.selection && scope.selection.length > 0) {
+        const chapColIdx = data.columns.findIndex(c => c.type === 'chapitre');
+        const subChapColIdx = data.columns.findIndex(c => c.type === 'sous-chapitre');
+
+        rows = rows.filter(row => {
+            const chap = row[chapColIdx];
+            const sub = row[subChapColIdx];
+            return scope.selection.includes(chap) || scope.selection.includes(sub);
+        });
+    }
+
+    if (rows.length === 0) return "Aucune donnée (aucun chapitre correspondant).";
+
+    // 3. Construire le Tableau Markdown
+    // Header
+    const headers = colsToInclude.map(c => c.label);
+    let md = "| " + headers.join(" | ") + " |\n";
+    md += "| " + headers.map(() => "---").join(" | ") + " |\n";
+
+    // Rows
+    rows.forEach(row => {
+        const cells = colsToInclude.map(c => {
+            let val = row[c.index];
+            if (val === null || val === undefined) val = "";
+            // Nettoyage basique pour ne pas casser le tableau MD
+            val = String(val).replace(/\n/g, "<br>").replace(/\|/g, "\\|");
+            return val;
+        });
+        md += "| " + cells.join(" | ") + " |\n";
+    });
+
+    return md;
 }
 
 function handleAddDelivery() {

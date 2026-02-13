@@ -115,13 +115,20 @@ export const ApiService = {
                             inputPayload.push({ type: "text", content: String(promptStr) });
                         }
 
-                        // B. Les colonnes du contexte
+                        // B. Les colonnes du contexte (Object)
                         if (contextObj && typeof contextObj === 'object') {
                             Object.entries(contextObj).forEach(([colName, colValue]) => {
                                 inputPayload.push({
                                     type: "text",
                                     content: `${colName}:\n${colValue}`
                                 });
+                            });
+                        }
+                        // C. Les colonnes du contexte (String / Markdown Table)
+                        else if (typeof contextObj === 'string') {
+                            inputPayload.push({
+                                type: "text",
+                                content: contextObj
                             });
                         }
                     } else {

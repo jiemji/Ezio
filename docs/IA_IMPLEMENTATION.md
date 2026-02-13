@@ -1,26 +1,28 @@
-# Documentation Technique - Implémentation IA (Ezio)
+# Documentation IA - Ezio (Fonctionnel & Technique)
 
-## Architecture Générale
-L'intégration IA repose sur 3 composants principaux :
-1.  **Configuration Centralisée** (`models.json`) : Défini les modèles disponibles et leurs paramètres techniques.
-2.  **Interface Audit** (`app_audit.js`) : Gère l'UI (bouton, champ éditable) et la construction du contexte.
-3.  **Service API** (`api_ia.js`) : Abstraction pour communiquer avec les providers (LM Studio, OpenAI, Groq).
+Ce document consolide les spécifications fonctionnelles et les détails d'implémentation de l'intelligence artificielle dans Ezio.
+
+## 1. Architecture Générale
+L'intégration IA repose sur 4 composants principaux :
+1.  **Configuration Centralisée** (`models.json`) : Définit les modèles disponibles et leurs paramètres techniques.
+2.  **Service API** (`api_ia.js`) : Abstraction robuste pour communiquer avec les providers (LM Studio, OpenAI, Groq).
+3.  **Module Audit** (`app_audit.js`) : IA contextuelle ligne par ligne (RAG simple).
+4.  **Module Livrables** (`app_deliveries.js`) : IA générative sur l'ensemble de l'audit (RAG global ou scopé).
 
 ---
 
-## 1. Configuration des Modèles (`models.json`)
-Ce fichier situé à la racine du projet contient la liste des modèles disponibles.
-Structure :
+## 2. Configuration (`models.json`)
+Fichier maître situé à la racine.
 ```json
 [
     {
-        "nom": "Nom affiché dans le créateur",
-        "description": "Description optionnelle",
+        "nom": "Nom affiché",
+        "description": "Description...",
         "prompt": "Tu es un auditeur expert...", // System Prompt
-        "provider": "lmstudio", // ou "openai", "groq"
+        "provider": "lmstudio", // ou "openai", "groq", "mock"
         "endpoint": "http://localhost:1234/api/v1/chat",
         "apikey": "not-needed",
-        "model": "nom-technique-du-modele",
+        "model": "model-id",
         "temperature": 0.7,
         "context_length": 32000
     }
@@ -29,49 +31,90 @@ Structure :
 
 ---
 
-## 2. Logique Applicative (`app_audit.js`)
-### Chargement
-Au démarrage, `loadModels()` charge `models.json` dans `auditAvailableModels`.
+## 3. Module Audit (Ligne par Ligne)
 
-### Exécution (`runIA`)
-Lors du clic sur "Générer" :
-1.  Récupération du modèle via `col.params.modele`.
-2.  Construction du **Contexte** : Extraction des valeurs des colonnes ciblées dans `col.params.colonnes`.
-3.  Construction du **Message** (Format Interne) :
-    ```javascript
-    const messages = [
-        { "role": "system", "content": modelConfig.prompt },
-        { "role": "user", "content": [ userPrompt, contextObject ] }
-    ];
+### Spécifications Fonctionnelles
+*   **Objectif :** Analyser ou compléter une ligne spécifique du tableau d'audit.
+*   **Trigger :** Clic sur le bouton "✨" d'une cellule `ia`.
+*   **Portée (Scope) :** La ligne courante uniquement.
+*   **Prompt :**
+    *   *Système* : Défini dans `models.json`.
+    *   *Utilisateur* : `[Instruction Colonne, Objet Données JSON]`.
+*   **Exemple Contexte :**
+    ```json
+    { "Question": "Politique MDP ?", "Constat": "Pas de politique." }
     ```
-4.  Appel de `ApiService.fetchLLM(modelConfig, messages)`.
-5.  Le résultat est injecté dans un `<textarea>` éditable (classe `.ia-textarea`).
+
+### Implémentation Technique (`app_audit.js`)
+*   **Fonction Clé :** `runIA(r, c, col, ...)`
+*   **Flux :**
+    1.  Lecture de la config colonne (`col.params.colonnes`).
+    2.  Extraction des valeurs de la ligne `r`.
+    3.  Construction du message composite.
+    4.  Appel `ApiService.fetchLLM`.
+    5.  Injection du résultat dans le `<textarea>` et la `<div>` de prévisualisation.
 
 ---
 
-## 3. Couche API (`api_ia.js`)
-Le service normalise les appels vers différents providers.
+## 4. Module Livrables (Rapports)
 
-### Spécificité LM Studio (`lmStudioDirect`)
-Pour supporter les contraintes locales, le payload est transformé en un tableau plat d'objets `text`.
-Entrée (Interne) -> Sortie (API LM Studio) :
-```json
-// Payload envoyé à LM Studio
-{
-  "input": [
-    { "type": "text", "content": "System Prompt..." },
-    { "type": "text", "content": "User Prompt..." },
-    { "type": "text", "content": "Colonne 1:\nValeur 1" },
-    { "type": "text", "content": "Colonne 2:\nValeur 2" }
-  ]
-}
-```
+### Spécifications Fonctionnelles
+*   **Objectif :** Générer une section de rapport basée sur un ensemble de lignes.
+*   **Trigger :** Bouton "Tester / Générer" sur une carte module.
+*   **Portée (Scope) :** 
+    *   *Global* : Toutes les lignes.
+    *   *Filtré* : Par Chapitre / Sous-chapitre.
+*   **Prompt :**
+    *   *Système* : Global (`models.json`).
+    *   *Utilisateur* : `[Instruction Module, Chaîne Tableau Markdown]`.
+*   **Exemple Contexte (Markdown Table) :**
+    ```markdown
+    | Question | Conformité |
+    | :--- | :--- |
+    | Politique MDP ? | Non Conforme |
+    | Sauvegardes ? | Conforme |
+    ```
+
+### Implémentation Technique (`app_deliveries.js`)
+*   **Fonction Clé :** `generateModule(delivery, index)`
+*   **Helper :** `buildContext(scope, columns, data)`
+    *   Filtre les colonnes (config module).
+    *   Filtre les lignes (config scope).
+    *   Génère une string Markdown (`| Header |\n| --- |\n| Cell |...`).
+    *   Gère les échappements (sauts de ligne -> `<br>`, pipes -> `\|`).
+*   **Flux :**
+    1.  `buildContext` retourne une string.
+    2.  Message composite envoyé à l'API.
+    3.  Résultat injecté dans une `div contenteditable`.
 
 ---
 
-## 4. Styles (`style_audit.css`)
-- **.ia-cell** : Flex layout column.
-- **.ia-textarea** :
-    - Background : `var(--readonly)` (gris clair).
-    - Texte Light Mode : `#001a33` (Bleu nuit).
-    - Texte Dark Mode : `#f0f0f0` (Gris clair).
+## 5. Couche API Agnostique (`api_ia.js`)
+
+Le service unifie les appels vers différents fournisseurs.
+
+### Logique Universelle
+*   Compatible **OpenAI**, **Groq**, **LM Studio**.
+*   Gestion automatique des erreurs standard.
+
+### Adaptateurs de Payload
+1.  **Standard (OpenAI/Groq)** :
+    *   Concatène le tableau `[Instruction, Contexte]` en une seule chaîne (Stringification si nécessaire).
+    *   Format : `"content": "Instruction...\n\nContexte..."`
+2.  **LM Studio (`lmStudioDirect`)** :
+    *   Exploite le format structuré pour maximiser la compréhension du contexte local.
+    *   Transforme le contexte (Objet JSON ou String Markdown) en segments distincts.
+    *   Format :
+        ```json
+        "input": [
+          { "type": "text", "content": "System Prompt" },
+          { "type": "text", "content": "Instruction" },
+          { "type": "text", "content": "Tableau Markdown..." }
+        ]
+        ```
+
+---
+
+## 6. Styles
+*   `style_audit.css` : Gestion des cellules IA interactives.
+*   `style_deliveries.css` : Gestion des cartes de livrables et des indicateurs de chargement.
