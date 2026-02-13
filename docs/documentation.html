@@ -368,8 +368,7 @@
                 <li><strong>Création</strong> : Sélectionnez un modèle existant pour créer un nouveau "Livrable".</li>
                 <li><strong>Mode Carte (Horizontal)</strong> : Chaque module du modèle devient une "carte" interactive.
                 </li>
-                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA spécifiquement pour ce rapport sans
-                    modifier le modèle d'origine.</li>
+                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA, sélectionnez les colonnes et activez l'option <strong>"Tableau"</strong> pour inclure les données sources directement dans le rapport généré.</li>
                 <li><strong>Génération (Tester / Générer)</strong> : Lancez l'IA module par module pour construire votre
                     rapport étape par étape.</li>
                 <li><strong>Persistance</strong> : Vos livrables sont sauvegardés à l'intérieur de votre fichier d'audit
@@ -469,7 +468,12 @@
             </ul>
 
             <h3 id="logique-ia">2.3 L'Intelligence Artificielle (IA)</h3>
-            <p>L'IA n'est pas globale mais <strong>contextuelle à la ligne</strong>.</p>
+            <p>L'application utilise deux types d'IA :</p>
+            <ul>
+                <li><strong>IA Contextuelle (Audit)</strong> : Opère ligne par ligne pour une assistance précise.</li>
+                <li><strong>IA Globale (Livrables)</strong> : Opère sur un ensemble de lignes (Scope) pour générer des synthèses ou des rapports, en se basant sur un tableau de données structuré.</li>
+            </ul>
+            <p><strong>Détail IA Contextuelle (Audit) :</strong></p>
             <ul>
                 <li>Lorsqu'une colonne est de type <code>IA</code>, elle est configurée avec un <strong>Prompt</strong>
                     spécifique (ex: "Génère une recommandation d'action...").</li>

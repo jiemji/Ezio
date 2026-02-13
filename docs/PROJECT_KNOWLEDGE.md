@@ -63,7 +63,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
-    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope) et les colonnes contextuelles.
+    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope), les colonnes contextuelles et l'option **"Tableau"** (inclure les données sources dans la réponse).
     *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
 
 8.  **Module Export (`app_export.js`)** :
@@ -186,6 +186,15 @@ Le service `api_ia.js` adapte ce format selon le provider.
     ]
     ```
     Cette méthode contourne certaines limitations de parsing des petits modèles locaux.
+
+### Flux IA - Module Livrables (IA Globale)
+Le module Livrables utilise un **RAG Global (Batch)** :
+1.  **Construction du Contexte** :
+    *   Récupère les lignes selon le Scope (Global/Chapitre).
+    *   Filtre les colonnes sélectionnées.
+    *   Génère un **Tableau Markdown** (`| Col1 | Col2 |...`).
+2.  **Message Utilisateur** : Composite `[Instruction, Tableau Markdown]`.
+3.  **Sortie** : Si l'option "Tableau" est active, le tableau Markdown est préfixé à l'analyse générée.
 
 ---
 
