@@ -10,7 +10,7 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
 Une refonte complète de l'architecture JavaScript a été effectuée pour passer d'un système de scripts globaux à des **Modules ES6** natifs.
-- **Modularisation** : Tous les fichiers JavaScript (`js/modules/`, `js/core/`, `js/ui/`) sont désormais des modules (`export` / `import`).
+- **Export Word Avancé** : Support des modèles `.docx` / `.dotx`. L'application injecte le contenu généré à la place du marqueur `{{CONTENT}}` ou à la fin du document, préservant ainsi la mise en forme (page de garde, en-têtes, etc.).
 - **Point d'entrée** : Création de `js/main.js` qui orchestre l'initialisation de l'application.
 - **Nettoyage** : Suppression de `js/app_shared.js` (legacy) et nettoyage de `index.html`.
 - **Refactoring** : Extraction de la logique d'export Word dans `js/modules/app_output_word.js`.

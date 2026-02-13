@@ -118,6 +118,11 @@ function renderMainView() {
         <div class="dlv-editor-header">
             <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
             <div class="dlv-actions">
+                <div class="dlv-template-upload" style="display:flex; align-items:center; margin-right:10px;">
+                    <label for="inpTemplateFile" class="btn-secondary small" style="cursor:pointer; margin-right:5px;">📂 Modèle Word</label>
+                    <input type="file" id="inpTemplateFile" accept=".docx,.dotx" style="display:none;">
+                    <span id="lblTemplateName" style="font-size:0.8rem; color:var(--text-muted);">Aucun modèle</span>
+                </div>
                 <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
                 <button id="btnDownloadWord" class="btn-primary small" style="margin-right:10px;">📄 Télécharger (Word)</button>
                 <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer ce Livrable</button>
@@ -208,6 +213,23 @@ function renderMainView() {
 
     els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
 
+    let templateBuffer = null;
+
+    document.getElementById('inpTemplateFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('lblTemplateName').textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                templateBuffer = evt.target.result;
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            document.getElementById('lblTemplateName').textContent = "Aucun modèle";
+            templateBuffer = null;
+        }
+    });
+
     document.getElementById('inpDlvName').addEventListener('change', (e) => {
         delivery.name = e.target.value;
         store.save();
@@ -219,7 +241,7 @@ function renderMainView() {
     });
 
     document.getElementById('btnDownloadWord').addEventListener('click', () => {
-        downloadDeliveryWord(delivery);
+        downloadDeliveryWord(delivery, templateBuffer);
     });
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {

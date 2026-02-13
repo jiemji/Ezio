@@ -2,15 +2,20 @@ import { Utils } from '../core/Utils.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
- * @param {Object} delivery - L'objet livrable (ezio reports structure)
+ * Supporte l'injection dans un modèle (.docx/.dotx) si fourni.
+ * 
+ * @param {Object} delivery - L'objet livrable
+ * @param {ArrayBuffer} [templateBuffer] - Le buffer du fichier modèle (optionnel)
  */
-export function downloadDeliveryWord(delivery) {
+export async function downloadDeliveryWord(delivery, templateBuffer) {
     if (!delivery || !delivery.structure || !window.docx) {
         if (!window.docx) alert("La librairie docx n'est pas chargée.");
         return;
     }
 
-    const doc = new window.docx.Document({
+    // 1. Générer le contenu du rapport (Document temporaire)
+    // On génère juste le "cœur" du rapport avec docx
+    const tempDoc = new window.docx.Document({
         sections: [{
             properties: {},
             children: [
@@ -26,7 +31,7 @@ export function downloadDeliveryWord(delivery) {
                     return [
                         new window.docx.Paragraph({
                             text: title,
-                            heading: window.docx.HeadingLevel.HEADING_1,
+                            heading: window.docx.HeadingLevel.HEADING_1, // Utilise le style "Heading 1" du template
                             spacing: { before: 400, after: 200 }
                         }),
                         ...parseMarkdownToDocx(content)
@@ -36,16 +41,98 @@ export function downloadDeliveryWord(delivery) {
         }]
     });
 
-    window.docx.Packer.toBlob(doc).then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        document.body.appendChild(a);
-        a.href = url;
-        a.download = `${Utils.toSlug(delivery.name)}.docx`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    });
+    try {
+        // 2. Packer le document temporaire pour obtenir son XML
+        const tempBlob = await window.docx.Packer.toBlob(tempDoc);
+
+        if (!templateBuffer) {
+            // Cas simple : Pas de modèle, on télécharge directement le doc généré
+            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            return;
+        }
+
+        // 3. Cas avec Modèle : Injection XML (Greffe)
+        if (!window.JSZip) {
+            alert("La librairie JSZip est manquante. Impossible d'utiliser le modèle.");
+            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            return;
+        }
+
+        // a. Charger le document temporaire (Source)
+        const tempZip = await window.JSZip.loadAsync(tempBlob);
+        const tempXmlStr = await tempZip.file("word/document.xml").async("string");
+        const parser = new DOMParser();
+        const tempXmlDoc = parser.parseFromString(tempXmlStr, "text/xml");
+
+        // Extraire les enfants de <body> (sauf sectPr final)
+        const tempBody = tempXmlDoc.getElementsByTagName("w:body")[0];
+        const sourceNodes = Array.from(tempBody.childNodes).filter(node => node.nodeName !== "w:sectPr");
+
+        // b. Charger le modèle (Cible)
+        const templateZip = await window.JSZip.loadAsync(templateBuffer);
+        const templateXmlStr = await templateZip.file("word/document.xml").async("string");
+        const templateXmlDoc = parser.parseFromString(templateXmlStr, "text/xml");
+        const templateBody = templateXmlDoc.getElementsByTagName("w:body")[0];
+
+        // c. Trouver le placeholder {{CONTENT}}
+        // Note: Word découpe souvent le texte en plusieurs <w:t>. C'est une recherche simplifiée.
+        // On cherche un <w:p> qui contient le texte {{CONTENT}}
+        let placeholderPara = null;
+        const paras = templateBody.getElementsByTagName("w:p");
+
+        for (let i = 0; i < paras.length; i++) {
+            if (paras[i].textContent.includes("{{CONTENT}}")) {
+                placeholderPara = paras[i];
+                break;
+            }
+        }
+
+        // d. Injection
+        if (placeholderPara) {
+            // Insérer avant le placeholder, puis supprimer le placeholder
+            sourceNodes.forEach(node => {
+                // Il faut importer le nœud dans le document cible
+                const importedNode = templateXmlDoc.importNode(node, true);
+                templateBody.insertBefore(importedNode, placeholderPara);
+            });
+            templateBody.removeChild(placeholderPara);
+        } else {
+            // Si pas de placeholder, ajouter à la fin (avant la dernière section sectPr si elle existe)
+            const lastChild = templateBody.lastChild;
+            sourceNodes.forEach(node => {
+                const importedNode = templateXmlDoc.importNode(node, true);
+                if (lastChild && lastChild.nodeName === "w:sectPr") {
+                    templateBody.insertBefore(importedNode, lastChild);
+                } else {
+                    templateBody.appendChild(importedNode);
+                }
+            });
+        }
+
+        // e. Sauvegarder le XML modifié dans le Zip du modèle
+        const serializer = new XMLSerializer();
+        const newTemplateXml = serializer.serializeToString(templateXmlDoc);
+        templateZip.file("word/document.xml", newTemplateXml);
+
+        // f. Générer le fichier final
+        const finalBlob = await templateZip.generateAsync({ type: "blob" });
+        downloadBlob(finalBlob, `${Utils.toSlug(delivery.name)}.docx`);
+
+    } catch (e) {
+        console.error("Erreur lors de la génération Word", e);
+        alert("Erreur lors de la génération : " + e.message);
+    }
+}
+
+function downloadBlob(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
 }
 
 function parseMarkdownToDocx(mdText) {
