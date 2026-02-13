@@ -117,6 +117,7 @@ function renderMainView() {
         <div class="dlv-editor-header">
             <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
             <div class="dlv-actions">
+                <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger le Rapport</button>
                 <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer ce Livrable</button>
             </div>
         </div>
@@ -209,6 +210,10 @@ function renderMainView() {
         delivery.name = e.target.value;
         store.save();
         renderSidebarList();
+    });
+
+    document.getElementById('btnDownloadReport').addEventListener('click', () => {
+        downloadDeliveryReport(delivery);
     });
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {
@@ -599,24 +604,23 @@ function createDeliveryFromTemplate(tplId) {
             sourceMod = availableModules.find(m => m.id === sourceId);
             config = sourceMod ? JSON.parse(JSON.stringify(sourceMod.config || {})) : {};
         } else {
+            // New format (object)
             sourceId = item.sourceId;
             sourceMod = availableModules.find(m => m.id === sourceId);
-            config = JSON.parse(JSON.stringify(item.config || {}));
+            config = item.config || (sourceMod ? JSON.parse(JSON.stringify(sourceMod.config || {})) : {});
         }
 
         return {
             sourceId: sourceId,
-            instanceId: 'inst_' + Date.now() + Math.random().toString(36).substr(2, 5),
+            name: sourceMod ? sourceMod.name : 'Module Inconnu',
             config: config,
-            name: (sourceMod ? sourceMod.name : 'Module Inconnu'),
-            type: (sourceMod ? sourceMod.type : 'analysis'),
-            result: null
+            result: ''
         };
     });
 
     const newDelivery = {
         id: newId,
-        name: template.name + ' (Copie)',
+        name: template.name + ' - ' + new Date().toLocaleDateString(),
         created: new Date().toISOString(),
         structure: structureClone
     };
@@ -629,3 +633,22 @@ function createDeliveryFromTemplate(tplId) {
     renderSidebarList();
     renderMainView();
 }
+
+function downloadDeliveryReport(delivery) {
+    if (!delivery || !delivery.structure) return;
+
+    let mdContent = `# ${delivery.name}\n\n`;
+
+    delivery.structure.forEach(inst => {
+        const title = inst.name || 'Module';
+        const content = inst.result || '(Aucun contenu)';
+
+        mdContent += `## ${title}\n\n`;
+        mdContent += `${content}\n\n`;
+        mdContent += `---\n\n`;
+    });
+
+    const filename = `${Utils.toSlug(delivery.name)}.md`;
+    Utils.downloadFile(mdContent, filename, 'text/markdown');
+}
+

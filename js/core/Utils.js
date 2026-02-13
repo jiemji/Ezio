@@ -60,17 +60,29 @@ export const Utils = {
     },
 
     /**
+     * Download content as file
+     * @param {string} content 
+     * @param {string} filename 
+     * @param {string} mimeType 
+     */
+    downloadFile: (content, filename, mimeType = 'text/plain') => {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    /**
      * Download data as JSON file
      * @param {Object} data 
      * @param {string} filename 
      */
     downloadJSON: (data, filename) => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        Utils.downloadFile(JSON.stringify(data, null, 2), filename, 'application/json');
     }
 };

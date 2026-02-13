@@ -60,7 +60,10 @@ Fichier maître situé à la racine.
 
 ### Spécifications Fonctionnelles
 *   **Objectif :** Générer une section de rapport basée sur un ensemble de lignes.
-*   **Trigger :** Bouton "Tester / Générer" sur une carte module.
+*   **Actions :**
+    *   **Générer Module** : Appel IA par module.
+    *   **Télécharger Rapport** : Export global du livrable au format Markdown (`.md`).
+*   **Trigger :** Bouton "Tester / Générer" (Module) ou "Télécharger le Rapport" (Global).
 *   **Portée (Scope) :** 
     *   *Global* : Toutes les lignes.
     *   *Filtré* : Par Chapitre / Sous-chapitre.
@@ -92,6 +95,10 @@ Fichier maître situé à la racine.
     2.  Message composite envoyé à l'API.
     3.  Résultat injecté dans une `div contenteditable`.
         *   *Note Implémentation* : Si `config.isTable` est actif, on concatène `contextData + "\n\n<br><br>\n\n" + response`.
+*   **Export Global (`downloadDeliveryReport`)** :
+    *   Concatène le titre du rapport (H1).
+    *   Itère sur les modules (Titre H2 + Contenu).
+    *   Génère un fichier `.md` via `Utils.downloadFile` (Blob).
 
 ---
 

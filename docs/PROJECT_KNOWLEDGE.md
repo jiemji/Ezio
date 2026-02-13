@@ -64,6 +64,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope), les colonnes contextuelles et l'option **"Tableau"** (inclure les données sources dans la réponse).
+    *   **Export** : Possibilité de télécharger le livrable complet (concaténation de tous les modules) au format **Markdown** (`.md`).
     *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
 
 8.  **Module Export (`app_export.js`)** :
