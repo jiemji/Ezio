@@ -5,6 +5,8 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 ## [Non Publié] - En cours
 ### Ajouts
 - Création de ce fichier `CHANGELOG.md` pour le suivi historique.
+- **Impression Unifiée** : Remplacement des boutons d'export Word/PPT par un bouton unique "Impression" avec une interface de sélection de modèles.
+- **Configuration Output** : Centralisation des configurations de sortie dans `output_config.json` (remplace `ppt_config.json`) avec support d'une liste de documents Word modèles.
 - **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres.
 - **Refonte UI/UX (Premium)** : Nouvelle identité visuelle "Midnight/Indigo".
     - **Design** : Adoption des polices *Inter* & *Outfit*, Glassmorphism sur le header, Ombres portées modernes.
