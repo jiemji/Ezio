@@ -11,7 +11,9 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 *   **JavaScript (Vanilla ES6+)** : Logique applicative native.
 *   **Librairies Externes** (via CDN) :
     *   `Chart.js` : Visualisation de données (Dashboard).
-    *   `Marked` : Rendu Markdown pour les réponses de l'IA et les Popups informatives.
+    *   **Visualisation** : `Chart.js` pour le Dashboard.
+*   **Fonts** : `Inter` (Corps) et `Outfit` (Titres) via Google Fonts.
+*   **Design** : Approche "Premium" avec variables CSS (Thèmes Clair/Sombre), Glassmorphism et Ombres portées.
 *   **Stockage** : `localStorage` pour la persistance des données et `JSON` pour l'import/export.
 
 ---
@@ -29,7 +31,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
     *   `DOM.js` : Références centralisées aux éléments du DOM.
     *   `Modal.js` : Gestion des fenêtres modales.
-    *   `Sidebar.js` : Gestion de la barre latérale et navigation.
+    *   `Sidebar.js` : Gestion du rendu des listes latérales.
+    *   `Navigation.js` : Orchestration des vues et de la sidebar (Logique Hover/Pin).
 
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :
@@ -70,6 +73,16 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 8.  **Module Export (`app_export.js`)** :
     *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
+73: 
+74: 9.  **Module Output Word (`app_output_word.js`)** :
+75:     *   **Export Word Avancé** : Génère des fichiers `.docx` depuis les données de l'application.
+76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
+77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
+
+10. **Module Output PPT (`app_outputppt.js`)** :
+    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS`.
+    *   **Templating JSON** : Système de templates défini par `ppt_config.json`. Permet de déclarer des "Masters" (Titres, Contenu) avec des positions absolues, des couleurs et des polices, sans toucher au code.
+    *   **Parsing Markdown** : Convertit le Markdown (Titres, Textes, Tableaux) en éléments natifs PowerPoint (Shapes, Tables) avec gestion basique du débordement.
 
 ### Styles (`css/`)
 *   `style_shared.css` : Styles globaux, variables, layout de base.

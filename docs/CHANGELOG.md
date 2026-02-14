@@ -6,11 +6,16 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 ### Ajouts
 - Création de ce fichier `CHANGELOG.md` pour le suivi historique.
 - **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres.
+- **Refonte UI/UX (Premium)** : Nouvelle identité visuelle "Midnight/Indigo".
+    - **Design** : Adoption des polices *Inter* & *Outfit*, Glassmorphism sur le header, Ombres portées modernes.
+    - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.
+    - **Ergonomie** : Amélioration des inputs (textarea), des tables (sticky headers) et des cartes du dashboard.
 
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
 Une refonte complète de l'architecture JavaScript a été effectuée pour passer d'un système de scripts globaux à des **Modules ES6** natifs.
-- **Modularisation** : Tous les fichiers JavaScript (`js/modules/`, `js/core/`, `js/ui/`) sont désormais des modules (`export` / `import`).
+- **Export Word Avancé** : Support des modèles `.docx` / `.dotx`.
+- **Export PowerPoint Configurable** : Nouveau moteur d'export PPTX (`js/modules/app_outputppt.js`). Support des thèmes personnalisés (Couleurs, Polices, Masters) via un simple fichier de configuration `ppt_config.json`. Sélection du style directement depuis l'interface.
 - **Point d'entrée** : Création de `js/main.js` qui orchestre l'initialisation de l'application.
 - **Nettoyage** : Suppression de `js/app_shared.js` (legacy) et nettoyage de `index.html`.
 - **Refactoring** : Extraction de la logique d'export Word dans `js/modules/app_output_word.js`.
