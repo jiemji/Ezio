@@ -11,7 +11,9 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 *   **JavaScript (Vanilla ES6+)** : Logique applicative native.
 *   **Librairies Externes** (via CDN) :
     *   `Chart.js` : Visualisation de données (Dashboard).
-    *   `Marked` : Rendu Markdown pour les réponses de l'IA et les Popups informatives.
+    *   **Visualisation** : `Chart.js` pour le Dashboard.
+*   **Fonts** : `Inter` (Corps) et `Outfit` (Titres) via Google Fonts.
+*   **Design** : Approche "Premium" avec variables CSS (Thèmes Clair/Sombre), Glassmorphism et Ombres portées.
 *   **Stockage** : `localStorage` pour la persistance des données et `JSON` pour l'import/export.
 
 ---
@@ -29,7 +31,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
     *   `DOM.js` : Références centralisées aux éléments du DOM.
     *   `Modal.js` : Gestion des fenêtres modales.
-    *   `Sidebar.js` : Gestion de la barre latérale et navigation.
+    *   `Sidebar.js` : Gestion du rendu des listes latérales.
+    *   `Navigation.js` : Orchestration des vues et de la sidebar (Logique Hover/Pin).
 
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :

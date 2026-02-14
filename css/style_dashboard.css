@@ -20,7 +20,11 @@
     gap: 1rem;
 }
 
-.dashboard-actions { display: flex; gap: 0.5rem; align-items: center; }
+.dashboard-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
 
 /* GRID SYSTEM */
 .dashboard-grid {
@@ -30,23 +34,28 @@
     gap: 1.5rem;
     padding: 1.5rem;
     /* flow-dense permet de combler les trous si une "grosse" carte bouge */
-    grid-auto-flow: dense; 
+    grid-auto-flow: dense;
 }
 
 /* CARDS */
 .widget-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    min-height: 300px;
+    min-height: 320px;
     position: relative;
-    transition: box-shadow 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.widget-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+.widget-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+}
 
 /* CLASSE UTILITAIRE POUR LARGEUR DOUBLE */
 .widget-wide {
@@ -71,7 +80,8 @@
 
 .widget-header h3 {
     margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--text-main);
 }

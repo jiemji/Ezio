@@ -45,8 +45,41 @@ function setupGlobalListeners() {
     if (DOM.btnShowDeliveries) DOM.btnShowDeliveries.onclick = () => switchView('deliveries');
 
     // Sidebar
+    // Sidebar
     if (DOM.toggleSidebarBtn) {
-        DOM.toggleSidebarBtn.onclick = () => document.body.classList.toggle('menu-closed');
+        // Reserved for future function (User Request)
+        DOM.toggleSidebarBtn.onclick = () => console.log('Menu button reserved for future function');
+    }
+
+    // New Sidebar Logic (Handle & Pin)
+    const sidebar = document.getElementById('sidebar');
+    const handle = document.getElementById('sidebarHandle');
+    const pinBtn = document.getElementById('pinSidebarBtn');
+
+    if (sidebar && handle) {
+        // Show on Handle Hover
+        handle.addEventListener('mouseenter', () => {
+            sidebar.classList.add('visible');
+        });
+
+        // Hide on Mouse Leave (if not pinned)
+        sidebar.addEventListener('mouseleave', () => {
+            if (!sidebar.classList.contains('pinned')) {
+                sidebar.classList.remove('visible');
+            }
+        });
+
+        // Also allow the sidebar to stay visible if we hover from handle to sidebar directly
+        // The mouseleave on sidebar handles the exit.
+    }
+
+    if (pinBtn && sidebar) {
+        pinBtn.onclick = () => {
+            const isPinned = sidebar.classList.toggle('pinned');
+            // If pinned, ensure it's visible (though logic implies it is)
+            if (isPinned) sidebar.classList.add('visible');
+            // Visual feedback on button is handled by CSS (rotate)
+        };
     }
 
     // Docs

@@ -6,6 +6,10 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 ### Ajouts
 - Création de ce fichier `CHANGELOG.md` pour le suivi historique.
 - **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres.
+- **Refonte UI/UX (Premium)** : Nouvelle identité visuelle "Midnight/Indigo".
+    - **Design** : Adoption des polices *Inter* & *Outfit*, Glassmorphism sur le header, Ombres portées modernes.
+    - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.
+    - **Ergonomie** : Amélioration des inputs (textarea), des tables (sticky headers) et des cartes du dashboard.
 
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
