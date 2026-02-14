@@ -146,6 +146,107 @@ header {
     height: 100%;
 }
 
+/* Header Dropdown Menu */
+.menu-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 220px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.2s ease-out;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.menu-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-section h4 {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    letter-spacing: 0.05em;
+}
+
+.menu-item {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 0.5rem 1rem 0.5rem 2rem !important;
+    /* Force Indentation */
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    display: block;
+    /* No Flexbox */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-item:hover:not(:disabled) {
+    background: var(--menu-hover);
+    color: var(--primary);
+}
+
+.menu-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+.menu-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0;
+}
+
+.menu-item.text-danger {
+    color: #ef4444;
+}
+
+.menu-item.text-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .header-center {
     flex-grow: 1;
     justify-content: center;
@@ -582,6 +683,15 @@ tr:hover td {
     background-color: color-mix(in srgb, var(--readonly), white 60%);
     /* Plus clair que le gris par défaut */
     border-color: var(--border);
+}
+
+.menu-item.btn-active-view {
+    font-weight: bold;
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+    /* Primary faint */
+    border-bottom: none;
+    border-left: 3px solid var(--primary);
 }
 
 .hidden {

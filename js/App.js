@@ -1,4 +1,5 @@
 import { DOM } from './ui/DOM.js';
+
 import { store, currentForm } from './core/State.js';
 import { Utils } from './core/Utils.js';
 import { switchView, registerModuleInit } from './ui/Navigation.js';
@@ -32,8 +33,40 @@ export const App = {
 
         // Default View
         switchView('app');
+
+        // 5. Subscribe to Store for Menu State
+        store.subscribe(() => {
+            updateMenuState();
+        });
+        updateMenuState(); // Initial check
     }
 };
+
+function updateMenuState() {
+    // Check if data is loaded (rows exist)
+    const hasData = store.get().rows.length > 0;
+
+    // Enable/Disable buttons based on state
+    // Only File actions depend on data presence
+    const buttonsToToggle = [
+        DOM.saveBtn,
+        DOM.exportBtn,
+        DOM.resetBtn
+    ];
+
+    buttonsToToggle.forEach(btn => {
+        if (btn) btn.disabled = !hasData;
+    });
+
+    // Configuration items should always be accessible (to allow creating new forms/agents)
+    // We ensure they are enabled (in case HTML had disabled attribute)
+    [DOM.btnShowCreator, DOM.btnShowModels, DOM.btnShowReports].forEach(btn => {
+        if (btn) btn.disabled = false;
+    });
+
+    // Ensure Load button is always enabled
+    if (DOM.loadBtn) DOM.loadBtn.disabled = false;
+}
 
 function setupGlobalListeners() {
     // Navigation Buttons
@@ -46,9 +79,27 @@ function setupGlobalListeners() {
 
     // Sidebar
     // Sidebar
-    if (DOM.toggleSidebarBtn) {
-        // Reserved for future function (User Request)
-        DOM.toggleSidebarBtn.onclick = () => console.log('Menu button reserved for future function');
+    // Sidebar
+    // Main Menu Toggle
+    if (DOM.toggleSidebarBtn && DOM.mainMenu) {
+        DOM.toggleSidebarBtn.onclick = (e) => {
+            e.stopPropagation();
+            DOM.mainMenu.classList.toggle('hidden');
+        };
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!DOM.mainMenu.classList.contains('hidden') && !DOM.mainMenu.contains(e.target) && e.target !== DOM.toggleSidebarBtn) {
+                DOM.mainMenu.classList.add('hidden');
+            }
+        });
+
+        // Close menu when clicking an item
+        DOM.mainMenu.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                DOM.mainMenu.classList.add('hidden');
+            });
+        });
     }
 
     // New Sidebar Logic (Handle & Pin)

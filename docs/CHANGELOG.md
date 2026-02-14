@@ -11,6 +11,18 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
     - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.
     - **Ergonomie** : Amélioration des inputs (textarea), des tables (sticky headers) et des cartes du dashboard.
 
+## [2.1.0] - 2026-02-14
+### Refonte Header & Navigation
+- **Menu Global** : Centralisation des actions "Fichier" (Charger, Sauvegarder, Exporter, Réinitialiser) et "Configuration" (Formulaires, Agents, Rapports) dans un menu unique accessible via l'icône ☰.
+- **Header Épuré** : Suppression des boutons d'action individuels pour alléger l'interface.
+- **Logique d'État** :
+    - Les actions contextuelles (Sauvegarder, Exporter, Rénitialiser) sont désactivées si aucune donnée n'est chargée.
+    - Les accès de configuration (Créateur, Modèles, Rapports) restent toujours disponibles.
+- **Correctifs UI** :
+    - Alignement flexbox corrigé dans le header.
+    - Indentation visuelle des sous-éléments du menu pour une meilleure lisibilité.
+    - Suppression de la dépendance à la visibilité des boutons selon la vue (le menu est désormais global).
+
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
 Une refonte complète de l'architecture JavaScript a été effectuée pour passer d'un système de scripts globaux à des **Modules ES6** natifs.

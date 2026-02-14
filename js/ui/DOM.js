@@ -9,22 +9,26 @@ export const DOM = {
 
     // Boutons Show
     btnShowApp: document.getElementById('btnShowApp'),
-    btnShowCreator: document.getElementById('btnShowCreator'),
+    btnShowCreator: document.getElementById('menuShowCreator'),
     btnShowDashboard: document.getElementById('btnShowDashboard'),
-    btnShowModels: document.getElementById('btnShowModels'),
-    btnShowReports: document.getElementById('btnShowReports'),
+    btnShowModels: document.getElementById('menuShowModels'),
+    btnShowReports: document.getElementById('menuShowReports'),
     btnShowDeliveries: document.getElementById('btnShowDeliveries'),
+
+    // Menu Components
+    mainMenu: document.getElementById('mainMenu'),
+    menuWrapper: document.querySelector('.menu-wrapper'),
 
     // UI Globale
     toggleSidebarBtn: document.getElementById('toggleSidebarBtn'),
     themeBtn: document.getElementById('themeBtn'),
     btnDocs: document.getElementById('btnDocs'),
 
-    // Actions
-    resetBtn: document.getElementById('resetBtn'),
-    loadBtn: document.getElementById('loadBtn'),
-    exportBtn: document.getElementById('exportBtn'),
-    saveBtn: document.getElementById('saveBtn'),
+    // Actions (Mapped to Menu Items)
+    resetBtn: document.getElementById('menuResetBtn'),
+    loadBtn: document.getElementById('menuLoadBtn'),
+    exportBtn: document.getElementById('menuExportBtn'),
+    saveBtn: document.getElementById('menuSaveBtn'),
 
     // Notes
     btnToggleNotes: document.getElementById('btnToggleNotes'),

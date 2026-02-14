@@ -25,15 +25,26 @@
 <body>
     <header>
         <div class="header-left">
-            <button id="toggleSidebarBtn" class="btn-icon" title="Masquer/Afficher le menu">☰</button>
+            <div class="menu-wrapper">
+                <button id="toggleSidebarBtn" class="btn-icon" title="Menu Principal">☰</button>
+                <div id="mainMenu" class="dropdown-menu hidden">
+                    <div class="menu-section">
+                        <h4>Fichiers</h4>
+                        <button id="menuLoadBtn" class="menu-item">Charger</button>
+                        <button id="menuSaveBtn" class="menu-item" disabled>Sauvegarder</button>
+                        <button id="menuExportBtn" class="menu-item" disabled>Exporter</button>
+                        <button id="menuResetBtn" class="menu-item text-danger" disabled>Réinitialiser</button>
+                    </div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-section">
+                        <h4>Configuration</h4>
+                        <button id="menuShowCreator" class="menu-item" disabled>Formulaires</button>
+                        <button id="menuShowModels" class="menu-item" disabled>Agents</button>
+                        <button id="menuShowReports" class="menu-item" disabled>Rapports</button>
+                    </div>
+                </div>
+            </div>
             <h1>EZIO<span class="badge-ia">IA Powered</span></h1>
-            <div class="separator-vertical"></div>
-            <button id="loadBtn" class="btn-secondary">Charger</button>
-            <button id="saveBtn" class="btn-primary">Sauver</button>
-            <button id="exportBtn" class="btn-primary">Exporter</button>
-            <div class="separator-vertical"></div>
-            <button id="resetBtn" class="btn-danger" title="Tout effacer">Réinit.</button>
-
         </div>
         <div class="header-center">
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Rechercher...">
@@ -45,9 +56,7 @@
 
         </div>
         <div class="header-right">
-            <button id="btnShowCreator" class="btn-secondary">Formulaires</button>
-            <button id="btnShowModels" class="btn-secondary">Agents</button>
-            <button id="btnShowReports" class="btn-secondary">Rapports</button>
+            <div class="separator-vertical"></div>
             <div class="separator-vertical"></div>
             <button id="themeBtn" class="btn-secondary" title="Changer de thème">🌙</button>
             <button id="btnDocs" class="btn-secondary" title="Ouvrir la documentation">?</button>

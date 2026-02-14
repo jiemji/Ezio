@@ -16,20 +16,17 @@ export function switchView(view) {
     [DOM.auditView, DOM.creatorView, DOM.dashboardView, DOM.modelsView, DOM.reportsView, DOM.deliveriesView]
         .forEach(el => el && el.classList.add('hidden'));
 
-    // 2. Boutons d'action visibles (Audit/Dashboard)
-    const actionBtns = [DOM.loadBtn, DOM.exportBtn, DOM.saveBtn, DOM.resetBtn];
-    if (view === 'app' || view === 'dashboard') {
-        actionBtns.forEach(btn => btn && btn.classList.remove('hidden'));
-    } else {
-        actionBtns.forEach(btn => btn && btn.classList.add('hidden'));
-    }
+    // 2. Boutons d'action : Désormais dans le menu global, ils ne doivent plus être masqués par vue.
+    // La logique de désactivation (disabled) est gérée par App.js / State.js
+    // On conserve le tableau si besoin pour d'autres usages, mais on ne toggle plus 'hidden'
 
     // 3. Reset Active State boutons nav
     [DOM.btnShowApp, DOM.btnShowCreator, DOM.btnShowDashboard, DOM.btnShowModels, DOM.btnShowReports, DOM.btnShowDeliveries]
         .forEach(btn => btn && btn.classList.remove('btn-active-view'));
 
     // 4. sidebar toggle visibility
-    if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.add('hidden');
+    // LE MENU PRINCIPAL DOIT RESTER VISIBLE PARTOUT
+    if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.remove('hidden');
 
     switch (view) {
         case 'creator':
@@ -40,7 +37,7 @@ export function switchView(view) {
 
         case 'dashboard':
             DOM.dashboardView.classList.remove('hidden');
-            if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.remove('hidden');
+            // if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.remove('hidden'); // Already visible
             if (DOM.btnShowDashboard) DOM.btnShowDashboard.classList.add('btn-active-view');
             moduleInits.dashboard && moduleInits.dashboard();
             break;
@@ -66,7 +63,7 @@ export function switchView(view) {
         case 'app':
         default:
             DOM.auditView.classList.remove('hidden');
-            if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.remove('hidden');
+            // if (DOM.toggleSidebarBtn) DOM.toggleSidebarBtn.classList.remove('hidden'); // Already visible
             if (DOM.btnShowApp) DOM.btnShowApp.classList.add('btn-active-view');
             moduleInits.audit && moduleInits.audit();
             break;
