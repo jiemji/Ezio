@@ -6,7 +6,7 @@ import { registerModuleInit } from '../ui/Navigation.js';
 export function initExport() {
     registerModuleInit('export', () => { }); // No specific init view, just bind button
 
-    const exportBtn = document.getElementById('exportBtn');
+    const exportBtn = document.getElementById('menuExportBtn');
     if (exportBtn) {
         // Remove onclick attribute if present (legacy)
         exportBtn.removeAttribute('onclick');
