@@ -32,7 +32,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   `DOM.js` : Références centralisées aux éléments du DOM.
     *   `Modal.js` : Gestion des fenêtres modales.
     *   `Sidebar.js` : Gestion du rendu des listes latérales.
-    *   `Navigation.js` : Orchestration des vues et de la sidebar (Logique Hover/Pin).
+    *   `Sidebar.js` : Gestion du rendu des listes latérales.
+    *   `Navigation.js` : Orchestration des vues, du **Menu Global** et de la sidebar (Logique Hover/Pin).
 
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :
@@ -85,7 +86,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   **Parsing Markdown** : Convertit le Markdown (Titres, Textes, Tableaux) en éléments natifs PowerPoint (Shapes, Tables) avec gestion basique du débordement.
 
 ### Styles (`css/`)
-*   `style_shared.css` : Styles globaux, variables, layout de base.
+*   `style_shared.css` : Styles globaux, variables, layout de base. **Gestion des Z-Index** : Header (2000) > Sidebar (10) > Contenu.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
 *   `style_reports.css` : Styles pour l'éditeur de templates.
 *   `style_deliveries.css` : Styles pour le générateur de livrables.

@@ -22,6 +22,8 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
     - Alignement flexbox corrigé dans le header.
     - Indentation visuelle des sous-éléments du menu pour une meilleure lisibilité.
     - Suppression de la dépendance à la visibilité des boutons selon la vue (le menu est désormais global).
+    - **Correctif Z-Index** : Correction de la superposition du menu déroulant qui passait derrière les sidebars (Header Z-Index passé à 2000).
+    - **Correctif Export** : Rétablissement du lien entre le bouton "Exporter" du menu et le module d'export.
 
 ## [2.0.0] - 2026-02-12
 ### Refonte Technique Majeure (ES6 Modules)
