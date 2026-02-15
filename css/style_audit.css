@@ -13,8 +13,8 @@
 
 /* Column Sizing */
 .col-s {
-    width: 80px;
-    min-width: 80px;
+    width: 100px;
+    min-width: 100px;
     text-align: center;
     font-family: monospace;
     font-weight: bold;
@@ -375,4 +375,10 @@ body.dark-mode .ia-textarea {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-light);
     background: var(--card-bg);
+}
+
+/* Reduced padding for Audit cells (20px -> 10px) */
+#tableContainer th,
+#tableContainer td {
+    padding: 16px 10px !important;
 }

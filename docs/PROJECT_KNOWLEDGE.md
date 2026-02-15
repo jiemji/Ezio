@@ -24,9 +24,13 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 *   `index.html` : Point d'entrée unique. Charge le module principal via `<script type="module" src="js/main.js">`.
 *   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
 *   `js/core/` :
-    *   `State.js` : Gestion centralisée de l'état (`store`, `currentForm`). Remplace l'ancien `app_shared.js`.
+    *   `State.js` : Gestion centralisée de l'état (`store`, `reportsStore`, `currentForm`).
     *   `Store.js` : Classe de gestion du `localStorage` et du pattern Observer-Subscribe.
-    *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, formatage, debounce...).
+    *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, safeFetch). 
+    *   `Config.js` : Constantes, couleurs et configurations par défaut.
+    *   `DataUtils.js` : Logique pure de manipulation de données (tris, filtres).
+    *   `Schemas.js` : Validation des structures de données JSON.
+    *   `UIFactory.js` : Composants UI réutilisables (Toasts, Badges, Boutons).
 *   `js/ui/` :
     *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
     *   `DOM.js` : Références centralisées aux éléments du DOM.
@@ -39,8 +43,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 1.  **Module Audit (`app_audit.js`)** :
     *   Cœur de l'application.
     *   Rendu dynamique du tableau d'audit (`renderTable`).
-    *   Gestion des types de cellules : Texte, Combo (Couleurs), QCM, IA.
-    *   Système de filtres (Chapitre/Sous-chapitre) et de tri.
+    *   Délègue le tri et le filtre à `DataUtils.js`.
+    *   Gestion des types de cellules : Texte, Combo (Couleurs via `Config`), QCM, IA.
 
 2.  **Module IA (`js/api/api_ia.js`)** :
     *   Couche d'abstraction vers les LLMs.
