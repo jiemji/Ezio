@@ -1,6 +1,7 @@
 import { Modal } from '../ui/Modal.js';
 import { downloadDeliveryWord } from './app_output_word.js';
 import { downloadDeliveryPpt } from './app_outputppt.js';
+import { UI } from '../core/UIFactory.js';
 
 /**
  * Affiche la popup d'impression
@@ -100,6 +101,6 @@ async function downloadWordWithTemplate(delivery, templatePath) {
         downloadDeliveryWord(delivery, buffer);
     } catch (err) {
         console.error(err);
-        alert("Erreur chargement modèle Word : " + err.message);
+        UI.showToast("Erreur chargement modèle Word : " + err.message, "danger");
     }
 }

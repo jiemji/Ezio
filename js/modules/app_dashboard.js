@@ -2,6 +2,7 @@ import { store, currentForm } from '../core/State.js';
 import { registerModuleInit } from '../ui/Navigation.js';
 import { Utils } from '../core/Utils.js';
 import { Config } from '../core/Config.js';
+import { UI } from '../core/UIFactory.js';
 
 let chartsInstances = [];
 
@@ -19,8 +20,8 @@ export function initDashboard() {
             const colId = kpiColSelect.value;
             const vizType = kpiTypeSelect.value;
 
-            if (!colId) return alert("Veuillez choisir une colonne.");
-            if (!vizType) return alert("Veuillez choisir un format de graphique.");
+            if (!colId) return UI.showToast("Veuillez choisir une colonne.", "warning");
+            if (!vizType) return UI.showToast("Veuillez choisir un format de graphique.", "warning");
 
             const col = currentForm.columns.find(c => c.id === colId);
             if (!col) return;

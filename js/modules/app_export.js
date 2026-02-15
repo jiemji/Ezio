@@ -2,6 +2,7 @@ import { currentForm } from '../core/State.js';
 import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
 import { registerModuleInit } from '../ui/Navigation.js';
+import { UI } from '../core/UIFactory.js';
 
 export function initExport() {
     registerModuleInit('export', () => { }); // No specific init view, just bind button
@@ -64,11 +65,11 @@ async function handleExport(format) {
         } else if (format.type === 'ppt') {
             exportToPPT(format.mode);
         } else {
-            alert("Type d'export non supporté : " + format.type);
+            UI.showToast("Type d'export non supporté : " + format.type, "warning");
         }
     } catch (err) {
         console.error("Export Error", err);
-        alert("Erreur lors de l'export : " + err.message);
+        UI.showToast("Erreur lors de l'export : " + err.message, "danger");
     }
 }
 
@@ -100,7 +101,7 @@ function prepareDataForExport() {
 
 function exportToExcel(mode) {
     if (typeof XLSX === 'undefined') {
-        alert("Librairie SheetJS introuvable.");
+        UI.showToast("Librairie SheetJS introuvable.", "danger");
         return;
     }
 
@@ -141,7 +142,7 @@ function exportToExcel(mode) {
 
 function exportToPPT(mode) {
     if (typeof PptxGenJS === 'undefined') {
-        alert("Librairie PptxGenJS introuvable.");
+        UI.showToast("Librairie PptxGenJS introuvable.", "danger");
         return;
     }
 

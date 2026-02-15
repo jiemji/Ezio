@@ -1,4 +1,5 @@
 import { Utils } from '../core/Utils.js';
+import { UI } from '../core/UIFactory.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -9,7 +10,7 @@ import { Utils } from '../core/Utils.js';
  */
 export async function downloadDeliveryWord(delivery, templateBuffer) {
     if (!delivery || !delivery.structure || !window.docx) {
-        if (!window.docx) alert("La librairie docx n'est pas chargée.");
+        if (!window.docx) UI.showToast("La librairie docx n'est pas chargée.", "danger");
         return;
     }
 
@@ -53,7 +54,7 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
 
         // 3. Cas avec Modèle : Injection XML (Greffe)
         if (!window.JSZip) {
-            alert("La librairie JSZip est manquante. Impossible d'utiliser le modèle.");
+            UI.showToast("La librairie JSZip est manquante. Impossible d'utiliser le modèle.", "danger");
             downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
             return;
         }
@@ -120,7 +121,7 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
 
     } catch (e) {
         console.error("Erreur lors de la génération Word", e);
-        alert("Erreur lors de la génération : " + e.message);
+        UI.showToast("Erreur lors de la génération : " + e.message, "danger");
     }
 }
 
