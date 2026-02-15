@@ -78,21 +78,18 @@ async function loadTemplates() {
         } catch (e) { }
     }
 
-    try {
-        const res = await fetch('reports.json');
-        if (res.ok) {
-            const json = await res.json();
-            availableTemplates = json.reports || [];
-            availableModules = json.modules || [];
-        }
-    } catch (e) { }
+    const data = await Utils.safeFetch('reports.json');
+    if (data) {
+        availableTemplates = data.reports || [];
+        availableModules = data.modules || [];
+    }
 }
 
 async function loadModelsList() {
-    try {
-        const res = await fetch('models.json');
-        if (res.ok) availableModels = await res.json();
-    } catch (e) { }
+    const data = await Utils.safeFetch('models.json');
+    if (data && Array.isArray(data)) {
+        availableModels = data;
+    }
 }
 
 function renderSidebarList() {

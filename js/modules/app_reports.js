@@ -2,12 +2,9 @@ import { registerModuleInit } from '../ui/Navigation.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
+import { reportsStore, reportsData } from '../core/State.js';
+import { Schemas } from '../core/Schemas.js';
 
-const STORAGE_KEY_REPORTS = 'ezio_reports_data';
-let reportsData = {
-    reports: [],
-    modules: []
-};
 let availableModels = [];
 let selection = { id: null, type: null };
 
@@ -28,6 +25,16 @@ async function renderReportsModule() {
     els.main = document.querySelector('#reports-view .reports-main');
 
     setupSidebar();
+
+    // Subscribe to store updates to auto-refresh UI
+    reportsStore.subscribe(() => {
+        // Only re-render if we are visible? 
+        // For now, simple re-render of lists is enough
+        renderSidebarLists();
+        // If the selected item was deleted or changed, we might need to handle it?
+        // But for now, let's keep renderMainView manual or check if selection exists
+    });
+
     await loadData();
     await loadModelsList();
     renderSidebarLists();
@@ -80,39 +87,33 @@ function setupSidebar() {
 }
 
 async function loadData() {
-    const saved = localStorage.getItem(STORAGE_KEY_REPORTS);
-    if (saved) {
-        try {
-            reportsData = JSON.parse(saved);
-            if (!reportsData.reports) reportsData.reports = [];
-            if (!reportsData.modules) reportsData.modules = [];
+    // Data is already loaded by State.js constructor, but we might want to check for defaults if empty
+    if (reportsData.reports.length === 0 && reportsData.modules.length === 0) {
+        const json = await Utils.safeFetch('reports.json', {}, Schemas.REPORTS_DATA);
+        if (json) {
+            reportsStore.set({
+                reports: json.reports || [],
+                modules: json.modules || []
+            });
             migrateReportsStructure();
-            return;
-        } catch (e) {
-            console.error("AppReports: Error parsing LocalStorage", e);
         }
-    }
-
-    try {
-        const res = await fetch('reports.json');
-        if (res.ok) {
-            const json = await res.json();
-            reportsData.reports = json.reports || [];
-            reportsData.modules = json.modules || [];
-            migrateReportsStructure();
-            saveToLocalStorage();
-        }
-    } catch (e) {
-        console.error("AppReports: Error loading reports.json", e);
+    } else {
+        migrateReportsStructure();
     }
 }
 
 function migrateReportsStructure() {
     let changed = false;
-    reportsData.reports.forEach(rpt => {
+    // deep copy to avoid mutating state directly if we were strict, but here we modify and then set
+    // actually, reportsData is a reference from State.js. 
+    // To be clean with Store, we should clone, modify, then set.
+
+    const newState = JSON.parse(JSON.stringify(reportsData));
+
+    newState.reports.forEach(rpt => {
         if (rpt.structure && rpt.structure.length > 0 && typeof rpt.structure[0] === 'string') {
             rpt.structure = rpt.structure.map(modId => {
-                const originalMod = reportsData.modules.find(m => m.id === modId);
+                const originalMod = newState.modules.find(m => m.id === modId);
                 const baseConfig = originalMod ? JSON.parse(JSON.stringify(originalMod.config || {})) : {};
                 return {
                     sourceId: modId,
@@ -123,35 +124,28 @@ function migrateReportsStructure() {
             changed = true;
         }
     });
-    if (changed) saveToLocalStorage();
+
+    if (changed) {
+        reportsStore.set(newState);
+    }
 }
 
 async function loadModelsList() {
-    try {
-        const res = await fetch('models.json');
-        if (res.ok) availableModels = await res.json();
-    } catch (e) {
-        console.warn("AppReports: Impossible de charger models.json");
+    const data = await Utils.safeFetch('models.json');
+    if (data && Array.isArray(data)) {
+        availableModels = data;
     }
 }
 
 function saveToLocalStorage() {
-    // Create a deep copy to avoid modifying the active state
-    const dataToSave = JSON.parse(JSON.stringify(reportsData));
+    // We update the store with the current 'reportsData' object
+    // Since 'reportsData' is a reference to the store's state (via export let), 
+    // and we might have mutated it directly in other functions (which is bad practice but common in legacy refactor),
+    // we should ideally clone-modify-set. 
+    // BUT, for this step, to be safe and ensure the Store saves:
+    reportsStore.set(reportsData);
 
-    // Simplify the structure for storage (just module IDs)
-    dataToSave.reports.forEach(rpt => {
-        if (rpt.structure && Array.isArray(rpt.structure)) {
-            rpt.structure = rpt.structure.map(item => {
-                // If it's already a string, keep it
-                if (typeof item === 'string') return item;
-                // Otherwise extract the sourceId
-                return item.sourceId;
-            });
-        }
-    });
-
-    localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(dataToSave));
+    // Note: The Store class handles the actual localStorage.setItem
 }
 
 function renderSidebarLists() {

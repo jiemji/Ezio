@@ -13,6 +13,23 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
     - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.
     - **Ergonomie** : Amélioration des inputs (textarea), des tables (sticky headers) et des cartes du dashboard.
 
+## [2.2.0] - 2026-02-15
+### Refactoring & Modernisation (Phases 1-4)
+Une refonte profonde du code pour améliorer la maintenabilité, la robustesse et l'expérience utilisateur.
+
+- **Architecture Unifiée** :
+    - **Cœur** : Création de `js/core/Config.js` (constantes, couleurs), `js/core/UIFactory.js` (composants réutilisables), `js/core/DataUtils.js` (logique de tri/filtre extraite), et `js/core/Schemas.js` (validation données).
+    - **État** : Unification de la gestion d'état des Rapports (`reportsStore`) dans `State.js`.
+- **Robustesse & Sécurité** :
+    - **Validation** : Intégration de schémas de validation JSON lors des imports et chargements via `Utils.safeFetch`.
+    - **Nettoyage** : Extraction de la logique métier (tri, filtre) hors des contrôleurs de vue (`app_audit.js`).
+- **Modernisation (DX)** :
+    - **Syntaxe** : Migration complète vers **Async/Await**, suppression des chaînes de promesses `.then()` legacy.
+    - **Code Mort** : Suppression massive de code commenté et obsolète.
+- **Expérience Utilisateur (UX)** :
+    - **Toasts** : Remplacement des `alert()` intrusifs par des notifications non-bloquantes (Toasts) pour les succès/erreurs.
+    - **UI Audit** : Ajustement du padding des cellules (mode "Compact" 10px) et élargissement des colonnes "Réponse" (450px) et "S" (100px).
+
 ## [2.1.0] - 2026-02-14
 ### Refonte Header & Navigation
 - **Menu Global** : Centralisation des actions "Fichier" (Charger, Sauvegarder, Exporter, Réinitialiser) et "Configuration" (Formulaires, Agents, Rapports) dans un menu unique accessible via l'icône ☰.

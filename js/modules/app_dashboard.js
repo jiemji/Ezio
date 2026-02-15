@@ -1,6 +1,7 @@
 import { store, currentForm } from '../core/State.js';
 import { registerModuleInit } from '../ui/Navigation.js';
 import { Utils } from '../core/Utils.js';
+import { Config } from '../core/Config.js';
 
 let chartsInstances = [];
 
@@ -203,7 +204,7 @@ function prepareChartConfig(widget) {
             return {
                 label: opt,
                 data: data,
-                backgroundColor: getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
+                backgroundColor: Utils.getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
             };
         });
 
@@ -237,7 +238,7 @@ function prepareChartConfig(widget) {
         Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
 
         const data = labels.map(l => counts[l]);
-        const colors = labels.map(l => getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
+        const colors = labels.map(l => Utils.getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
 
         const type = vizType.split('_')[1];
 
@@ -267,42 +268,3 @@ function getColorByIndex(i) {
     return palette[i % palette.length];
 }
 
-function getComboColor(scheme, value, options) {
-    // Re-use logic from app_audit.js or better, move to Utils.js
-    // For now, duplicate to avoid cross-module dependency issues if not in Utils
-    // Or simpler: move to Utils.js?
-    // Let's rely on duplication for speed, as Utils is already refactored.
-    // Or better: Use Utils.getComboColor? It is not in Utils.js yet.
-    // I will duplicate logic here.
-
-    if (!scheme || !value || !options || options.length === 0) return '';
-    const index = options.indexOf(value);
-    if (index === -1) return '';
-    const fixedSchemes = {
-        'alert6': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
-        'alert3': ['#22c55e', '#eab308', '#ef4444'],
-        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
-    };
-    if (fixedSchemes[scheme]) {
-        const colors = fixedSchemes[scheme];
-        if (index >= colors.length) return colors[colors.length - 1];
-        return colors[index];
-    }
-
-    // Gradients
-    const baseColors = {
-        'blue': '59, 130, 246', 'green': '34, 197, 94', 'red': '239, 68, 68',
-        'purple': '168, 85, 247', 'orange': '249, 115, 22', 'yellow': '234, 179, 8'
-    };
-    const rgb = baseColors[scheme];
-    if (rgb) {
-        let alpha = 0.9;
-        if (options.length > 1) {
-            const startAlpha = 0.1; const endAlpha = 0.9;
-            const step = (endAlpha - startAlpha) / (options.length - 1);
-            alpha = startAlpha + (index * step);
-        }
-        return `rgba(${rgb}, ${alpha})`;
-    }
-    return '';
-}
