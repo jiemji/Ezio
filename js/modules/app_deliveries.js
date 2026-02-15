@@ -6,6 +6,7 @@ import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
 import { downloadDeliveryWord } from './app_output_word.js';
 import { downloadDeliveryPpt } from './app_outputppt.js';
+import { showImpressionPopup } from './app_impression_logic.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -119,34 +120,12 @@ function renderMainView() {
         <div class="dlv-editor-header">
             <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
             <div class="dlv-actions">
-                <div class="dlv-template-upload" style="display:flex; align-items:center; margin-right:10px;">
-                    <label for="inpTemplateFile" class="btn-secondary small" style="cursor:pointer; margin-right:5px;">📂 Modèle Word</label>
-                    <input type="file" id="inpTemplateFile" accept=".docx,.dotx" style="display:none;">
-                    <span id="lblTemplateName" style="font-size:0.8rem; color:var(--text-muted);">Aucun modèle</span>
-                </div>
                 <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
-                <div style="display:flex; flex-direction:column; margin-right:10px;">
-                    <select id="slcPptTemplate" class="form-control" style="font-size:0.8rem; padding:2px; margin-bottom:2px; width:150px;">
-                        <option value="default">Style Standard</option>
-                    </select>
-                    <button id="btnDownloadPpt" class="btn-primary small" style="width:100%; background-color:#c43e1c; border-color:#c43e1c;">📊 PPT</button>
-                </div>
-                <button id="btnDownloadWord" class="btn-primary small" style="margin-right:10px;">📄 Télécharger (Word)</button>
-                <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:10px;">🗑️ Supprimer</button>
+                <button id="btnImpression" class="btn-primary small" style="margin-right:10px;">Impression</button>
+                <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:auto;">Supprimer</button>
             </div>
         </div>
     `;
-
-    // Load PPT templates list for the dropdown
-    fetch('ppt_config.json')
-        .then(res => res.json())
-        .then(config => {
-            const slc = document.getElementById('slcPptTemplate');
-            if (slc && config.templates) {
-                slc.innerHTML = config.templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-            }
-        })
-        .catch(err => console.warn("Erreur chargement liste templates PPT", err));
 
     let trackHTML = `<div class="dlv-horizontal-track">`;
     const instances = delivery.structure || [];
@@ -231,23 +210,6 @@ function renderMainView() {
 
     els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
 
-    let templateBuffer = null;
-
-    document.getElementById('inpTemplateFile').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            document.getElementById('lblTemplateName').textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                templateBuffer = evt.target.result;
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            document.getElementById('lblTemplateName').textContent = "Aucun modèle";
-            templateBuffer = null;
-        }
-    });
-
     document.getElementById('inpDlvName').addEventListener('change', (e) => {
         delivery.name = e.target.value;
         store.save();
@@ -258,13 +220,8 @@ function renderMainView() {
         downloadDeliveryReport(delivery);
     });
 
-    document.getElementById('btnDownloadWord').addEventListener('click', () => {
-        downloadDeliveryWord(delivery, templateBuffer);
-    });
-
-    document.getElementById('btnDownloadPpt').addEventListener('click', () => {
-        const tplId = document.getElementById('slcPptTemplate').value;
-        downloadDeliveryPpt(delivery, tplId);
+    document.getElementById('btnImpression').addEventListener('click', () => {
+        showImpressionPopup(delivery);
     });
 
     document.getElementById('btnDeleteDelivery').addEventListener('click', () => {

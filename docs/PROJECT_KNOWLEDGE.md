@@ -32,7 +32,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
     *   `DOM.js` : Références centralisées aux éléments du DOM.
     *   `Modal.js` : Gestion des fenêtres modales.
     *   `Sidebar.js` : Gestion du rendu des listes latérales.
-    *   `Navigation.js` : Orchestration des vues et de la sidebar (Logique Hover/Pin).
+    *   `Sidebar.js` : Gestion du rendu des listes latérales.
+    *   `Navigation.js` : Orchestration des vues, du **Menu Global** et de la sidebar (Logique Hover/Pin).
 
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js`)** :
@@ -67,7 +68,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope), les colonnes contextuelles et l'option **"Tableau"** (inclure les données sources dans la réponse).
-    *   **Export** : Possibilité de télécharger le livrable complet (concaténation de tous les modules) au format **Markdown** (`.md`).
+    *   **Impression** : Bouton unique "Impression" ouvrant une popup pour choisir entre les modèles Word (définis dans `output_config.json`) et les templates PowerPoint.
     *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
 
 8.  **Module Export (`app_export.js`)** :
@@ -79,13 +80,13 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
 77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
-10. **Module Output PPT (`app_outputppt.js`)** :
-    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS`.
-    *   **Templating JSON** : Système de templates défini par `ppt_config.json`. Permet de déclarer des "Masters" (Titres, Contenu) avec des positions absolues, des couleurs et des polices, sans toucher au code.
-    *   **Parsing Markdown** : Convertit le Markdown (Titres, Textes, Tableaux) en éléments natifs PowerPoint (Shapes, Tables) avec gestion basique du débordement.
+10. **Module Output (`app_outputppt.js`, `app_output_word.js`)** :
+    *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
+    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis.
+    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page.
 
 ### Styles (`css/`)
-*   `style_shared.css` : Styles globaux, variables, layout de base.
+*   `style_shared.css` : Styles globaux, variables, layout de base. **Gestion des Z-Index** : Header (2000) > Sidebar (10) > Contenu.
 *   `style_audit.css`, `style_dashboard.css`, `style_creator.css` : Styles spécifiques par module.
 *   `style_reports.css` : Styles pour l'éditeur de templates.
 *   `style_deliveries.css` : Styles pour le générateur de livrables.

@@ -63,7 +63,8 @@ Fichier maître situé à la racine.
 *   **Actions :**
     *   **Générer Module** : Appel IA par module.
     *   **Télécharger Rapport** : Export global du livrable au format Markdown (`.md`).
-*   **Trigger :** Bouton "Tester / Générer" (Module) ou "Télécharger le Rapport" (Global).
+    *   **Impression** : Génération de documents finaux (Word/PPT) via modèles.
+*   **Trigger :** Bouton "Impression" (Header), "Tester / Générer" (Module) ou "Télécharger (MD)".
 *   **Portée (Scope) :** 
     *   *Global* : Toutes les lignes.
     *   *Filtré* : Par Chapitre / Sous-chapitre.

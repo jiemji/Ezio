@@ -1,14 +1,22 @@
-# Guide de Configuration des Modèles PowerPoint
+# Guide de Configuration des Sorties (Output)
 
-Ce document explique comment créer et modifier les modèles PowerPoint utilisés par l'application Ezio.
-La configuration se trouve dans le fichier `ppt_config.json` à la racine de l'application.
+Ce document explique comment gérer les modèles PowerPoint et Word utilisés par l'application Ezio.
+La configuration se trouve dans le fichier `output_config.json` à la racine de l'application.
 
 ## Structure du Fichier
 
-Le fichier contient une liste de templates (`templates`). Chaque template possède un `id`, un nom, un thème de couleurs, des polices et des définitions de "Masters" (diapositives maîtresses).
+Le fichier contient deux collections principales :
+1.  `templates` : Pour les modèles PowerPoint (Styles, Masters, Thèmes).
+2.  `documents` : Pour les modèles Word (Fichiers .docx servant de base).
 
 ```json
 {
+  "documents": [
+    { 
+       "name": "Rapport Isec", 
+       "path": "Modele_word.docx" 
+    }
+  ],
   "templates": [
     {
       "id": "mon_template",
@@ -21,7 +29,15 @@ Le fichier contient une liste de templates (`templates`). Chaque template possè
 }
 ```
 
-## 1. Thème et Polices
+## 1. Modèles Word (`documents`)
+
+Cette section liste les fichiers Word disponibles pour l'impression.
+*   `name` : Le nom affiché dans la popup d'impression.
+*   `path` : Le chemin relatif vers le fichier `.docx` ou `.dotx` (ex: `Modele_word.docx`).
+
+## 2. Modèles PowerPoint (`templates`)
+
+## 2.1. Thème et Polices
 
 Définissez ici les couleurs principales (format HEX sans #) et les polices.
 
@@ -39,7 +55,7 @@ Définissez ici les couleurs principales (format HEX sans #) et les polices.
 }
 ```
 
-## 2. Diapositives Maîtresses (Masters)
+## 2.2. Diapositives Maîtresses (Masters)
 
 Il y a deux types de diapositives obligatoires :
 1.  `TITLE_SLIDE` : La première page (Titre du Livrable).

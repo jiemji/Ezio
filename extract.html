@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracteur de Modèle PowerPoint - Ezio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .upload-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px dashed var(--secondary);
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            min-height: 300px;
+        }
+
+        .upload-card.drag-over {
+            background: #eff6ff;
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .icon-upload {
+            width: 64px;
+            height: 64px;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            background-color: var(--secondary);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .result-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        pre {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow: auto;
+            flex: 1;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-error {
+            color: var(--error);
+        }
+
+        .status-success {
+            color: var(--success);
+        }
+
+        @media (max-width: 768px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .result-card {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M16 13H8" />
+                <path d="M16 17H8" />
+                <path d="M10 9H8" />
+            </svg>
+            Extracteur de Modèle PPTX
+        </h1>
+        <div>
+            <button onclick="downloadJson()" id="btnDownload" disabled>Télécharger JSON</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="upload-card" id="dropZone">
+            <svg class="icon-upload" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <h3>Glissez votre fichier .pptx ici</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">ou cliquez pour sélectionner un fichier</p>
+            <button onclick="document.getElementById('fileInput').click()">Sélectionner un fichier</button>
+            <input type="file" id="fileInput" accept=".pptx" onchange="handleFile(this.files[0])">
+            <div id="status" class="status-msg"></div>
+        </div>
+
+        <div class="result-card">
+            <div class="result-header">
+                <h3>Résultat JSON</h3>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">Format compatible ppt_config.json</span>
+            </div>
+            <pre id="jsonOutput">// Le JSON extrait apparaîtra ici...</pre>
+        </div>
+    </main>
+
+    <script>
+        let extractedData = null;
+
+        // Constants for PPTX parsing
+        const EMU_PER_INCH = 914400;
+
+        // Drop zone handlers
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            if (!file) return;
+
+            const status = document.getElementById('status');
+            status.textContent = "Lecture du fichier...";
+            status.className = "status-msg";
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
+
+                status.textContent = "Extraction de la structure...";
+
+                // 1. Get Presentation info (slide size)
+                const presentationXml = await zip.file("ppt/presentation.xml").async("text");
+                const presentationDoc = new DOMParser().parseFromString(presentationXml, "text/xml");
+
+                const sldSz = presentationDoc.getElementsByTagName("p:sldSz")[0];
+                const slideWidthEmu = parseInt(sldSz.getAttribute("cx"));
+                const slideHeightEmu = parseInt(sldSz.getAttribute("cy"));
+
+                // 2. Identify Slide Layouts
+                const layouts = [];
+                // Filter only valid slideLayout files
+                const layoutFiles = Object.keys(zip.files).filter(path => path.startsWith("ppt/slideLayouts/slideLayout") && path.endsWith(".xml"));
+
+                for (const layoutPath of layoutFiles) {
+                    const layoutXml = await zip.file(layoutPath).async("text");
+                    const layoutDoc = new DOMParser().parseFromString(layoutXml, "text/xml");
+
+                    // Get layout name
+                    const cSld = layoutDoc.getElementsByTagName("p:cSld")[0];
+                    const name = cSld.getAttribute("name") || layoutPath.split('/').pop().replace('.xml', '');
+
+                    // Parse relationships to find images
+                    // The relationship file is in ppt/slideLayouts/_rels/slideLayoutX.xml.rels
+                    const filename = layoutPath.split('/').pop();
+                    const relsPath = `ppt/slideLayouts/_rels/${filename}.rels`;
+
+                    let relationships = {};
+                    if (zip.file(relsPath)) {
+                        const relsXml = await zip.file(relsPath).async("text");
+                        const relsDoc = new DOMParser().parseFromString(relsXml, "text/xml");
+                        const relNodes = relsDoc.getElementsByTagName("Relationship");
+                        for (let i = 0; i < relNodes.length; i++) {
+                            const id = relNodes[i].getAttribute("Id");
+                            const target = relNodes[i].getAttribute("Target");
+                            const type = relNodes[i].getAttribute("Type");
+                            relationships[id] = { target, type };
+                        }
+                    }
+
+                    // Parse elements
+                    const elements = [];
+                    const spTree = cSld.getElementsByTagName("p:spTree")[0];
+                    // Query all shape types including pics
+                    const shapes = spTree.querySelectorAll("sp, pic, cxnSp");
+
+                    for (const shape of shapes) {
+                        const elData = await parseShape(shape, slideWidthEmu, slideHeightEmu, zip, relationships);
+                        if (elData) elements.push(elData);
+                    }
+
+                    let contentArea = null;
+                    const bodyPlaceholder = elements.find(el => el._phType === 'body');
+                    if (bodyPlaceholder) {
+                        contentArea = {
+                            x: bodyPlaceholder.x,
+                            y: bodyPlaceholder.y,
+                            w: bodyPlaceholder.w,
+                            h: bodyPlaceholder.h
+                        };
+                    }
+
+                    layouts.push({
+                        name: name,
+                        background: { color: "FFFFFF" }, // Default
+                        elements: elements.map(e => {
+                            const { _phType, ...clean } = e;
+                            return clean;
+                        }),
+                        contentArea: contentArea
+                    });
+                }
+
+                const output = {
+                    templates: [
+                        {
+                            id: "extracted_" + Date.now(),
+                            name: file.name.replace('.pptx', ''),
+                            theme: {
+                                primary: "000000",
+                                secondary: "666666",
+                                text: "333333",
+                                background: "FFFFFF",
+                                surface: "F7F7F7"
+                            },
+                            fonts: {
+                                title: "Arial",
+                                body: "Arial"
+                            },
+                            masters: {}
+                        }
+                    ]
+                };
+
+                layouts.forEach(l => {
+                    const key = l.name.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+                    output.templates[0].masters[key] = {
+                        background: l.background,
+                        elements: l.elements,
+                        contentArea: l.contentArea
+                    };
+                });
+
+                extractedData = output;
+                document.getElementById('jsonOutput').textContent = JSON.stringify(output, null, 4);
+                document.getElementById('btnDownload').disabled = false;
+                status.textContent = "Extraction terminée !";
+                status.className = "status-msg status-success";
+
+            } catch (err) {
+                console.error(err);
+                status.textContent = "Erreur : " + err.message;
+                status.className = "status-msg status-error";
+            }
+        }
+
+        async function parseShape(shapeNode, slideW, slideH, zip, relationships) {
+            try {
+                const spPr = shapeNode.getElementsByTagName("p:spPr")[0];
+                const xfrm = spPr?.getElementsByTagName("a:xfrm")[0];
+
+                if (!xfrm) return null;
+
+                const off = xfrm.getElementsByTagName("a:off")[0];
+                const ext = xfrm.getElementsByTagName("a:ext")[0];
+
+                if (!off || !ext) return null;
+
+                const xEmu = parseInt(off.getAttribute("x"));
+                const yEmu = parseInt(off.getAttribute("y"));
+                const wEmu = parseInt(ext.getAttribute("cx"));
+                const hEmu = parseInt(ext.getAttribute("cy"));
+
+                const toInch = (emu) => parseFloat((emu / 914400).toFixed(2));
+
+                let x = toInch(xEmu);
+                let y = toInch(yEmu);
+                let w = toInch(wEmu);
+                let h = toInch(hEmu);
+
+                // Rotation (1/60000 degree)
+                let rotate = 0;
+                if (xfrm.hasAttribute("rot")) {
+                    rotate = parseInt(xfrm.getAttribute("rot")) / 60000;
+                }
+
+                let type = "rect";
+                let text = "";
+                let phType = null;
+                let imageData = null;
+
+                // Check if it's a picture
+                if (shapeNode.tagName.endsWith("pic")) {
+                    type = "image";
+                    const blipFill = shapeNode.getElementsByTagName("p:blipFill")[0];
+                    const blip = blipFill?.getElementsByTagName("a:blip")[0];
+                    const embedId = blip?.getAttribute("r:embed");
+
+                    if (embedId && relationships[embedId]) {
+                        imageData = "image";
+                    }
+                }
+
+                // Check Shape Type
+                // PrstGeom
+                const prstGeom = spPr.getElementsByTagName("a:prstGeom")[0];
+                if (prstGeom) {
+                    const prst = prstGeom.getAttribute("prst");
+                    if (prst === "line") type = "line";
+                    else if (prst === "ellipse") type = "ellipse";
+                }
+
+                const nvSpPr = shapeNode.getElementsByTagName("p:nvSpPr")[0];
+                const ph = nvSpPr?.getElementsByTagName("p:ph")[0];
+                if (ph) {
+                    phType = ph.getAttribute("type");
+                    if (phType === "title" || phType === "ctrTitle") {
+                        type = "text";
+                        text = "{{TITLE}}";
+                    } else if (phType === "dt") {
+                        type = "text";
+                        text = "{{DATE}}";
+                    } else if (phType === "sldNum") {
+                        type = "text";
+                        text = "{{SLIDE_NUMBER}}";
+                    } else if (phType === "body") {
+                        type = "text";
+                        text = "{{CONTENT_PLACEHOLDER}}";
+                    }
+                }
+
+                const txBody = shapeNode.getElementsByTagName("p:txBody")[0];
+                if (txBody && !text && type !== "image") {
+                    const paragraphs = txBody.getElementsByTagName("a:p");
+                    let foundText = "";
+                    for (let p of paragraphs) {
+                        const ranges = p.getElementsByTagName("a:r");
+                        for (let r of ranges) {
+                            const t = r.getElementsByTagName("a:t")[0];
+                            if (t) foundText += t.textContent;
+                        }
+                    }
+                    if (foundText.trim()) {
+                        type = "text";
+                        text = foundText.trim();
+                    }
+                }
+
+                // Initial Style extraction
+                let color = "000000";
+                let fontSize = 12;
+                let bold = false;
+                let align = "left";
+                let valign = "top";
+                let fill = null;
+                let transparency = 0;
+                let shadow = null;
+                let border = null;
+
+                // Fill color & Transparency
+                const solidFill = spPr?.getElementsByTagName("a:solidFill")[0];
+                if (solidFill) {
+                    const srgbClr = solidFill.getElementsByTagName("a:srgbClr")[0];
+                    const schemeClr = solidFill.getElementsByTagName("a:schemeClr")[0];
+                    let fillNode = srgbClr || schemeClr;
+
+                    if (fillNode) {
+                        fill = fillNode.getAttribute("val");
+                        // Transparency
+                        const alpha = fillNode.getElementsByTagName("a:alpha")[0];
+                        if (alpha) {
+                            const val = parseInt(alpha.getAttribute("val"));
+                            // Alpha is 0-100000, PptxGenJS uses 0-100 transparency
+                            transparency = 100 - (val / 1000);
+                        }
+                    }
+                }
+
+                // Borders / Lines
+                const ln = spPr?.getElementsByTagName("a:ln")[0];
+                if (ln) {
+                    const wLn = parseInt(ln.getAttribute("w") || "0");
+                    const pt = wLn / 12700;
+
+                    let lnColor = "000000";
+                    const lnSolidFill = ln.getElementsByTagName("a:solidFill")[0];
+                    if (lnSolidFill) {
+                        const srgbAndScheme = lnSolidFill.querySelector("srgbClr, schemeClr");
+                        if (srgbAndScheme) lnColor = srgbAndScheme.getAttribute("val");
+                    }
+
+                    border = { pt: parseFloat(pt.toFixed(1)), color: lnColor };
+
+                    const prstDash = ln.getElementsByTagName("a:prstDash")[0];
+                    if (prstDash) {
+                        border.dashType = prstDash.getAttribute("val");
+                    }
+
+                    const headEnd = ln.getElementsByTagName("a:headEnd")[0];
+                    if (headEnd) {
+                        border.headEnd = headEnd.getAttribute("type");
+                    }
+                    const tailEnd = ln.getElementsByTagName("a:tailEnd")[0];
+                    if (tailEnd) {
+                        border.tailEnd = tailEnd.getAttribute("type");
+                    }
+                }
+
+                // Shadows
+                const effectLst = spPr?.getElementsByTagName("a:effectLst")[0];
+                const outerShdw = effectLst?.getElementsByTagName("a:outerShdw")[0];
+                if (outerShdw) {
+                    const dist = parseInt(outerShdw.getAttribute("dist") || "0") / 12700;
+                    const blur = parseInt(outerShdw.getAttribute("blurRad") || "0") / 12700;
+                    const dir = parseInt(outerShdw.getAttribute("dir") || "0") / 60000;
+
+                    let shdwColor = "000000";
+                    const sc = outerShdw.querySelector("srgbClr, schemeClr");
+                    if (sc) shdwColor = sc.getAttribute("val");
+
+                    shadow = {
+                        type: 'outer',
+                        angle: dir,
+                        blur: blur,
+                        offset: dist,
+                        color: shdwColor,
+                        opacity: 0.5
+                    };
+                }
+
+                // Text Body Properties
+                const bodyPr = txBody?.getElementsByTagName("a:bodyPr")[0];
+                if (bodyPr) {
+                    const anchor = bodyPr.getAttribute("anchor");
+                    if (anchor === "ctr") valign = "middle";
+                    else if (anchor === "b") valign = "bottom";
+                }
+
+                // Text Run Properties
+                if (txBody) {
+                    const p = txBody.getElementsByTagName("a:p")[0];
+                    if (p) {
+                        const pPr = p.getElementsByTagName("a:pPr")[0];
+                        if (pPr) {
+                            const algn = pPr.getAttribute("algn");
+                            if (algn === "ctr") align = "center";
+                            if (algn === "r") align = "right";
+                        }
+
+                        const r = p.getElementsByTagName("a:r")[0];
+                        if (r) {
+                            const rPr = r.getElementsByTagName("a:rPr")[0];
+                            if (rPr) {
+                                const sz = rPr.getAttribute("sz");
+                                if (sz) fontSize = parseInt(sz) / 100;
+
+                                const b = rPr.getAttribute("b");
+                                if (b === "1" || b === "true") bold = true;
+
+                                const solidFillText = rPr.getElementsByTagName("a:solidFill")[0];
+                                if (solidFillText) {
+                                    const srgb = solidFillText.getElementsByTagName("a:srgbClr")[0];
+                                    if (srgb) color = srgb.getAttribute("val");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const element = {
+                    type: type,
+                    x: x,
+                    y: y,
+                    w: w,
+                    h: h,
+                    _phType: phType
+                };
+
+                // Add extended features
+                if (rotate !== 0) element.rotate = parseFloat(rotate.toFixed(1));
+                if (transparency > 0) element.transparency = parseInt(transparency);
+                if (shadow) element.shadow = shadow;
+
+                if (type === "text") {
+                    element.text = text;
+                    element.fontSize = fontSize;
+                    if (color) element.color = color;
+                    if (bold) element.bold = true;
+                    if (align !== "left") element.align = align;
+                    if (valign !== "top") element.valign = valign;
+                    if (border) element.border = border;
+                } else if (type === "image" && imageData) {
+                    element.src = imageData;
+                    if (border) element.border = border;
+
+                    delete element.text;
+                    delete element.fontSize;
+                    delete element.color;
+                } else if (type === "line" || type === "rect" || type === "ellipse") {
+                    if (fill) element.fill = fill;
+                    if (border) {
+                        element.border = border;
+                        if (type === "line") {
+                            if (border.headEnd) element.lineHead = border.headEnd;
+                            if (border.tailEnd) element.lineTail = border.tailEnd;
+                            if (border.dashType) element.dashType = border.dashType;
+                        }
+                    }
+                }
+
+                return element;
+
+            } catch (e) {
+                console.warn("Error parsing shape", e);
+                return null;
+            }
+        }
+
+        function downloadJson() {
+            if (!extractedData) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(extractedData, null, 4));
+            const anchorNode = document.createElement('a');
+            anchorNode.setAttribute("href", dataStr);
+            anchorNode.setAttribute("download", "ppt_config_extracted.json");
+            document.body.appendChild(anchorNode);
+            anchorNode.click();
+            anchorNode.remove();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,348 @@
+{
+    "documents": [
+        {
+            "name": "Rapport Isec",
+            "path": "Modele_word.docx"
+        }
+    ],
+    "templates": [
+        {
+            "id": "extracted_1771110192358",
+            "name": "Présentation1",
+            "theme": {
+                "primary": "000000",
+                "secondary": "666666",
+                "text": "333333",
+                "background": "FFFFFF",
+                "surface": "F7F7F7"
+            },
+            "fonts": {
+                "title": "Arial",
+                "body": "Arial"
+            },
+            "masters": {
+                "TITLE_SLIDE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 1.67,
+                            "y": 1.23,
+                            "w": 10,
+                            "h": 2.61,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "text",
+                            "x": 1.67,
+                            "y": 3.94,
+                            "w": 10,
+                            "h": 1.81,
+                            "text": "Modifiez le style des sous-titres du masque",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "image",
+                            "x": 0.38,
+                            "y": 0.45,
+                            "w": 4.08,
+                            "h": 0.84,
+                            "rotate": 349.2,
+                            "src": "logo.png"
+                        }
+                    ],
+                    "contentArea": null
+                },
+                "CONTENT_SLIDE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "image",
+                            "x": 0.38,
+                            "y": 0.45,
+                            "w": 4.08,
+                            "h": 0.84,
+                            "rotate": 349.2,
+                            "src": "logo.png"
+                        }
+                    ],
+                    "contentArea": null
+                },
+                "TITRE_DE_SECTION": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 0.91,
+                            "y": 1.87,
+                            "w": 11.5,
+                            "h": 3.12,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.91,
+                            "y": 5.02,
+                            "w": 11.5,
+                            "h": 1.64,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": {
+                        "x": 0.91,
+                        "y": 5.02,
+                        "w": 11.5,
+                        "h": 1.64
+                    }
+                },
+                "DEUX_CONTENUS": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 2,
+                            "w": 5.67,
+                            "h": 4.76,
+                            "text": "Cliquez pour modifier les styles du texte du masqueDeuxième niveauTroisième niveauQuatrième niveauCinquième niveau",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 6.75,
+                            "y": 2,
+                            "w": 5.67,
+                            "h": 4.76,
+                            "text": "Cliquez pour modifier les styles du texte du masqueDeuxième niveauTroisième niveauQuatrième niveauCinquième niveau",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": null
+                },
+                "COMPARAISON": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 0.4,
+                            "w": 11.5,
+                            "h": 1.45,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 1.84,
+                            "w": 5.64,
+                            "h": 0.9,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 2.74,
+                            "w": 5.64,
+                            "h": 4.03,
+                            "text": "Cliquez pour modifier les styles du texte du masqueDeuxième niveauTroisième niveauQuatrième niveauCinquième niveau",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 6.75,
+                            "y": 1.84,
+                            "w": 5.67,
+                            "h": 0.9,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "text",
+                            "x": 6.75,
+                            "y": 2.74,
+                            "w": 5.67,
+                            "h": 4.03,
+                            "text": "Cliquez pour modifier les styles du texte du masqueDeuxième niveauTroisième niveauQuatrième niveauCinquième niveau",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": {
+                        "x": 0.92,
+                        "y": 1.84,
+                        "w": 5.64,
+                        "h": 0.9
+                    }
+                },
+                "TITRE_SEUL": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [],
+                    "contentArea": null
+                },
+                "VIDE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [],
+                    "contentArea": null
+                },
+                "CONTENU_AVEC_L_GENDE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 0.5,
+                            "w": 4.3,
+                            "h": 1.75,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "text",
+                            "x": 5.67,
+                            "y": 1.08,
+                            "w": 6.75,
+                            "h": 5.33,
+                            "text": "Cliquez pour modifier les styles du texte du masqueDeuxième niveauTroisième niveauQuatrième niveauCinquième niveau",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 2.25,
+                            "w": 4.3,
+                            "h": 4.17,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": {
+                        "x": 0.92,
+                        "y": 2.25,
+                        "w": 4.3,
+                        "h": 4.17
+                    }
+                },
+                "IMAGE_AVEC_L_GENDE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 0.5,
+                            "w": 4.3,
+                            "h": 1.75,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000",
+                            "valign": "bottom"
+                        },
+                        {
+                            "type": "rect",
+                            "x": 5.67,
+                            "y": 1.08,
+                            "w": 6.75,
+                            "h": 5.33
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 2.25,
+                            "w": 4.3,
+                            "h": 4.17,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": {
+                        "x": 0.92,
+                        "y": 2.25,
+                        "w": 4.3,
+                        "h": 4.17
+                    }
+                },
+                "TITRE_ET_TEXTE_VERTICAL": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [],
+                    "contentArea": null
+                },
+                "TITRE_VERTICAL_ET_TEXTE": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "text",
+                            "x": 9.54,
+                            "y": 0.4,
+                            "w": 2.88,
+                            "h": 6.36,
+                            "text": "{{TITLE}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.92,
+                            "y": 0.4,
+                            "w": 8.46,
+                            "h": 6.36,
+                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": {
+                        "x": 0.92,
+                        "y": 0.4,
+                        "w": 8.46,
+                        "h": 6.36
+                    }
+                }
+            }
+        }
+    ]
+}
