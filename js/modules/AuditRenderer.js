@@ -173,35 +173,61 @@ function renderCellHtml(col, value, r, c, currentForm) {
 }
 
 function attachEvents(container, actions, currentForm) {
-    // Sort
-    container.querySelectorAll('.th-label').forEach(el => {
-        el.parentElement.onclick = () => actions.handleSort(parseInt(el.parentElement.parentElement.dataset.colidx));
-    });
+    // 1. CLICK DELEGATION
+    // Handles: Sort, Row Actions (Add/Delete), IA Generation
+    container.onclick = (e) => {
+        const target = e.target;
 
-    // Column Filters
-    container.querySelectorAll('.th-filter-select').forEach(el => {
-        el.onchange = (e) => actions.handleColumnFilter(parseInt(el.dataset.colidx), e.target.value);
-    });
+        // A. SORTING (Header)
+        const sortHeader = target.closest('.th-label');
+        if (sortHeader) {
+            const th = sortHeader.closest('th');
+            if (th) actions.handleSort(parseInt(th.dataset.colidx));
+            return;
+        }
 
-    // Row Actions
-    container.querySelectorAll('.btn-add-row').forEach(btn => {
-        btn.onclick = () => actions.duplicateRow(parseInt(btn.dataset.r));
-    });
-    container.querySelectorAll('.btn-delete-row').forEach(btn => {
-        btn.onclick = () => actions.deleteRow(parseInt(btn.dataset.r));
-    });
+        // B. ROW ACTIONS
+        const btnAdd = target.closest('.btn-add-row');
+        if (btnAdd) {
+            actions.duplicateRow(parseInt(btnAdd.dataset.r));
+            return;
+        }
 
-    // Inputs: Reponse
-    container.querySelectorAll('.inp-reponse, .editable-question').forEach(el => {
-        el.oninput = (e) => actions.updateValue(parseInt(e.target.dataset.r), parseInt(e.target.dataset.c), e.target.value);
-    });
+        const btnDel = target.closest('.btn-delete-row');
+        if (btnDel) {
+            actions.deleteRow(parseInt(btnDel.dataset.r));
+            return;
+        }
 
-    // Inputs: Combo
-    container.querySelectorAll('.inp-combo').forEach(el => {
-        el.onchange = (e) => {
-            const r = parseInt(e.target.dataset.r);
-            const c = parseInt(e.target.dataset.c);
-            const val = e.target.value;
+        // C. IA GENERATION
+        const btnIA = target.closest('.btn-ia');
+        if (btnIA) {
+            const r = parseInt(btnIA.dataset.r);
+            const c = parseInt(btnIA.dataset.c);
+            const col = currentForm.columns[c];
+            const txt = btnIA.parentElement.querySelector('.ia-textarea');
+            const preview = container.querySelector(`#ia-${r}-${c}`);
+            actions.runIA(r, c, col, btnIA, txt, preview);
+            return;
+        }
+    };
+
+    // 2. CHANGE DELEGATION
+    // Handles: Column Filters, Combo Inputs, QCM Inputs
+    container.onchange = (e) => {
+        const target = e.target;
+
+        // A. COLUMN FILTERS
+        if (target.classList.contains('th-filter-select')) {
+            actions.handleColumnFilter(parseInt(target.dataset.colidx), target.value);
+            return;
+        }
+
+        // B. COMBO INPUTS
+        if (target.classList.contains('inp-combo')) {
+            const r = parseInt(target.dataset.r);
+            const c = parseInt(target.dataset.c);
+            const val = target.value;
             actions.updateValue(r, c, val);
 
             // Visual update for combo color
@@ -209,20 +235,18 @@ function attachEvents(container, actions, currentForm) {
             if (col.params?.colorScheme) {
                 const options = col.params.options || [];
                 const bg = Utils.getComboColor(col.params.colorScheme, val, options);
-                e.target.style.backgroundColor = bg;
-                e.target.style.color = Utils.getContrastColor(bg);
+                target.style.backgroundColor = bg;
+                target.style.color = Utils.getContrastColor(bg);
             }
-        };
-    });
+            return;
+        }
 
-    // Inputs: QCM
-    container.querySelectorAll('.inp-qcm').forEach(el => {
-        el.onchange = (e) => {
-            const r = parseInt(e.target.dataset.r);
-            const c = parseInt(e.target.dataset.c);
+        // C. QCM INPUTS
+        if (target.classList.contains('inp-qcm')) {
+            const r = parseInt(target.dataset.r);
+            const c = parseInt(target.dataset.c);
 
             // Re-read current value from FORM STATE to update specific item
-            // actions.updateValue expects the FULL value for the cell
             let currentVal = currentForm.rows[r][c];
             if (!Array.isArray(currentVal)) {
                 const col = currentForm.columns[c];
@@ -231,31 +255,27 @@ function attachEvents(container, actions, currentForm) {
 
             // Clone to avoid direct mutation if strict
             const newVal = JSON.parse(JSON.stringify(currentVal));
-            const itemIdx = parseInt(e.target.dataset.i);
+            const itemIdx = parseInt(target.dataset.i);
             if (newVal[itemIdx]) {
-                newVal[itemIdx].checked = e.target.checked;
+                newVal[itemIdx].checked = target.checked;
                 actions.updateValue(r, c, newVal);
             }
-        };
-    });
+            return;
+        }
+    };
 
-    // Inputs: IA
-    container.querySelectorAll('.ia-textarea').forEach(el => {
-        el.oninput = (e) => {
-            const r = parseInt(e.target.dataset.r);
-            const c = parseInt(e.target.dataset.c);
-            actions.updateValue(r, c, e.target.value);
-        };
-    });
+    // 3. INPUT DELEGATION
+    // Handles: Text Inputs (Reponse, Editable Question, IA Textarea)
+    container.oninput = (e) => {
+        const target = e.target;
 
-    container.querySelectorAll('.btn-ia').forEach(btn => {
-        btn.onclick = () => {
-            const r = parseInt(btn.dataset.r);
-            const c = parseInt(btn.dataset.c);
-            const col = currentForm.columns[c];
-            const txt = btn.parentElement.querySelector('.ia-textarea');
-            const preview = container.querySelector(`#ia-${r}-${c}`);
-            actions.runIA(r, c, col, btn, txt, preview);
-        };
-    });
+        if (target.classList.contains('inp-reponse') ||
+            target.classList.contains('editable-question') ||
+            target.classList.contains('ia-textarea')) {
+
+            const r = parseInt(target.dataset.r);
+            const c = parseInt(target.dataset.c);
+            actions.updateValue(r, c, target.value);
+        }
+    };
 }

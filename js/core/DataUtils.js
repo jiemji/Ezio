@@ -44,12 +44,45 @@ export const DataUtils = {
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             processed = processed.filter(item => {
-                const rowText = item.data.map(cell => {
-                    if (cell === null || cell === undefined) return "";
-                    if (typeof cell === 'object') return JSON.stringify(cell);
-                    return String(cell);
-                }).join(" ").toLowerCase();
-                return rowText.includes(query);
+                // Optimization: Avoid JSON.stringify for every cell
+                // Build a searchable string from relevant values
+                let rowText = "";
+                const len = item.data.length;
+                for (let i = 0; i < len; i++) {
+                    const cell = item.data[i];
+                    if (cell === null || cell === undefined) continue;
+
+                    const type = typeof cell;
+                    if (type === 'string') {
+                        rowText += cell + " ";
+                    } else if (type === 'number' || type === 'boolean') {
+                        rowText += cell + " ";
+                    } else if (type === 'object') {
+                        // For arrays (Multiplex/QCM) or simple objects, we might want to search their values
+                        // But avoiding full JSON stringify if possible.
+                        // For QCM (array of objects), we often want labels.
+                        if (Array.isArray(cell)) {
+                            // Check if it's an array of strings or objects
+                            if (cell.length > 0) {
+                                if (typeof cell[0] === 'string') {
+                                    rowText += cell.join(" ") + " ";
+                                } else if (cell[0].label) {
+                                    // QCM structure: [{label: "x", checked: true}, ...]
+                                    // We only search labels if checked? Or all? Usually search finds text content.
+                                    // Let's add all labels for searchability
+                                    rowText += cell.map(o => o.label).join(" ") + " ";
+                                } else {
+                                     // Fallback
+                                    rowText += JSON.stringify(cell) + " ";
+                                }
+                            }
+                        } else {
+                            // Fallback for other objects
+                             rowText += JSON.stringify(cell) + " ";
+                        }
+                    }
+                }
+                return rowText.toLowerCase().includes(query);
             });
         }
 

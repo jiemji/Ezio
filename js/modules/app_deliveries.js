@@ -39,8 +39,210 @@ async function renderDeliveriesModule() {
 
     renderSidebarList();
     renderMainView();
+    setupDelegation(); // Attach delegated listeners once
 }
 
+function setupDelegation() {
+    if (!els.main) return;
+
+    // Debounced Save for text inputs
+    const debouncedSave = Utils.debounce(() => {
+        store.save();
+    }, 500);
+
+    // 1. CLICK Delegation
+    els.main.onclick = (e) => {
+        const target = e.target;
+
+        // Buttons: Generate, Move, Remove
+        if (target.classList.contains('btn-generate')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) generateModule(delivery, parseInt(target.dataset.idx));
+            return;
+        }
+        if (target.classList.contains('btn-move-left')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), -1);
+            return;
+        }
+        if (target.classList.contains('btn-move-right')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), 1);
+            return;
+        }
+        if (target.classList.contains('btn-remove-mod')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) removeModule(delivery, parseInt(target.dataset.idx));
+            return;
+        }
+
+        // Checkboxes: Chapter, SubChap, Col, FormatTable
+        if (target.classList.contains('chk-chapter')) {
+            handleChapterCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-subchap')) {
+            handleSubChapCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-col')) {
+            handleColCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-format-table')) {
+            const idx = parseInt(target.dataset.idx);
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery && delivery.structure[idx]) {
+                if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
+                delivery.structure[idx].config.isTable = target.checked;
+                store.save();
+            }
+            return;
+        }
+    };
+
+    // 2. CHANGE Delegation (Selects)
+    els.main.onchange = (e) => {
+        const target = e.target;
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (!delivery) return;
+
+        // Delivery Name
+        if (target.id === 'inpDlvName') {
+            delivery.name = target.value;
+            store.save();
+            renderSidebarList();
+            return;
+        }
+
+        const idx = parseInt(target.dataset.idx);
+        if (isNaN(idx) || !delivery.structure[idx]) return;
+
+        // Prompt (also handled in input for debounce, but change ensures final save)
+        if (target.classList.contains('txt-inst-prompt')) {
+            delivery.structure[idx].config.ai.prompt = target.value;
+            store.save();
+            return;
+        }
+
+        // Model
+        if (target.classList.contains('slc-inst-model')) {
+            delivery.structure[idx].config.ai.model = target.value;
+            store.save();
+            return;
+        }
+
+        // Scope Type
+        if (target.classList.contains('slc-inst-scope')) {
+            delivery.structure[idx].config.scope.type = target.value;
+            if (target.value === 'global') {
+                delivery.structure[idx].config.scope.selection = [];
+            }
+            store.save();
+            renderMainView();
+            return;
+        }
+    };
+
+    // 3. INPUT Delegation (Debounced Text)
+    els.main.oninput = (e) => {
+        const target = e.target;
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (!delivery) return;
+
+        if (target.classList.contains('txt-inst-prompt')) {
+            const idx = parseInt(target.dataset.idx);
+            if (delivery.structure[idx]) {
+                delivery.structure[idx].config.ai.prompt = target.value;
+                debouncedSave();
+            }
+        }
+        // Delivery Name Debounce
+        if (target.id === 'inpDlvName') {
+            delivery.name = target.value;
+            debouncedSave();
+            // Note: Sidebar update might be delayed, which is fine
+        }
+    };
+
+    // 4. BLUR Delegation (ContentEditable)
+    els.main.addEventListener('blur', (e) => {
+        const target = e.target;
+        if (target.classList.contains('dlv-card-result')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            const card = target.closest('.dlv-card');
+            if (delivery && card) {
+                const idx = parseInt(card.dataset.idx);
+                if (delivery.structure[idx]) {
+                    delivery.structure[idx].result = target.innerHTML;
+                    store.save();
+                }
+            }
+        }
+    }, true); // Capture phase for blur
+}
+
+// Helper functions for checkboxes to keep delegation clean
+function handleChapterCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const chapName = target.getAttribute('data-chap');
+    const hierarchy = buildChapterHierarchy();
+    const chap = hierarchy.find(c => c.name === chapName);
+
+    if (!delivery || !chap) return;
+
+    let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+    if (target.checked) {
+        chap.subs.forEach(s => {
+            if (!currentSelection.includes(s)) currentSelection.push(s);
+        });
+    } else {
+        currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
+    }
+
+    delivery.structure[idx].config.scope.selection = currentSelection;
+    store.save();
+    renderMainView();
+}
+
+function handleSubChapCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const subName = target.getAttribute('data-sub');
+    if (!delivery) return;
+
+    let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+    if (target.checked) {
+        if (!currentSelection.includes(subName)) currentSelection.push(subName);
+    } else {
+        currentSelection = currentSelection.filter(s => s !== subName);
+    }
+
+    delivery.structure[idx].config.scope.selection = currentSelection;
+    store.save();
+    renderMainView();
+}
+
+function handleColCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const colId = target.getAttribute('data-colid');
+    if (!delivery) return;
+
+    let currentCols = delivery.structure[idx].config.columns || [];
+
+    if (target.checked) {
+        if (!currentCols.includes(colId)) currentCols.push(colId);
+    } else {
+        currentCols = currentCols.filter(c => c !== colId);
+    }
+
+    delivery.structure[idx].config.columns = currentCols;
+    store.save();
+}
 function setupSidebar() {
     if (!els.sidebar) return;
 
@@ -207,11 +409,8 @@ function renderMainView() {
 
     els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
 
-    document.getElementById('inpDlvName').addEventListener('change', (e) => {
-        delivery.name = e.target.value;
-        store.save();
-        renderSidebarList();
-    });
+    // Name change handled by delegation in setupDelegation
+
 
     document.getElementById('btnDownloadReport').addEventListener('click', () => {
         downloadDeliveryReport(delivery);
@@ -231,12 +430,7 @@ function renderMainView() {
         }
     });
 
-    els.main.querySelectorAll('.btn-generate').forEach(btn => btn.onclick = () => generateModule(delivery, parseInt(btn.dataset.idx)));
-    els.main.querySelectorAll('.btn-move-left').forEach(btn => btn.onclick = () => moveModule(delivery, parseInt(btn.dataset.idx), -1));
-    els.main.querySelectorAll('.btn-move-right').forEach(btn => btn.onclick = () => moveModule(delivery, parseInt(btn.dataset.idx), 1));
-    els.main.querySelectorAll('.btn-remove-mod').forEach(btn => btn.onclick = () => removeModule(delivery, parseInt(btn.dataset.idx)));
-
-    bindConfigInputs(delivery);
+    // Old individual listeners removed - handled by delegation in setupDelegation()
 }
 
 function buildChapterHierarchy() {
@@ -320,128 +514,7 @@ function renderColumnSelector(idx, selectedCols) {
     return html;
 }
 
-function bindConfigInputs(delivery) {
-    const main = els.main;
 
-    // Prompt
-    main.querySelectorAll('.txt-inst-prompt').forEach(txt => {
-        txt.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.ai.prompt = e.target.value;
-            store.save();
-        };
-    });
-
-    // Model
-    main.querySelectorAll('.slc-inst-model').forEach(slc => {
-        slc.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.ai.model = e.target.value;
-            store.save();
-        };
-    });
-
-    // Scope Type
-    main.querySelectorAll('.slc-inst-scope').forEach(slc => {
-        slc.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.scope.type = e.target.value;
-            if (e.target.value === 'global') {
-                delivery.structure[idx].config.scope.selection = []; // Clear selection if global
-            }
-            store.save();
-            renderMainView(); // Re-render to show/hide checkboxes
-        };
-    });
-
-    // Chapter Checkbox (Parent)
-    main.querySelectorAll('.chk-chapter').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const chapName = e.target.getAttribute('data-chap');
-            const hierarchy = buildChapterHierarchy(); // Rebuild is fast enough
-            const chap = hierarchy.find(c => c.name === chapName);
-
-            if (!chap) return;
-
-            let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-            if (e.target.checked) {
-                // Add all subs of this chapter
-                chap.subs.forEach(s => {
-                    if (!currentSelection.includes(s)) currentSelection.push(s);
-                });
-            } else {
-                // Remove all subs of this chapter
-                currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
-            }
-
-            delivery.structure[idx].config.scope.selection = currentSelection;
-            store.save();
-            renderMainView(); // Refresh UI states
-        };
-    });
-
-    // Sub-chapter Checkbox (Child)
-    main.querySelectorAll('.chk-subchap').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const subName = e.target.getAttribute('data-sub');
-            let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-            if (e.target.checked) {
-                if (!currentSelection.includes(subName)) currentSelection.push(subName);
-            } else {
-                currentSelection = currentSelection.filter(s => s !== subName);
-            }
-
-            delivery.structure[idx].config.scope.selection = currentSelection;
-            store.save();
-            renderMainView(); // Refresh UI states
-        };
-    });
-
-    // Column Checkbox
-    main.querySelectorAll('.chk-col').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const colId = e.target.getAttribute('data-colid');
-            let currentCols = delivery.structure[idx].config.columns || [];
-
-            if (e.target.checked) {
-                if (!currentCols.includes(colId)) currentCols.push(colId);
-            } else {
-                currentCols = currentCols.filter(c => c !== colId);
-            }
-
-            delivery.structure[idx].config.columns = currentCols;
-            store.save();
-            // No need to re-render main view for columns, state is visual enough
-        };
-    });
-
-    // Table Format Checkbox
-    main.querySelectorAll('.chk-format-table').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
-            delivery.structure[idx].config.isTable = e.target.checked;
-            store.save();
-        };
-    });
-
-    // Result Edit (Blur)
-    main.querySelectorAll('.dlv-card-result').forEach(div => {
-        div.onblur = (e) => {
-            const card = div.closest('.dlv-card');
-            if (!card) return;
-            const idx = parseInt(card.dataset.idx);
-            // Save innerHTML to preserve formatting edits
-            delivery.structure[idx].result = div.innerHTML;
-            store.save();
-        };
-    });
-}
 
 function moveModule(delivery, index, direction) {
     if (index + direction < 0 || index + direction >= delivery.structure.length) return;
