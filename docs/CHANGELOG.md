@@ -13,6 +13,20 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
     - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.
     - **Ergonomie** : Amélioration des inputs (textarea), des tables (sticky headers) et des cartes du dashboard.
 
+## [2.2.1] - 2026-02-19
+### Optimisation des Performances (Phase 1 & 2)
+Focus sur la réactivité de l'interface et la réduction de la charge mémoire.
+
+- **Moteur de Rendu Audit (`AuditRenderer.js`)** :
+    - **Délégation d'Événements** : Remplacement des milliers d'écouteurs individuels (un par cellule) par un écouteur unique sur le conteneur principal. Gain significatif de mémoire et de temps d'initialisation pour les gros audits.
+- **Module Livrables (`app_deliveries.js`)** :
+    - **Debounce** : Temporisation de la sauvegarde automatique (500ms) lors de la frappe pour éviter les écritures disques excessives.
+    - **Délégation** : Adoption du même modèle de délégation d'événements que l'audit.
+- **Tableau de Bord (`app_dashboard.js`)** :
+    - **Smart Rendering** : Réutilisation des instances `Chart.js` existantes lors des mises à jour de données, éliminant le scintillement (flicker) et la charge CPU inutile.
+- **Core (`DataUtils.js`)** :
+    - **Recherche Optimisée** : Réécriture de la logique de recherche globale pour éviter la sérialisation JSON excessive de chaque cellule.
+
 ## [2.2.0] - 2026-02-15
 ### Refactoring & Modernisation (Phases 1-4)
 Une refonte profonde du code pour améliorer la maintenabilité, la robustesse et l'expérience utilisateur.

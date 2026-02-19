@@ -71,7 +71,7 @@ graph TD
 *   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
 ### Core & Structure (`js/core/`)
 *   `State.js` : **État Global**. Singleton gérant les données de l'application (`currentForm`, `reportsStore`) et la persistance (`Store.js`).
-*   `Utils.js` : Helpers basiques et extensions de prototypes.
+*   `Utils.js` : Helpers basiques (slugify, escapeHtml, **debounce**) et extensions de prototypes.
 *   `DataUtils.js` : **Logique Métier Pure**. Contient les algorithmes de tri, filtrage, recherche et traitement des données. Totalement découplé du DOM.
 *   `UIFactory.js` : **Composants UI**. Bibliothèque de générateurs d'éléments (Boutons, Badges, Toasts) pour une UX cohérente. Remplace les `alert()` par des Toasts.
 *   `Config.js` : Constantes (Couleurs, Seuils, Valeurs par défaut).
@@ -86,7 +86,7 @@ graph TD
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js` & `AuditRenderer.js`)** :
     *   **Contrôleur (`app_audit.js`)** : Gère les événements utilisateurs, les appels API (IA) et la manipulation de l'état via `State.js`.
-    *   **Vue (`AuditRenderer.js`)** : Gère exclusivement la génération du HTML du tableau et l'attachement des événements DOM. Reçoit un contexte pur de `app_audit.js`.
+    *   **Vue (`AuditRenderer.js`)** : Gère exclusivement la génération du HTML du tableau. Utilise la **Délégation d'Événements** sur le conteneur principal pour gérer les clics performants sur des milliers de cellules.
     *   **Logique** : Délègue le tri/filtre complexe à `DataUtils.js`.
 
 2.  **Module IA (`js/api/api_ia.js`)** :
@@ -96,6 +96,7 @@ graph TD
 
 3.  **Module Dashboard (`app_dashboard.js`)** :
     *   Génération de KPIs dynamiques basés sur les colonnes "Combo".
+    *   **Optimisation** : Réutilise les instances `Chart.js` via `chart.update()` pour éviter le scintillement lors des rafraîchissements.
     *   Types de graphiques : Camembert, Anneau, Barres, Empilement par chapitre.
 
 4.  **Module Créateur (`app_creator.js`)** :
@@ -116,6 +117,7 @@ graph TD
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
     *   **UX** : Interface étape par étape avec prévisualisation immédiate et notifications non-intrusives (`UI.showToast`).
+    *   **Performance** : Sauvegarde des entrées texte (prompts) temporisée (**Debounce**) pour fluidifier la saisie.
     *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, et option Tableau.
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
 
