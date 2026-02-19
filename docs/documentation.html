@@ -247,7 +247,7 @@ npx http-server .</code></pre>
                     <tr>
                         <td><code>js/modules/</code></td>
                         <td>Fonctionnalités</td>
-                        <td>app_audit.js, AuditRenderer.js, app_deliveries.js</td>
+                        <td>app_audit.js, AuditRenderer.js, app_deliveries.js, app_output_word.js</td>
                     </tr>
                     <tr>
                         <td><code>js/ui/</code></td>
@@ -341,6 +341,14 @@ async function generateModule(delivery) {
     }
 }</code></pre>
 
+            <h3 id="mod-printing">3.3 Impression & Export (Module Unifié)</h3>
+            <p>Le système d'impression remplace les anciens exports individuels.</p>
+            <ul>
+                <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles disponibles (Word et PPTX).</li>
+                <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le contenu dans des modèles existants.</li>
+                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides vectorielles.</li>
+            </ul>
+
             <h2 id="features">4. Fonctionnalités Clés</h2>
 
             <h3>4.1 Gestion des Données (JSON)</h3>
@@ -356,6 +364,16 @@ async function generateModule(delivery) {
                 <li><strong>Configuration</strong> : Fichier <code>models.json</code> à la racine.</li>
                 <li><strong>Providers</strong> : Compatible OpenAI, Groq, et <strong>LM Studio</strong> (Local).</li>
             </ul>
+
+            <h3 id="printing-features">4.3 Impression & Rapports</h3>
+            <p>La nouvelle interface d'impression unifiée permet de générer des livrables professionnels.</p>
+            <ul>
+                <li><strong>Format Word</strong> : Support des modèles <code>.docx</code> et <code>.dotx</code> pour conserver votre identité visuelle.</li>
+                <li><strong>Format PowerPoint</strong> : Génération de présentations basées sur des thèmes configurables.</li>
+            </ul>
+            <div class="alert alert-note">
+                <strong>Guide de Configuration :</strong> Pour apprendre à créer vos propres modèles, consultez le <a href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide de Configuration des Sorties</a>.
+            </div>
 
         </main>
 
@@ -373,9 +391,14 @@ async function generateModule(delivery) {
                     <ul>
                         <li><a href="#mod-audit" class="sub-link">3.1 Audit (MVC)</a></li>
                         <li><a href="#mod-deliveries" class="sub-link">3.2 Livrables (Async)</a></li>
+                        <li><a href="#mod-printing" class="sub-link">3.3 Impression</a></li>
                     </ul>
                 </li>
-                <li><a href="#features">4. Fonctionnalités</a></li>
+                <li><a href="#features">4. Fonctionnalités</a>
+                    <ul>
+                        <li><a href="#printing-features" class="sub-link">4.3 Impression</a></li>
+                    </ul>
+                </li>
             </ul>
         </nav>
     </div>

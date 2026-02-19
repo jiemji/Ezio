@@ -54,7 +54,24 @@ function setupDelegation() {
     els.main.onclick = (e) => {
         const target = e.target;
 
-        // Buttons: Generate, Move, Remove
+        // Buttons: Generate, Move, Remove, Collapse
+        if (target.classList.contains('btn-toggle-collapse')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            const idx = parseInt(target.dataset.idx);
+            if (delivery && delivery.structure[idx]) {
+                const isCollapsed = delivery.structure[idx].config.collapsed;
+                delivery.structure[idx].config.collapsed = !isCollapsed;
+                store.save(); // Save state
+
+                // Direct DOM update
+                const wrapper = target.closest('.dlv-card-body').querySelector('.dlv-inputs-wrapper');
+                if (wrapper) wrapper.style.display = !isCollapsed ? 'none' : 'block';
+
+                target.innerText = !isCollapsed ? '▶' : '▼';
+            }
+            return;
+        }
+
         if (target.classList.contains('btn-generate')) {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery) generateModule(delivery, parseInt(target.dataset.idx));
@@ -353,8 +370,10 @@ function renderMainView() {
             inst.config.columns = (currentForm.columns || []).map(c => c.id);
         }
 
+        const isCollapsed = inst.config.collapsed || false;
+
         trackHTML += `
-            <div class="dlv-card" data-idx="${idx}">
+            <div class="dlv-card ${isCollapsed ? 'collapsed' : ''}" data-idx="${idx}">
                 <div class="dlv-card-header">
                      <div class="dlv-card-nav">
                         ${idx > 0 ? `<button class="btn-card-action btn-move-left" data-idx="${idx}" title="Reculer">&lt;</button>` : ''}
@@ -367,35 +386,43 @@ function renderMainView() {
                 </div>
                 <div class="dlv-card-body">
                     <div class="form-group">
-                        <label>Scope (Périmètre)</label>
-                        <select class="form-control slc-inst-scope" data-idx="${idx}">
-                            <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
-                            <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
-                        </select>
-                    </div>
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            <label style="margin-bottom:0; margin-right: 10px;">Scope (Périmètre)</label>
+                            <button class="btn-toggle-collapse" data-idx="${idx}" title="Replier/Déplier" style="padding:0; border:none; background:none; cursor:pointer;">
+                                ${isCollapsed ? '▶' : '▼'}
+                            </button>
+                        </div>
+                        
+                        <div class="dlv-inputs-wrapper" style="${isCollapsed ? 'display:none;' : ''}">
+                            <select class="form-control slc-inst-scope" data-idx="${idx}">
+                                <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
+                                <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
+                            </select>
 
-                    ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
+                            ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
 
-                    <div class="form-group">
-                        <label>Colonnes à inclure</label>
-                        ${renderColumnSelector(idx, inst.config.columns)}
-                    </div>
+                            <div class="form-group" style="margin-top:1rem;">
+                                <label>Colonnes à inclure</label>
+                                ${renderColumnSelector(idx, inst.config.columns)}
+                            </div>
 
-                    <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
-                        <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
-                        <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
-                    </div>
+                            <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
+                                <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
+                                <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
+                            </div>
 
-                    <div class="form-group">
-                        <label>Prompt IA</label>
-                        <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
-                    </div>
-                     <div class="form-group">
-                        <label>Modèle IA</label>
-                        <select class="form-control slc-inst-model" data-idx="${idx}">
-                            <option value="">-- Défaut --</option>
-                            ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
-                        </select>
+                            <div class="form-group">
+                                <label>Prompt IA</label>
+                                <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Modèle IA</label>
+                                <select class="form-control slc-inst-model" data-idx="${idx}">
+                                    <option value="">-- Défaut --</option>
+                                    ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="dlv-card-footer">

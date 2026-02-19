@@ -275,6 +275,29 @@ body.dark-mode .sidebar-item.selected {
     margin-bottom: 5px;
 }
 
-.sub-list {
-    margin-left: 20px;
+
+/* Card Collapse */
+/* Removed old collapse rules to keep footer visible */
+
+
+.btn-toggle-collapse {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 5px;
+    margin-right: 5px;
+    transition: transform 0.2s;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-toggle-collapse:hover {
+    color: var(--primary);
+}
+
+.dlv-card.collapsed .btn-toggle-collapse {
+    transform: rotate(-90deg);
 }

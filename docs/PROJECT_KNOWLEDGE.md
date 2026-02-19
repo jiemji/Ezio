@@ -121,8 +121,9 @@ graph TD
     *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, et option Tableau.
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
 
-8.  **Module Export (`app_export.js`)** :
-    *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
+8.  **Module Export (Data) (`app_export.js`)** :
+    *   Gestion de l'export des données brutes (JSON d'état complet, CSV pour Excel).
+    *   *Note :* L'export documentaire (Word/PPT) est désormais géré par le module Impression.
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 73: 
 74: 9.  **Module Output Word (`app_output_word.js`)** :
@@ -130,7 +131,8 @@ graph TD
 76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
 77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
-10. **Module Output (`app_outputppt.js`, `app_output_word.js`)** :
+10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
+    *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
     *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis.
     *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page.
