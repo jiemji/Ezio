@@ -116,9 +116,10 @@ function setupDelegation() {
             }
             return;
         }
-        if (target.classList.contains('btn-md-format')) {
-            const action = target.getAttribute('data-action');
-            const idx = parseInt(target.getAttribute('data-idx'));
+        const btnFormat = target.closest('.btn-md-format');
+        if (btnFormat) {
+            const action = btnFormat.getAttribute('data-action');
+            const idx = parseInt(btnFormat.getAttribute('data-idx'));
             handleMdFormatting(action, idx);
             return;
         }
@@ -314,10 +315,13 @@ function handleMdFormatting(action, idx) {
             document.execCommand('formatBlock', false, '<' + newTag.toUpperCase() + '>');
         }
     } else if (action === 'indent-up') {
-        document.execCommand('insertUnorderedList', false, null);
+        const isList = document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList');
+        if (isList) {
+            document.execCommand('indent', false, null);
+        } else {
+            document.execCommand('insertUnorderedList', false, null);
+        }
     } else if (action === 'indent-down') {
-        // Technically outdent, but standard insertUnorderedList toggles it. 
-        // We'll trust native contenteditable behavior for nested lists and outdents.
         document.execCommand('outdent', false, null);
     } else if (action === 'list-num') {
         document.execCommand('insertOrderedList', false, null);
@@ -559,12 +563,12 @@ function renderMainView() {
                 <div class="dlv-card-footer">
                      <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
                      <div class="dlv-md-toolbar" style="margin-top: 15px; display: flex; gap: 5px; flex-wrap: wrap;">
-                         <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${idx}" title="Niveau de titre +">[+]</button>
-                         <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${idx}" title="Niveau de titre -">[-]</button>
-                         <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${idx}" title="Désindenter">[<]</button>
-                         <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${idx}" title="Indenter">[>]</button>
-                         <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée">[1.]</button>
-                         <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras">[G]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${idx}" title="Niveau de titre +"><i class="fas fa-heading"></i> <i class="fas fa-plus" style="font-size:0.7em;"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${idx}" title="Niveau de titre -"><i class="fas fa-heading"></i> <i class="fas fa-minus" style="font-size:0.7em;"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${idx}" title="Désindenter"><i class="fas fa-outdent"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${idx}" title="Indenter"><i class="fas fa-indent"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras"><i class="fas fa-bold"></i></button>
                      </div>
                      <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>

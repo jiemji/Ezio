@@ -320,12 +320,14 @@ function renderTable() {
     AuditRenderer.render(container, context);
 }</code></pre>
 
-            <h3 id="mod-deliveries">3.2 Module Livrables (Async/Await)</h3>
+            <h3 id="mod-deliveries">3.2 Module Livrables (Async/Await & WYSIWYG)</h3>
             <p>Ce module gère un workflow complexe de génération de documents via IA.</p>
             <ul>
                 <li><strong>Scope</strong> : Sélectionne les chapitres à analyser.</li>
                 <li><strong>Context Build</strong> : Construit un tableau Markdown des données filtrées.</li>
                 <li><strong>IA Call</strong> : Envoie le contexte + prompt au LLM (via <code>api_ia.js</code>).</li>
+                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi avec
+                    barre d'outils, convertissant le HTML visuel en Markdown pour la persistance.</li>
             </ul>
             <pre><code>// Exemple de flux (simplifié)
 async function generateModule(delivery) {
@@ -344,9 +346,12 @@ async function generateModule(delivery) {
             <h3 id="mod-printing">3.3 Impression & Export (Module Unifié)</h3>
             <p>Le système d'impression remplace les anciens exports individuels.</p>
             <ul>
-                <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles disponibles (Word et PPTX).</li>
-                <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le contenu dans des modèles existants.</li>
-                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides vectorielles.</li>
+                <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles
+                    disponibles (Word et PPTX).</li>
+                <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le
+                    contenu dans des modèles existants.</li>
+                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides
+                    vectorielles.</li>
             </ul>
 
             <h2 id="features">4. Fonctionnalités Clés</h2>
@@ -368,11 +373,14 @@ async function generateModule(delivery) {
             <h3 id="printing-features">4.3 Impression & Rapports</h3>
             <p>La nouvelle interface d'impression unifiée permet de générer des livrables professionnels.</p>
             <ul>
-                <li><strong>Format Word</strong> : Support des modèles <code>.docx</code> et <code>.dotx</code> pour conserver votre identité visuelle.</li>
-                <li><strong>Format PowerPoint</strong> : Génération de présentations basées sur des thèmes configurables.</li>
+                <li><strong>Format Word</strong> : Support des modèles <code>.docx</code> et <code>.dotx</code> pour
+                    conserver votre identité visuelle.</li>
+                <li><strong>Format PowerPoint</strong> : Génération de présentations basées sur des thèmes
+                    configurables.</li>
             </ul>
             <div class="alert alert-note">
-                <strong>Guide de Configuration :</strong> Pour apprendre à créer vos propres modèles, consultez le <a href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide de Configuration des Sorties</a>.
+                <strong>Guide de Configuration :</strong> Pour apprendre à créer vos propres modèles, consultez le <a
+                    href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide de Configuration des Sorties</a>.
             </div>
 
         </main>

@@ -116,7 +116,7 @@ graph TD
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
-    *   **UX** : Interface étape par étape avec prévisualisation immédiate et notifications non-intrusives (`UI.showToast`).
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`contenteditable`) avec barre d'outils visuelle (Titres, Listes, Gras) qui convertit de manière bidirectionnelle le HTML en Markdown. Prévisualisation immédiate et notifications non-intrusives (`UI.showToast`).
     *   **Performance** : Sauvegarde des entrées texte (prompts) temporisée (**Debounce**) pour fluidifier la saisie.
     *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, et option Tableau.
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
