@@ -1,8 +1,10 @@
 import { store, currentForm } from '../core/State.js';
 import { registerModuleInit } from '../ui/Navigation.js';
 import { Utils } from '../core/Utils.js';
+import { Config } from '../core/Config.js';
+import { UI } from '../core/UIFactory.js';
 
-let chartsInstances = [];
+let chartsMap = new Map(); // Store chart instances by widget ID
 
 export function initDashboard() {
     registerModuleInit('dashboard', renderDashboard);
@@ -18,8 +20,8 @@ export function initDashboard() {
             const colId = kpiColSelect.value;
             const vizType = kpiTypeSelect.value;
 
-            if (!colId) return alert("Veuillez choisir une colonne.");
-            if (!vizType) return alert("Veuillez choisir un format de graphique.");
+            if (!colId) return UI.showToast("Veuillez choisir une colonne.", "warning");
+            if (!vizType) return UI.showToast("Veuillez choisir un format de graphique.", "warning");
 
             const col = currentForm.columns.find(c => c.id === colId);
             if (!col) return;
@@ -115,27 +117,62 @@ function renderDashboard() {
 
     const dashboardGrid = document.getElementById('dashboardGrid');
     if (!dashboardGrid) return;
-    dashboardGrid.innerHTML = "";
-
-    chartsInstances.forEach(c => c.destroy());
-    chartsInstances = [];
 
     if (!currentForm.statics || currentForm.statics.length === 0) {
         dashboardGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); padding: 3rem; border: 2px dashed var(--border); border-radius: 8px;">
             <h3>Tableau de bord vide</h3>
             <p>Sélectionnez une colonne ci-dessus pour générer un graphique.</p>
         </div>`;
+        chartsMap.forEach(chart => chart.destroy());
+        chartsMap.clear();
         return;
     }
 
+    // Clean up empty state if present
+    const emptyState = dashboardGrid.querySelector('div[style*="grid-column: 1/-1"]');
+    if (emptyState) dashboardGrid.innerHTML = '';
+
+    const currentIds = currentForm.statics.map(w => w.id);
+
+    // 1. Remove widgets that no longer exist
+    Array.from(dashboardGrid.children).forEach(card => {
+        const id = card.dataset.id;
+        if (!currentIds.includes(id)) {
+            // Destroy chart
+            if (chartsMap.has(id)) {
+                chartsMap.get(id).destroy();
+                chartsMap.delete(id);
+            }
+            // Remove DOM
+            card.remove();
+        }
+    });
+
+    // 2. Add or Update widgets
     currentForm.statics.forEach((widget, index) => {
-        renderWidget(widget, index, dashboardGrid);
+        let card = dashboardGrid.querySelector(`.widget-card[data-id="${widget.id}"]`);
+
+        if (!card) {
+            // New Widget
+            card = createWidgetDOM(widget);
+            dashboardGrid.appendChild(card);
+            // Create Chart
+            initWidgetChart(widget, card);
+        } else {
+            // Update Existing Code (Order check?)
+            // If we want to support reordering, we should append child again to move it to end?
+            // dashboardGrid.appendChild(card); // This moves it to the end, ensuring order matches array
+
+            // Update Chart Data
+            updateWidgetChart(widget);
+        }
     });
 }
 
-function renderWidget(widget, index, container) {
+function createWidgetDOM(widget) {
     const card = document.createElement('div');
     card.className = 'widget-card';
+    card.dataset.id = widget.id; // Important for diffing
 
     if (widget.vizType === 'cross_stacked') {
         card.classList.add('widget-wide');
@@ -149,9 +186,12 @@ function renderWidget(widget, index, container) {
     btnDel.className = 'btn-icon danger';
     btnDel.innerHTML = '🗑️';
     btnDel.onclick = () => {
-        currentForm.statics.splice(index, 1);
-        store.save(); // Direct save
-        renderDashboard();
+        const idx = currentForm.statics.findIndex(w => w.id === widget.id);
+        if (idx !== -1) {
+            currentForm.statics.splice(idx, 1);
+            store.save();
+            renderDashboard();
+        }
     };
     header.appendChild(btnDel);
     card.appendChild(header);
@@ -165,19 +205,43 @@ function renderWidget(widget, index, container) {
     const canvas = document.createElement('canvas');
     canvasContainer.appendChild(canvas);
     card.appendChild(canvasContainer);
-    container.appendChild(card);
+
+    return card;
+}
+
+function initWidgetChart(widget, card) {
+    const canvas = card.querySelector('canvas');
+    if (!canvas) return;
 
     const config = prepareChartConfig(widget);
-    if (config) {
-        // Assume Chart is global (loaded via CDN as per Utils/Knowledge)
-        if (window.Chart) {
-            chartsInstances.push(new window.Chart(canvas, config));
-        } else {
-            canvasContainer.innerHTML = "Chart.js library not loaded.";
-        }
+    if (config && window.Chart) {
+        const chart = new window.Chart(canvas, config);
+        chartsMap.set(widget.id, chart);
     } else {
-        canvasContainer.innerHTML = "<div style='text-align:center; margin-top:50px; color:red'>Erreur: Colonne introuvable</div>";
+        const container = canvas.parentElement;
+        container.innerHTML = "<div style='text-align:center; margin-top:50px; color:red'>Erreur: Impossible de créer le graphique</div>";
     }
+}
+
+function updateWidgetChart(widget) {
+    const chart = chartsMap.get(widget.id);
+    if (!chart) return; // Should not happen if DOM exists
+
+    const newConfig = prepareChartConfig(widget);
+    if (!newConfig) return;
+
+    // Check if type changed (requires destroy/recreate)
+    if (chart.config.type !== newConfig.type) {
+        chart.destroy();
+        const card = document.querySelector(`.widget-card[data-id="${widget.id}"]`);
+        if (card) initWidgetChart(widget, card);
+        return;
+    }
+
+    // Update data and options
+    chart.data = newConfig.data;
+    chart.options = newConfig.options; // In case options changed (e.g. legend)
+    chart.update();
 }
 
 function prepareChartConfig(widget) {
@@ -203,7 +267,7 @@ function prepareChartConfig(widget) {
             return {
                 label: opt,
                 data: data,
-                backgroundColor: getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
+                backgroundColor: Utils.getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
             };
         });
 
@@ -237,7 +301,7 @@ function prepareChartConfig(widget) {
         Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
 
         const data = labels.map(l => counts[l]);
-        const colors = labels.map(l => getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
+        const colors = labels.map(l => Utils.getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
 
         const type = vizType.split('_')[1];
 
@@ -267,42 +331,3 @@ function getColorByIndex(i) {
     return palette[i % palette.length];
 }
 
-function getComboColor(scheme, value, options) {
-    // Re-use logic from app_audit.js or better, move to Utils.js
-    // For now, duplicate to avoid cross-module dependency issues if not in Utils
-    // Or simpler: move to Utils.js?
-    // Let's rely on duplication for speed, as Utils is already refactored.
-    // Or better: Use Utils.getComboColor? It is not in Utils.js yet.
-    // I will duplicate logic here.
-
-    if (!scheme || !value || !options || options.length === 0) return '';
-    const index = options.indexOf(value);
-    if (index === -1) return '';
-    const fixedSchemes = {
-        'alert6': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
-        'alert3': ['#22c55e', '#eab308', '#ef4444'],
-        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
-    };
-    if (fixedSchemes[scheme]) {
-        const colors = fixedSchemes[scheme];
-        if (index >= colors.length) return colors[colors.length - 1];
-        return colors[index];
-    }
-
-    // Gradients
-    const baseColors = {
-        'blue': '59, 130, 246', 'green': '34, 197, 94', 'red': '239, 68, 68',
-        'purple': '168, 85, 247', 'orange': '249, 115, 22', 'yellow': '234, 179, 8'
-    };
-    const rgb = baseColors[scheme];
-    if (rgb) {
-        let alpha = 0.9;
-        if (options.length > 1) {
-            const startAlpha = 0.1; const endAlpha = 0.9;
-            const step = (endAlpha - startAlpha) / (options.length - 1);
-            alpha = startAlpha + (index * step);
-        }
-        return `rgba(${rgb}, ${alpha})`;
-    }
-    return '';
-}

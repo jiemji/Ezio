@@ -39,8 +39,379 @@ async function renderDeliveriesModule() {
 
     renderSidebarList();
     renderMainView();
+    setupDelegation(); // Attach delegated listeners once
 }
 
+function setupDelegation() {
+    if (!els.main) return;
+
+    // Debounced Save for text inputs
+    const debouncedSave = Utils.debounce(() => {
+        store.save();
+    }, 500);
+
+    // 1. CLICK Delegation
+    els.main.onclick = (e) => {
+        const target = e.target;
+
+        // Buttons: Generate, Move, Remove, Collapse
+        if (target.classList.contains('btn-toggle-collapse')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            const idx = parseInt(target.dataset.idx);
+            if (delivery && delivery.structure[idx]) {
+                const isCollapsed = delivery.structure[idx].config.collapsed;
+                delivery.structure[idx].config.collapsed = !isCollapsed;
+                store.save(); // Save state
+
+                // Direct DOM update
+                const wrapper = target.closest('.dlv-card-body').querySelector('.dlv-inputs-wrapper');
+                if (wrapper) wrapper.style.display = !isCollapsed ? 'none' : 'block';
+
+                target.innerText = !isCollapsed ? '▶' : '▼';
+            }
+            return;
+        }
+
+        if (target.classList.contains('btn-generate')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) generateModule(delivery, parseInt(target.dataset.idx));
+            return;
+        }
+        if (target.classList.contains('btn-move-left')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), -1);
+            return;
+        }
+        if (target.classList.contains('btn-move-right')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), 1);
+            return;
+        }
+        if (target.classList.contains('btn-remove-mod')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) removeModule(delivery, parseInt(target.dataset.idx));
+            return;
+        }
+
+        // Checkboxes: Chapter, SubChap, Col, FormatTable
+        if (target.classList.contains('chk-chapter')) {
+            handleChapterCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-subchap')) {
+            handleSubChapCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-col')) {
+            handleColCheck(target);
+            return;
+        }
+        if (target.classList.contains('chk-format-table')) {
+            const idx = parseInt(target.dataset.idx);
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery && delivery.structure[idx]) {
+                if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
+                delivery.structure[idx].config.isTable = target.checked;
+                store.save();
+            }
+            return;
+        }
+        const btnFormat = target.closest('.btn-md-format');
+        if (btnFormat) {
+            const action = btnFormat.getAttribute('data-action');
+            const idx = parseInt(btnFormat.getAttribute('data-idx'));
+            handleMdFormatting(action, idx);
+            return;
+        }
+    };
+
+    // 2. CHANGE Delegation (Selects)
+    els.main.onchange = (e) => {
+        const target = e.target;
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (!delivery) return;
+
+        // Delivery Name
+        if (target.id === 'inpDlvName') {
+            delivery.name = target.value;
+            store.save();
+            renderSidebarList();
+            return;
+        }
+
+        const idx = parseInt(target.dataset.idx);
+        if (isNaN(idx) || !delivery.structure[idx]) return;
+
+        // Prompt (also handled in input for debounce, but change ensures final save)
+        if (target.classList.contains('txt-inst-prompt')) {
+            delivery.structure[idx].config.ai.prompt = target.value;
+            store.save();
+            return;
+        }
+
+        // Model
+        if (target.classList.contains('slc-inst-model')) {
+            delivery.structure[idx].config.ai.model = target.value;
+            store.save();
+            return;
+        }
+
+        // Scope Type
+        if (target.classList.contains('slc-inst-scope')) {
+            delivery.structure[idx].config.scope.type = target.value;
+            if (target.value === 'global') {
+                delivery.structure[idx].config.scope.selection = [];
+            }
+            store.save();
+            renderMainView();
+            return;
+        }
+    };
+
+    // 3. INPUT Delegation (Debounced Text)
+    els.main.oninput = (e) => {
+        const target = e.target;
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (!delivery) return;
+
+        if (target.classList.contains('txt-inst-prompt')) {
+            const idx = parseInt(target.dataset.idx);
+            if (delivery.structure[idx]) {
+                delivery.structure[idx].config.ai.prompt = target.value;
+                debouncedSave();
+            }
+        }
+        // Delivery Name Debounce
+        if (target.id === 'inpDlvName') {
+            delivery.name = target.value;
+            debouncedSave();
+            // Note: Sidebar update might be delayed, which is fine
+        }
+    };
+
+    // 4. BLUR Delegation (ContentEditable)
+    els.main.addEventListener('blur', (e) => {
+        const target = e.target;
+        if (target.classList.contains('dlv-card-result')) {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            const card = target.closest('.dlv-card');
+            if (delivery && card) {
+                const idx = parseInt(card.dataset.idx);
+                if (delivery.structure[idx]) {
+                    delivery.structure[idx].result = htmlToMarkdown(target.innerHTML);
+                    store.save();
+                }
+            }
+        }
+    }, true); // Capture phase for blur
+}
+
+function htmlToMarkdown(html) {
+    if (!html) return '';
+
+    // Create a temporary element to parse HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    // Clean up empty tags and weird spaces
+    temp.innerHTML = temp.innerHTML.replace(/\u200B/g, '');
+
+    function parseNodeToMd(node, listLevel = 0, isOrdered = false, counter = { val: 1 }) {
+        let md = '';
+        for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+
+            if (child.nodeType === 3) { // Text node
+                md += child.textContent;
+            } else if (child.nodeType === 1) { // Element node
+                const tag = child.tagName.toLowerCase();
+
+                switch (tag) {
+                    case 'b':
+                    case 'strong':
+                        md += '**' + parseNodeToMd(child) + '**';
+                        break;
+                    case 'i':
+                    case 'em':
+                        md += '*' + parseNodeToMd(child) + '*';
+                        break;
+                    case 'h1': md += '\n# ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h2': md += '\n## ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h3': md += '\n### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h4': md += '\n#### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h5': md += '\n##### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h6': md += '\n###### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'p':
+                    case 'div':
+                        md += '\n' + parseNodeToMd(child) + '\n';
+                        break;
+                    case 'br':
+                        md += '\n';
+                        break;
+                    case 'table':
+                        const tRows = child.querySelectorAll('tr');
+                        let tableMd = '\n';
+                        tRows.forEach((tr, rIdx) => {
+                            let rMd = '|';
+                            const cells = tr.querySelectorAll('th, td');
+                            if (cells.length === 0) return;
+                            cells.forEach(cell => {
+                                rMd += ' ' + parseNodeToMd(cell).replace(/\n/g, '<br>').trim() + ' |';
+                            });
+                            tableMd += rMd + '\n';
+                            if (rIdx === 0 && tr.querySelector('th')) {
+                                tableMd += '|' + Array.from(cells).map(() => '---').join('|') + '|\n';
+                            }
+                        });
+                        md += tableMd + '\n';
+                        break;
+                    case 'ul':
+                        md += '\n' + parseNodeToMd(child, listLevel + 1, false) + '\n';
+                        break;
+                    case 'ol':
+                        md += '\n' + parseNodeToMd(child, listLevel + 1, true, { val: 1 }) + '\n';
+                        break;
+                    case 'li':
+                        const indent = '  '.repeat(Math.max(0, listLevel - 1));
+                        const bullet = isOrdered ? `${counter.val++}. ` : '- ';
+                        md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter);
+                        break;
+                    default:
+                        md += parseNodeToMd(child, listLevel, isOrdered, counter);
+                }
+            }
+        }
+        return md;
+    }
+
+    let markdown = parseNodeToMd(temp).trim();
+    // Normalize multiple newlines
+    markdown = markdown.replace(/\n{3,}/g, '\n\n');
+    return markdown;
+}
+
+function handleMdFormatting(action, idx) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    if (!delivery) return;
+
+    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
+    if (!editor) return;
+
+    editor.focus();
+
+    if (action === 'bold') {
+        document.execCommand('bold', false, null);
+    } else if (action === 'h-up' || action === 'h-down') {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        let node = selection.focusNode;
+        if (!node) return;
+
+        // Find closest block element
+        const blockNode = node.nodeType === 3 ? node.parentNode : node;
+        const blockWrapper = blockNode.closest('h1, h2, h3, h4, h5, h6, p, div');
+        let currentTag = blockWrapper ? blockWrapper.tagName.toLowerCase() : 'p';
+        if (currentTag === 'div' || currentTag === 'li') currentTag = 'p';
+
+        let newTag = currentTag;
+
+        if (action === 'h-up') { // [+] Level 2 -> Level 3 -> Level 4 -> Level 4 (Max Level)
+            if (currentTag === 'p') newTag = 'h2';
+            else if (currentTag === 'h2') newTag = 'h3';
+            else if (currentTag === 'h3') newTag = 'h4';
+            else if (currentTag === 'h4') newTag = 'h4';
+        } else if (action === 'h-down') { // [-] Level 4 -> Level 3 -> Level 2 -> Normal Text 
+            if (currentTag === 'h4') newTag = 'h3';
+            else if (currentTag === 'h3') newTag = 'h2';
+            else if (currentTag === 'h2') newTag = 'p';
+            else if (currentTag === 'p') newTag = 'p';
+        }
+
+        if (newTag !== currentTag) {
+            document.execCommand('formatBlock', false, '<' + newTag.toUpperCase() + '>');
+        }
+    } else if (action === 'indent-up') {
+        const isList = document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList');
+        if (isList) {
+            document.execCommand('indent', false, null);
+        } else {
+            document.execCommand('insertUnorderedList', false, null);
+        }
+    } else if (action === 'indent-down') {
+        document.execCommand('outdent', false, null);
+    } else if (action === 'list-num') {
+        document.execCommand('insertOrderedList', false, null);
+    }
+
+    // Save parsed Markdown back
+    if (delivery.structure[idx]) {
+        delivery.structure[idx].result = htmlToMarkdown(editor.innerHTML);
+        store.save();
+    }
+}
+
+// Helper functions for checkboxes to keep delegation clean
+function handleChapterCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const chapName = target.getAttribute('data-chap');
+    const hierarchy = buildChapterHierarchy();
+    const chap = hierarchy.find(c => c.name === chapName);
+
+    if (!delivery || !chap) return;
+
+    let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+    if (target.checked) {
+        chap.subs.forEach(s => {
+            if (!currentSelection.includes(s)) currentSelection.push(s);
+        });
+    } else {
+        currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
+    }
+
+    delivery.structure[idx].config.scope.selection = currentSelection;
+    store.save();
+    renderMainView();
+}
+
+function handleSubChapCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const subName = target.getAttribute('data-sub');
+    if (!delivery) return;
+
+    let currentSelection = delivery.structure[idx].config.scope.selection || [];
+
+    if (target.checked) {
+        if (!currentSelection.includes(subName)) currentSelection.push(subName);
+    } else {
+        currentSelection = currentSelection.filter(s => s !== subName);
+    }
+
+    delivery.structure[idx].config.scope.selection = currentSelection;
+    store.save();
+    renderMainView();
+}
+
+function handleColCheck(target) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    const idx = parseInt(target.dataset.idx);
+    const colId = target.getAttribute('data-colid');
+    if (!delivery) return;
+
+    let currentCols = delivery.structure[idx].config.columns || [];
+
+    if (target.checked) {
+        if (!currentCols.includes(colId)) currentCols.push(colId);
+    } else {
+        currentCols = currentCols.filter(c => c !== colId);
+    }
+
+    delivery.structure[idx].config.columns = currentCols;
+    store.save();
+}
 function setupSidebar() {
     if (!els.sidebar) return;
 
@@ -78,21 +449,18 @@ async function loadTemplates() {
         } catch (e) { }
     }
 
-    try {
-        const res = await fetch('reports.json');
-        if (res.ok) {
-            const json = await res.json();
-            availableTemplates = json.reports || [];
-            availableModules = json.modules || [];
-        }
-    } catch (e) { }
+    const data = await Utils.safeFetch('reports.json');
+    if (data) {
+        availableTemplates = data.reports || [];
+        availableModules = data.modules || [];
+    }
 }
 
 async function loadModelsList() {
-    try {
-        const res = await fetch('models.json');
-        if (res.ok) availableModels = await res.json();
-    } catch (e) { }
+    const data = await Utils.safeFetch('models.json');
+    if (data && Array.isArray(data)) {
+        availableModels = data;
+    }
 }
 
 function renderSidebarList() {
@@ -154,8 +522,10 @@ function renderMainView() {
             inst.config.columns = (currentForm.columns || []).map(c => c.id);
         }
 
+        const isCollapsed = inst.config.collapsed || false;
+
         trackHTML += `
-            <div class="dlv-card" data-idx="${idx}">
+            <div class="dlv-card ${isCollapsed ? 'collapsed' : ''}" data-idx="${idx}">
                 <div class="dlv-card-header">
                      <div class="dlv-card-nav">
                         ${idx > 0 ? `<button class="btn-card-action btn-move-left" data-idx="${idx}" title="Reculer">&lt;</button>` : ''}
@@ -168,40 +538,56 @@ function renderMainView() {
                 </div>
                 <div class="dlv-card-body">
                     <div class="form-group">
-                        <label>Scope (Périmètre)</label>
-                        <select class="form-control slc-inst-scope" data-idx="${idx}">
-                            <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
-                            <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
-                        </select>
-                    </div>
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            <label style="margin-bottom:0; margin-right: 10px;">Scope (Périmètre)</label>
+                            <button class="btn-toggle-collapse" data-idx="${idx}" title="Replier/Déplier" style="padding:0; border:none; background:none; cursor:pointer;">
+                                ${isCollapsed ? '▶' : '▼'}
+                            </button>
+                        </div>
+                        
+                        <div class="dlv-inputs-wrapper" style="${isCollapsed ? 'display:none;' : ''}">
+                            <select class="form-control slc-inst-scope" data-idx="${idx}">
+                                <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
+                                <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
+                            </select>
 
-                    ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
+                            ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
 
-                    <div class="form-group">
-                        <label>Colonnes à inclure</label>
-                        ${renderColumnSelector(idx, inst.config.columns)}
-                    </div>
+                            <div class="form-group" style="margin-top:1rem;">
+                                <label>Colonnes à inclure</label>
+                                ${renderColumnSelector(idx, inst.config.columns)}
+                            </div>
 
-                    <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
-                        <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
-                        <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
-                    </div>
+                            <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
+                                <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
+                                <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
+                            </div>
 
-                    <div class="form-group">
-                        <label>Prompt IA</label>
-                        <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
-                    </div>
-                     <div class="form-group">
-                        <label>Modèle IA</label>
-                        <select class="form-control slc-inst-model" data-idx="${idx}">
-                            <option value="">-- Défaut --</option>
-                            ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
-                        </select>
+                            <div class="form-group">
+                                <label>Prompt IA</label>
+                                <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Modèle IA</label>
+                                <select class="form-control slc-inst-model" data-idx="${idx}">
+                                    <option value="">-- Défaut --</option>
+                                    ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="dlv-card-footer">
                      <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
-                     <div class="dlv-card-result" contenteditable="true">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
+                     <div class="dlv-md-toolbar" style="margin-top: 15px; display: flex; gap: 5px; flex-wrap: wrap;">
+                         <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${idx}" title="Niveau de titre +"><i class="fas fa-heading"></i> <i class="fas fa-plus" style="font-size:0.7em;"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${idx}" title="Niveau de titre -"><i class="fas fa-heading"></i> <i class="fas fa-minus" style="font-size:0.7em;"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${idx}" title="Désindenter"><i class="fas fa-outdent"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${idx}" title="Indenter"><i class="fas fa-indent"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
+                         <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras"><i class="fas fa-bold"></i></button>
+                     </div>
+                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; overflow-x:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>
             </div>
         `;
@@ -210,11 +596,8 @@ function renderMainView() {
 
     els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
 
-    document.getElementById('inpDlvName').addEventListener('change', (e) => {
-        delivery.name = e.target.value;
-        store.save();
-        renderSidebarList();
-    });
+    // Name change handled by delegation in setupDelegation
+
 
     document.getElementById('btnDownloadReport').addEventListener('click', () => {
         downloadDeliveryReport(delivery);
@@ -234,12 +617,41 @@ function renderMainView() {
         }
     });
 
-    els.main.querySelectorAll('.btn-generate').forEach(btn => btn.onclick = () => generateModule(delivery, parseInt(btn.dataset.idx)));
-    els.main.querySelectorAll('.btn-move-left').forEach(btn => btn.onclick = () => moveModule(delivery, parseInt(btn.dataset.idx), -1));
-    els.main.querySelectorAll('.btn-move-right').forEach(btn => btn.onclick = () => moveModule(delivery, parseInt(btn.dataset.idx), 1));
-    els.main.querySelectorAll('.btn-remove-mod').forEach(btn => btn.onclick = () => removeModule(delivery, parseInt(btn.dataset.idx)));
+    // Old individual listeners removed - handled by delegation in setupDelegation()
 
-    bindConfigInputs(delivery);
+    applyTableColumnWidths(els.main);
+}
+
+function applyTableColumnWidths(container) {
+    if (!container || !currentForm || !currentForm.columns) return;
+    const tables = container.querySelectorAll('table');
+    tables.forEach(table => {
+        const headers = table.querySelectorAll('th');
+        headers.forEach(th => {
+            const colName = th.textContent.trim();
+            const colDef = currentForm.columns.find(c => c.label === colName);
+            if (colDef) {
+                let width = 'auto';
+                const type = colDef.type || 'question';
+
+                if (type === 'chapitre' || type === 'sous-chapitre') width = '100px';
+                else if (type === 'reponse' || type === 'ia') width = '250px';
+                else if (type === 'qcm' || type === 'combo') width = '120px';
+                else if (type === 'popup') width = '200px';
+                else if (type === 'question' || type === 'reference') {
+                    const size = (colDef.params && colDef.params.size) || colDef.size || 'M';
+                    if (size === 'S') width = '50px';
+                    else if (size === 'L') width = '250px';
+                    else width = '120px'; // default
+                }
+
+                if (width !== 'auto') {
+                    th.style.minWidth = width;
+                    th.style.width = width;
+                }
+            }
+        });
+    });
 }
 
 function buildChapterHierarchy() {
@@ -323,128 +735,7 @@ function renderColumnSelector(idx, selectedCols) {
     return html;
 }
 
-function bindConfigInputs(delivery) {
-    const main = els.main;
 
-    // Prompt
-    main.querySelectorAll('.txt-inst-prompt').forEach(txt => {
-        txt.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.ai.prompt = e.target.value;
-            store.save();
-        };
-    });
-
-    // Model
-    main.querySelectorAll('.slc-inst-model').forEach(slc => {
-        slc.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.ai.model = e.target.value;
-            store.save();
-        };
-    });
-
-    // Scope Type
-    main.querySelectorAll('.slc-inst-scope').forEach(slc => {
-        slc.onchange = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            delivery.structure[idx].config.scope.type = e.target.value;
-            if (e.target.value === 'global') {
-                delivery.structure[idx].config.scope.selection = []; // Clear selection if global
-            }
-            store.save();
-            renderMainView(); // Re-render to show/hide checkboxes
-        };
-    });
-
-    // Chapter Checkbox (Parent)
-    main.querySelectorAll('.chk-chapter').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const chapName = e.target.getAttribute('data-chap');
-            const hierarchy = buildChapterHierarchy(); // Rebuild is fast enough
-            const chap = hierarchy.find(c => c.name === chapName);
-
-            if (!chap) return;
-
-            let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-            if (e.target.checked) {
-                // Add all subs of this chapter
-                chap.subs.forEach(s => {
-                    if (!currentSelection.includes(s)) currentSelection.push(s);
-                });
-            } else {
-                // Remove all subs of this chapter
-                currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
-            }
-
-            delivery.structure[idx].config.scope.selection = currentSelection;
-            store.save();
-            renderMainView(); // Refresh UI states
-        };
-    });
-
-    // Sub-chapter Checkbox (Child)
-    main.querySelectorAll('.chk-subchap').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const subName = e.target.getAttribute('data-sub');
-            let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-            if (e.target.checked) {
-                if (!currentSelection.includes(subName)) currentSelection.push(subName);
-            } else {
-                currentSelection = currentSelection.filter(s => s !== subName);
-            }
-
-            delivery.structure[idx].config.scope.selection = currentSelection;
-            store.save();
-            renderMainView(); // Refresh UI states
-        };
-    });
-
-    // Column Checkbox
-    main.querySelectorAll('.chk-col').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            const colId = e.target.getAttribute('data-colid');
-            let currentCols = delivery.structure[idx].config.columns || [];
-
-            if (e.target.checked) {
-                if (!currentCols.includes(colId)) currentCols.push(colId);
-            } else {
-                currentCols = currentCols.filter(c => c !== colId);
-            }
-
-            delivery.structure[idx].config.columns = currentCols;
-            store.save();
-            // No need to re-render main view for columns, state is visual enough
-        };
-    });
-
-    // Table Format Checkbox
-    main.querySelectorAll('.chk-format-table').forEach(chk => {
-        chk.onclick = (e) => {
-            const idx = parseInt(e.target.dataset.idx);
-            if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
-            delivery.structure[idx].config.isTable = e.target.checked;
-            store.save();
-        };
-    });
-
-    // Result Edit (Blur)
-    main.querySelectorAll('.dlv-card-result').forEach(div => {
-        div.onblur = (e) => {
-            const card = div.closest('.dlv-card');
-            if (!card) return;
-            const idx = parseInt(card.dataset.idx);
-            // Save innerHTML to preserve formatting edits
-            delivery.structure[idx].result = div.innerHTML;
-            store.save();
-        };
-    });
-}
 
 function moveModule(delivery, index, direction) {
     if (index + direction < 0 || index + direction >= delivery.structure.length) return;
@@ -500,14 +791,15 @@ async function generateModule(delivery, index) {
         // Si l'option "Tableau" est cochée, on préfixe la réponse avec le tableau de contexte
         let finalResult = response;
         if (instance.config.isTable) {
-            // Utilisation de balises HTML <br> pour forcer l'espacement visuel après le tableau Markdown
-            finalResult = contextData + "\n\n<br><br>\n\n" + response;
+            // Utilisation d'un séparateur markdown standard au lieu de balises HTML
+            finalResult = contextData + "\n\n---\n\n" + response;
         }
 
         instance.result = finalResult;
         store.save();
 
         resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
+        applyTableColumnWidths(resultContainer);
 
     } catch (e) {
         console.error("Generation Error", e);

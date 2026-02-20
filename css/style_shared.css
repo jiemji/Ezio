@@ -295,17 +295,25 @@ header .btn-primary,
 header .btn-secondary,
 header .btn-danger,
 header label.btn-secondary,
+header input[type="text"].search-input,
 header input[type="text"] {
-    height: 36px !important;
-    font-size: 0.9rem !important;
-    line-height: 1 !important;
-    padding: 0 12px !important;
+    height: 36px;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0 12px;
     margin: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     vertical-align: middle;
+}
+
+/* Specific override for the burger button to ensure it keeps its size */
+header #toggleSidebarBtn {
+    width: 36px;
+    padding: 0;
+    font-size: 1.2rem;
 }
 
 /* Cas particulier : Champ recherche */

@@ -20,27 +20,74 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 ## 2. Architecture des Fichiers
 
+### Diagramme de Flux (Architecture Simplifiée)
+
+```mermaid
+graph TD
+    User((Utilisateur))
+    
+    subgraph UI [Interface Utilisateur]
+        Nav[Navigation.js]
+        Side[Sidebar.js]
+        Mod[Modal.js]
+        Toast[UIFactory.js]
+    end
+
+    subgraph Modules [Modules Fonctionnels]
+        Audit[app_audit.js]
+        Renderer[AuditRenderer.js]
+        Dlv[app_deliveries.js]
+        Dash[app_dashboard.js]
+    end
+
+    subgraph Core [Cœur Applicatif]
+        State[State.js]
+        Logic[DataUtils.js]
+        Config[Config.js]
+        API[api_ia.js]
+    end
+
+    %% Interactions
+    User -->|Clics/Saisie| Audit
+    User -->|Navigation| Nav
+    
+    Audit -->|Met à jour| State
+    Audit -->|Calcule| Logic
+    Audit -->|Appelle IA| API
+    Audit -->|Context| Renderer
+    
+    Renderer -->|Génère HTML| User
+    Renderer -->|Bind Events| Audit
+    
+    Dlv -->|Lit| State
+    Dlv -->|Génère Doc| API
+    
+    State -->|Persistance| LocalStorage[(LocalStorage)]
+    State -->|Notifie| Audit
+```
+
 ### Core & Structure
 *   `index.html` : Point d'entrée unique. Charge le module principal via `<script type="module" src="js/main.js">`.
 *   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
-*   `js/core/` :
-    *   `State.js` : Gestion centralisée de l'état (`store`, `currentForm`). Remplace l'ancien `app_shared.js`.
-    *   `Store.js` : Classe de gestion du `localStorage` et du pattern Observer-Subscribe.
-    *   `Utils.js` : Fonctions utilitaires génériques (helpers DOM, formatage, debounce...).
-*   `js/ui/` :
-    *   `Navigation.js` : Gestion de la navigation entre les vues (`switchView`) et initialisation des modules.
-    *   `DOM.js` : Références centralisées aux éléments du DOM.
-    *   `Modal.js` : Gestion des fenêtres modales.
-    *   `Sidebar.js` : Gestion du rendu des listes latérales.
-    *   `Sidebar.js` : Gestion du rendu des listes latérales.
-    *   `Navigation.js` : Orchestration des vues, du **Menu Global** et de la sidebar (Logique Hover/Pin).
+### Core & Structure (`js/core/`)
+*   `State.js` : **État Global**. Singleton gérant les données de l'application (`currentForm`, `reportsStore`) et la persistance (`Store.js`).
+*   `Utils.js` : Helpers basiques (slugify, escapeHtml, **debounce**) et extensions de prototypes.
+*   `DataUtils.js` : **Logique Métier Pure**. Contient les algorithmes de tri, filtrage, recherche et traitement des données. Totalement découplé du DOM.
+*   `UIFactory.js` : **Composants UI**. Bibliothèque de générateurs d'éléments (Boutons, Badges, Toasts) pour une UX cohérente. Remplace les `alert()` par des Toasts.
+*   `Config.js` : Constantes (Couleurs, Seuils, Valeurs par défaut).
+*   `Schemas.js` : Validation et structures de données par défaut.
+
+### UI & Navigation (`js/ui/`)
+*   `Navigation.js` : Orchestrateur des vues et initilialisation des modules.
+*   `Sidebar.js` : Gestionnaire générique de listes latérales.
+*   `Modal.js` : Service de fenêtres modales.
+*   `DOM.js` : Cache des sélecteurs DOM fréquents.
 
 ### Modules Fonctionnels (`js/modules/`)
-1.  **Module Audit (`app_audit.js`)** :
-    *   Cœur de l'application.
-    *   Rendu dynamique du tableau d'audit (`renderTable`).
-    *   Gestion des types de cellules : Texte, Combo (Couleurs), QCM, IA.
-    *   Système de filtres (Chapitre/Sous-chapitre) et de tri.
+1.  **Module Audit (`app_audit.js` & `AuditRenderer.js`)** :
+    *   **Contrôleur (`app_audit.js`)** : Gère les événements utilisateurs, les appels API (IA) et la manipulation de l'état via `State.js`.
+    *   **Vue (`AuditRenderer.js`)** : Gère exclusivement la génération du HTML du tableau. Utilise la **Délégation d'Événements** sur le conteneur principal pour gérer les clics performants sur des milliers de cellules.
+    *   **Logique** : Délègue le tri/filtre complexe à `DataUtils.js`.
 
 2.  **Module IA (`js/api/api_ia.js`)** :
     *   Couche d'abstraction vers les LLMs.
@@ -49,6 +96,7 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 3.  **Module Dashboard (`app_dashboard.js`)** :
     *   Génération de KPIs dynamiques basés sur les colonnes "Combo".
+    *   **Optimisation** : Réutilise les instances `Chart.js` via `chart.update()` pour éviter le scintillement lors des rafraîchissements.
     *   Types de graphiques : Camembert, Anneau, Barres, Empilement par chapitre.
 
 4.  **Module Créateur (`app_creator.js`)** :
@@ -67,12 +115,15 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
-    *   **Interface Horizontale** : Workflow étape par étape pour customiser les prompts, le modèle IA, le périmètre (Scope), les colonnes contextuelles et l'option **"Tableau"** (inclure les données sources dans la réponse).
-    *   **Impression** : Bouton unique "Impression" ouvrant une popup pour choisir entre les modèles Word (définis dans `output_config.json`) et les templates PowerPoint.
-    *   **Persistance** : Les livrables sont stockés directement dans le fichier d'audit (`ezio_data.json`) sous la clé (`reports` et non plus `deliveries` - *Legacy mismatch fix*). Les résultats générés sont éditables et sauvegardés.
+    *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`contenteditable`) avec barre d'outils visuelle (Titres, Listes, Gras) qui convertit de manière bidirectionnelle et précise le HTML en Markdown (support complet des tableaux). Redimensionnement intelligent des colonnes basé sur le paramétrage de l'audit et ajout d'un scroll horizontal. Prévisualisation immédiate et notifications non-intrusives (`UI.showToast`).
+    *   **Performance** : Sauvegarde des entrées texte (prompts) temporisée (**Debounce**) pour fluidifier la saisie.
+    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, et option Tableau.
+    *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
 
-8.  **Module Export (`app_export.js`)** :
-    *   Gestion de l'export des données (JSON d'état complet, CSV pour Excel).
+8.  **Module Export (Data) (`app_export.js`)** :
+    *   Gestion de l'export des données brutes (JSON d'état complet, CSV pour Excel).
+    *   *Note :* L'export documentaire (Word/PPT) est désormais géré par le module Impression.
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 73: 
 74: 9.  **Module Output Word (`app_output_word.js`)** :
@@ -80,7 +131,8 @@ Le projet est construit avec une stack minimaliste et robuste pour assurer une e
 76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
 77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
-10. **Module Output (`app_outputppt.js`, `app_output_word.js`)** :
+10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
+    *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
     *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis.
     *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page.

@@ -220,43 +220,67 @@ body.dark-mode .sidebar-item.selected {
     border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 0.9rem;
-    overflow-y: visible;
-    /* Grow with content */
+    /* Removed overflow-y: visible since it's a textarea now, resize is vertical */
     text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* font-family monospace added in inline style, but we can set it here too if we want */
 }
 
-.dlv-card-result h1,
 .dlv-card-result h2 {
-    font-size: 1rem;
+    font-size: calc(0.9rem + 0.75em);
+    font-weight: bold;
+    text-decoration: underline;
     margin: 0.5rem 0;
 }
 
-/* Make tables scrollable horizontally */
-.dlv-card-result table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-    /* Encourage horizontal scrolling for dense data */
-    border-collapse: collapse;
-    margin-bottom: 1rem;
+.dlv-card-result h3 {
+    font-size: calc(0.9rem + 0.5em);
+    font-weight: bold;
+    margin: 0.5rem 0;
 }
 
-.dlv-card-result th,
-.dlv-card-result td {
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-}
-
-.dlv-card-result th {
-    background-color: var(--bg-secondary);
-    font-weight: 600;
+.dlv-card-result h4 {
+    font-size: calc(0.9rem + 0.25em);
+    font-weight: bold;
+    margin: 0.5rem 0;
 }
 
 .rpt-loading {
     animation: spin 1s linear infinite;
     display: inline-block;
     margin-right: 5px;
+}
+
+.dlv-card-result ul {
+    list-style-type: disc;
+    margin: 0.5rem 0 0.5rem 2rem;
+    padding: 0;
+}
+
+.dlv-card-result ol {
+    list-style-type: decimal;
+    margin: 0.5rem 0 0.5rem 2rem;
+    padding: 0;
+}
+
+.dlv-card-result li {
+    margin-bottom: 0.3rem;
+    display: list-item;
+}
+
+.dlv-card-result table {
+    width: 100%;
+    min-width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: calc(0.9rem - 0.25em);
+}
+
+.dlv-card-result th,
+.dlv-card-result td {
+    border: 1px solid var(--border);
+    padding: 8px;
 }
 
 /* CHAPTER SELECTOR (Scope) */
@@ -275,6 +299,29 @@ body.dark-mode .sidebar-item.selected {
     margin-bottom: 5px;
 }
 
-.sub-list {
-    margin-left: 20px;
+
+/* Card Collapse */
+/* Removed old collapse rules to keep footer visible */
+
+
+.btn-toggle-collapse {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 5px;
+    margin-right: 5px;
+    transition: transform 0.2s;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-toggle-collapse:hover {
+    color: var(--primary);
+}
+
+.dlv-card.collapsed .btn-toggle-collapse {
+    transform: rotate(-90deg);
 }

@@ -3,6 +3,7 @@ import { Utils } from '../core/Utils.js';
 import { store, currentForm } from '../core/State.js';
 import { switchView, registerModuleInit } from '../ui/Navigation.js';
 import { Modal } from '../ui/Modal.js';
+import { UI } from '../core/UIFactory.js';
 import { renderAudit } from './app_audit.js'; // Optional: for direct re-render if needed, or rely on stored subscription
 
 let creatorData = { headers: [], rows: [], configs: [] };
@@ -29,8 +30,9 @@ export function initCreator() {
                     const jsonData = JSON.parse(evt.target.result);
                     parseImportJSON(jsonData);
                     renderCreatorTable();
+                    renderCreatorTable();
                 } catch (err) {
-                    alert("Erreur de lecture du JSON : " + err.message);
+                    UI.showToast("Erreur de lecture du JSON : " + err.message, "danger");
                     console.error(err);
                 }
             };
@@ -85,10 +87,10 @@ function openAddColModal() {
             label: 'Ajouter', class: 'btn-primary', onClick: (e, m) => {
                 const inp = document.getElementById('inpNewColName');
                 const name = inp ? inp.value.trim() : "";
-                if (!name) return alert("Veuillez entrer un nom de colonne.");
+                if (!name) return UI.showToast("Veuillez entrer un nom de colonne.", "warning");
 
                 if (creatorData.headers.includes(name)) {
-                    return alert("Une colonne porte déjà ce nom.");
+                    return UI.showToast("Une colonne porte déjà ce nom.", "warning");
                 }
 
                 addNewColumn(name);
@@ -158,7 +160,7 @@ function parseImportJSON(data) {
             params: {}
         }));
     } else {
-        alert("Format non reconnu.");
+        UI.showToast("Format non reconnu.", "danger");
         return;
     }
     if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');

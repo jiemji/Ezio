@@ -1,4 +1,5 @@
 import { Utils } from '../core/Utils.js';
+import { UI } from '../core/UIFactory.js';
 
 let pptConfig = null;
 
@@ -27,7 +28,7 @@ async function loadPptConfig() {
  */
 export async function downloadDeliveryPpt(delivery, templateId = 'default') {
     if (!delivery || !delivery.structure || !window.PptxGenJS) {
-        if (!window.PptxGenJS) alert("La librairie PptxGenJS n'est pas chargée.");
+        if (!window.PptxGenJS) UI.showToast("La librairie PptxGenJS n'est pas chargée.", "danger");
         return;
     }
 

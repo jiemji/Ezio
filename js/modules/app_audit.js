@@ -3,7 +3,12 @@ import { Utils } from '../core/Utils.js';
 import { store, currentForm } from '../core/State.js'; // Imports live binding currentForm
 import { switchView, registerModuleInit } from '../ui/Navigation.js';
 import { Modal } from '../ui/Modal.js';
+
 import { ApiService } from '../api/api_ia.js';
+import { Config } from '../core/Config.js';
+import { UI } from '../core/UIFactory.js';
+import { DataUtils } from '../core/DataUtils.js';
+import { AuditRenderer } from './AuditRenderer.js';
 
 let activeFilters = { chapter: null, subChapter: null };
 let columnFilters = {};
@@ -92,60 +97,53 @@ function openLoadModal() {
                     const data = JSON.parse(evt.target.result);
                     applyLoadedData(data, "Fichier local chargé");
                     modal.close();
+                    UI.showToast("Import réussi !", "success");
                 } catch (err) {
-                    alert("Erreur JSON: " + err.message);
+                    UI.showToast("Erreur JSON: " + err.message, "danger");
                 }
             };
             reader.readAsText(file);
         };
     }
 
-    // Fetch Templates
-    fetch('./templates/templates.json')
-        .then(res => res.ok ? res.json() : [])
-        .then(templates => {
-            const list = document.getElementById('templateList');
-            if (list) {
-                if (templates.length === 0) {
-                    list.innerHTML = "<li>Aucun modèle trouvé.</li>";
-                    return;
-                }
-                list.innerHTML = templates.map(t =>
-                    `<li style="padding:5px; cursor:pointer; border-bottom:1px solid #eee;" data-file="${t.filename}">
-                        <strong>${Utils.escapeHtml(t.name)}</strong>
-                    </li>`
-                ).join('');
-
-                list.querySelectorAll('li').forEach(li => {
-                    li.onclick = () => {
-                        loadRemoteTemplate(li.dataset.file)
-                            .then(() => modal.close());
-                    };
-                });
+    // Fetch Templates (Async/Await)
+    (async () => {
+        const templates = await Utils.safeFetch('./templates/templates.json');
+        const list = document.getElementById('templateList');
+        if (list) {
+            if (!templates || templates.length === 0) {
+                list.innerHTML = "<li>Aucun modèle trouvé (ou erreur chargement).</li>";
+                return;
             }
-        })
-        .catch(err => {
-            const list = document.getElementById('templateList');
-            if (list) list.innerHTML = `<li style="color:red">Erreur: ${err.message}</li>`;
-        });
+            list.innerHTML = templates.map(t =>
+                `<li style="padding:5px; cursor:pointer; border-bottom:1px solid #eee;" data-file="${t.filename}">
+                    <strong>${Utils.escapeHtml(t.name)}</strong>
+                </li>`
+            ).join('');
+
+            list.querySelectorAll('li').forEach(li => {
+                li.onclick = async () => {
+                    await loadRemoteTemplate(li.dataset.file);
+                    modal.close();
+                };
+            });
+        }
+    })();
 }
 
 async function loadRemoteTemplate(filename) {
-    try {
-        const response = await fetch(`./templates/${filename}`);
-        if (!response.ok) throw new Error(`Fichier introuvable (${response.status})`);
-        const text = await response.text();
-        const data = JSON.parse(text);
+    const data = await Utils.safeFetch(`./templates/${filename}`);
+    if (data) {
         applyLoadedData(data, `Modèle chargé : ${filename}`);
-    } catch (err) {
-        console.error(err);
-        alert(`Erreur : Impossible de charger ce modèle.\nDétail: ${err.message}`);
+        UI.showToast(`Modèle ${filename} chargé`, "success");
+    } else {
+        UI.showToast(`Erreur : Impossible de charger le modèle ${filename}.`, "danger");
     }
 }
 
 function applyLoadedData(data, message) {
     if (!data.columns || !data.rows) {
-        alert("Format de fichier invalide (Colonnes ou lignes manquantes).");
+        UI.showToast("Format de fichier invalide (Colonnes ou lignes manquantes).", "danger");
         return;
     }
 
@@ -259,167 +257,25 @@ function renderSidebar() {
 function renderTable() {
     const tableContainer = document.getElementById('tableContainer');
     if (!tableContainer) return;
-    tableContainer.innerHTML = "";
 
-    // ... Copy renderTable logic from original ...
-    // Note: I will need to copy the FULL renderTable logic here.
-    // For brevity of this generation I will summarize, but in real action I must include it all.
-
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const trHead = document.createElement('tr');
-
-    const getColClass = (col) => {
-        if (col.type === 'chapitre' || col.type === 'sous-chapitre') return 'col-chapitre';
-        if (col.type === 'popup') return 'col-popup';
-        if (col.type === 'combo') return 'col-combo';
-        if (col.type === 'qcm') return 'col-qcm';
-        if (col.type === 'reponse') return 'col-reponse';
-        if (col.type === 'ia') return 'col-ia';
-        const size = col.size ? col.size.toUpperCase() : 'L';
-        return size === 'S' ? 'col-s' : (size === 'M' ? 'col-m' : 'col-l');
+    const context = {
+        currentForm,
+        filters: { activeFilters, columnFilters, currentSearch, currentSort },
+        actions: {
+            handleSort,
+            handleColumnFilter,
+            duplicateRow,
+            deleteRow,
+            updateValue,
+            runIA
+        }
     };
 
-    // ACTION COL
-    const thAction = document.createElement('th');
-    thAction.className = "col-actions";
-    trHead.appendChild(thAction);
-
-    currentForm.columns.forEach((col, cIdx) => {
-        if (col.visible === false) return;
-        const th = document.createElement('th');
-        th.className = getColClass(col) + " sortable-header";
-
-        const headerDiv = document.createElement('div');
-        headerDiv.className = "th-header-content";
-
-        const labelSpan = document.createElement('span');
-        let sortIcon = "↕";
-        if (currentSort.colIndex === cIdx) {
-            sortIcon = currentSort.direction === 'asc' ? "▲" : "▼";
-            th.classList.add('sorted');
-        }
-        labelSpan.innerText = `${col.label} ${sortIcon}`;
-        labelSpan.style.cursor = "pointer";
-        labelSpan.onclick = () => handleSort(cIdx);
-        headerDiv.appendChild(labelSpan);
-
-        if (col.type === 'combo') {
-            const selectFilter = document.createElement('select');
-            selectFilter.className = "th-filter-select";
-            selectFilter.onclick = (e) => e.stopPropagation();
-            selectFilter.appendChild(new Option("Tout", ""));
-            const opts = col.params?.options || [];
-            opts.forEach(opt => {
-                const o = new Option(opt, opt);
-                if (columnFilters[cIdx] === opt) o.selected = true;
-                selectFilter.appendChild(o);
-            });
-            selectFilter.onchange = (e) => handleColumnFilter(cIdx, e.target.value);
-            headerDiv.appendChild(selectFilter);
-        }
-
-        th.appendChild(headerDiv);
-        trHead.appendChild(th);
-    });
-    thead.appendChild(trHead);
-    table.appendChild(thead);
-
-    // PIPELINE (Filter & Sort)
-    const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
-    const subChapIdx = currentForm.columns.findIndex(c => c.type === 'sous-chapitre');
-
-    let rowsToProcess = currentForm.rows.map((row, index) => ({ data: row, originalIndex: index }));
-
-    if (activeFilters.chapter && chapIdx !== -1) {
-        rowsToProcess = rowsToProcess.filter(item => item.data[chapIdx] === activeFilters.chapter);
-    }
-    if (activeFilters.subChapter && subChapIdx !== -1) {
-        rowsToProcess = rowsToProcess.filter(item => item.data[subChapIdx] === activeFilters.subChapter);
-    }
-    Object.keys(columnFilters).forEach(keyIdx => {
-        const filterVal = columnFilters[keyIdx];
-        const cIdx = parseInt(keyIdx);
-        rowsToProcess = rowsToProcess.filter(item => item.data[cIdx] === filterVal);
-    });
-    if (currentSearch) {
-        rowsToProcess = rowsToProcess.filter(item => {
-            const rowText = item.data.map(cell => {
-                if (cell === null || cell === undefined) return "";
-                if (typeof cell === 'object') return JSON.stringify(cell);
-                return String(cell);
-            }).join(" ").toLowerCase();
-            return rowText.includes(currentSearch);
-        });
-    }
-    if (currentSort.colIndex !== -1) {
-        rowsToProcess.sort((a, b) => {
-            const valA = a.data[currentSort.colIndex];
-            const valB = b.data[currentSort.colIndex];
-            if (valA == null && valB == null) return 0;
-            if (valA == null) return 1;
-            if (valB == null) return -1;
-            let comparison = 0;
-            if (!isNaN(parseFloat(valA)) && isFinite(valA) && !isNaN(parseFloat(valB)) && isFinite(valB)) {
-                comparison = parseFloat(valA) - parseFloat(valB);
-            } else {
-                comparison = String(valA).localeCompare(String(valB));
-            }
-            return currentSort.direction === 'asc' ? comparison : -comparison;
-        });
-    }
-
-    // RENDER ROWS
-    const tbody = document.createElement('tbody');
-    rowsToProcess.forEach((item) => {
-        const tr = document.createElement('tr');
-
-        // Actions
-        const tdAction = document.createElement('td');
-        tdAction.className = "col-actions";
-        const divBtns = document.createElement('div');
-        divBtns.className = 'action-buttons-container';
-
-        const btnAdd = document.createElement('button');
-        btnAdd.className = "btn-row-action btn-add-row";
-        btnAdd.innerHTML = "+";
-        btnAdd.title = "Dupliquer cette ligne";
-        btnAdd.onclick = () => duplicateRow(item.originalIndex);
-        divBtns.appendChild(btnAdd);
-
-        const meta = currentForm.rowMeta[item.originalIndex] || {};
-        if (meta.isAdded) {
-            const btnDel = document.createElement('button');
-            btnDel.className = "btn-row-action btn-delete-row";
-            btnDel.innerHTML = "🗑️";
-            btnDel.title = "Supprimer cette ligne";
-            btnDel.onclick = () => deleteRow(item.originalIndex);
-            divBtns.appendChild(btnDel);
-        }
-        tdAction.appendChild(divBtns);
-        tr.appendChild(tdAction);
-
-        item.data.forEach((cell, cIdx) => {
-            const col = currentForm.columns[cIdx];
-            if (col.visible === false) return;
-            const td = document.createElement('td');
-            td.className = getColClass(col);
-            renderCell(td, col, cell, item.originalIndex, cIdx);
-            tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-    });
-
-    table.appendChild(tbody);
-    tableContainer.appendChild(table);
-
-    // Update Indicators (moved to separate function, but called here)
-    // Actually renderTable does it in original.
-    // I put it in updateStatusIndicator() for modularity
-
-    const visibleCount = rowsToProcess.length;
-    updateStatusIndicatorElements(visibleCount);
+    const stats = AuditRenderer.render(tableContainer, context);
+    updateStatusIndicatorElements(stats?.visibleCount || 0);
 }
+
+
 
 function updateStatusIndicatorElements(visibleCount) {
     const statusIndicator = document.getElementById('statusIndicator');
@@ -462,155 +318,12 @@ function updateValue(r, c, val) {
     // The original code does saveState() but not renderApp() inside updateValue.
 }
 
-function renderCell(container, col, value, r, c) {
-    // ... Copy renderCell logic ...
-    switch (col.type) {
-        case 'question':
-            const meta = currentForm.rowMeta[r] || {};
-            if (meta.isAdded) {
-                const txt = document.createElement('textarea');
-                txt.value = value || "";
-                txt.className = "editable-question";
-                txt.oninput = (e) => updateValue(r, c, e.target.value);
-                container.appendChild(txt);
-            } else {
-                container.classList.add('cell-readonly'); container.innerText = value || "";
-            }
-            break;
-        case 'chapitre': case 'sous-chapitre': case 'reference':
-            container.classList.add('cell-readonly'); container.innerText = value || ""; break;
-        case 'reponse':
-            const txt = document.createElement('textarea'); txt.value = value || "";
-            txt.oninput = (e) => updateValue(r, c, e.target.value); container.appendChild(txt); break;
-        case 'combo':
-            const sel = document.createElement('select');
-            const options = col.params?.options || [];
-            sel.appendChild(new Option("--", ""));
-            options.forEach(opt => {
-                const o = new Option(opt, opt);
-                if (opt === value) o.selected = true;
-                sel.appendChild(o);
-            });
-            const updateBg = (v) => {
-                const colorScheme = col.params?.colorScheme;
-                if (colorScheme && v) {
-                    const bg = getComboColor(colorScheme, v, options);
-                    sel.style.backgroundColor = bg;
-                    sel.style.color = getContrastColor(bg);
-                } else {
-                    sel.style.backgroundColor = ''; sel.style.color = '';
-                }
-            };
-            sel.onchange = (e) => { updateValue(r, c, e.target.value); updateBg(e.target.value); };
-            updateBg(value);
-            container.appendChild(sel); break;
-        case 'qcm':
-            const qcmDiv = document.createElement('div'); qcmDiv.className = 'qcm-container';
-            const items = Array.isArray(value) ? value : (col.params?.options || []).map(o => ({ label: o, checked: false }));
-            items.forEach((item, iIdx) => {
-                const l = document.createElement('label'); l.className = 'qcm-item';
-                const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked;
-                cb.onchange = (e) => { items[iIdx].checked = e.target.checked; updateValue(r, c, items); };
-                l.appendChild(cb); l.append(item.label); qcmDiv.appendChild(l);
-            });
-            container.appendChild(qcmDiv); break;
-        case 'popup':
-            const w = document.createElement('div'); w.className = 'popup-wrapper';
-            let rawContent = value || "Vide";
-            if (typeof rawContent === 'string') rawContent = rawContent.replace(/\\n/g, '\n');
-            // USE window.marked because it is global from CDN
-            const renderedContent = window.marked ? window.marked.parse(rawContent, { breaks: true }) : rawContent;
-            w.innerHTML = `<div class="popup-badge">Preuves</div><div class="popup-content">${renderedContent}</div>`;
-            container.appendChild(w); break;
-        case 'ia':
-            const d = document.createElement('div'); d.className = 'ia-cell';
-            const b = document.createElement('button'); b.className = 'btn-ia'; b.innerHTML = "✨";
-            b.title = "Générer avec l'IA";
-
-            const txtIA = document.createElement('textarea');
-            txtIA.className = 'ia-textarea';
-            txtIA.value = value || "";
-            txtIA.placeholder = "IA...";
-            txtIA.oninput = (e) => {
-                updateValue(r, c, e.target.value);
-                if (preview) preview.innerHTML = window.marked ? window.marked.parse(e.target.value) : e.target.value;
-            };
-
-            const preview = document.createElement('div');
-            preview.id = `ia-${r}-${c}`;
-            preview.className = 'ia-content';
-            preview.innerHTML = value ? (window.marked ? window.marked.parse(value) : value) : "";
-
-            b.onclick = () => runIA(r, c, col, b, txtIA, preview);
-
-            d.appendChild(b);
-            d.appendChild(txtIA);
-            container.appendChild(d); break;
-        default: container.innerText = value || ""; break;
-    }
-}
-
-function getContrastColor(color) {
-    if (!color) return '';
-    let r, g, b;
-
-    if (color.startsWith('#')) {
-        const hex = color.replace('#', '');
-        r = parseInt(hex.substr(0, 2), 16);
-        g = parseInt(hex.substr(2, 2), 16);
-        b = parseInt(hex.substr(4, 2), 16);
-    } else if (color.startsWith('rgb')) {
-        const vals = color.match(/\d+/g);
-        if (vals) {
-            r = parseInt(vals[0]);
-            g = parseInt(vals[1]);
-            b = parseInt(vals[2]);
-        }
-    } else {
-        return '';
-    }
-
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 128) ? '#000000' : '#ffffff';
-}
-
-function getComboColor(scheme, value, options) {
-    if (!scheme || !value || !options || options.length === 0) return '';
-    const index = options.indexOf(value);
-    if (index === -1) return '';
-    const fixedSchemes = {
-        'alert6': ['#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#000000'],
-        'alert3': ['#22c55e', '#eab308', '#ef4444'],
-        'rainbow': ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#6366f1', '#a855f7']
-    };
-    if (fixedSchemes[scheme]) {
-        const colors = fixedSchemes[scheme];
-        if (index >= colors.length) return colors[colors.length - 1];
-        return colors[index];
-    }
-    const baseColors = {
-        'blue': '59, 130, 246', 'green': '34, 197, 94', 'red': '239, 68, 68',
-        'purple': '168, 85, 247', 'orange': '249, 115, 22', 'yellow': '234, 179, 8'
-    };
-    const rgb = baseColors[scheme];
-    if (!rgb) return '';
-    let alpha = 0.9;
-    if (options.length > 1) {
-        const startAlpha = 0.1; const endAlpha = 0.9;
-        const step = (endAlpha - startAlpha) / (options.length - 1);
-        alpha = startAlpha + (index * step);
-    }
-    alpha = Math.round(alpha * 100) / 100;
-    return `rgba(${rgb}, ${alpha})`;
-}
-
-
 async function runIA(r, c, col, btn, textareaInput, previewDiv) {
     const modelName = col.params?.modele;
-    if (!modelName) return alert("Aucun modèle IA configuré pour cette colonne.");
+    if (!modelName) return UI.showToast("Aucun modèle IA configuré pour cette colonne.", "warning");
 
     const modelConfig = auditAvailableModels.find(m => m.nom === modelName);
-    if (!modelConfig) return alert(`Le modèle '${modelName}' est introuvable dans la configuration.`);
+    if (!modelConfig) return UI.showToast(`Le modèle '${modelName}' est introuvable.`, "danger");
 
     const fmt = (v, t) => { if (t === 'qcm' && Array.isArray(v)) return v.map(i => `${i.label}:${i.checked ? '[x]' : '[ ]'}`).join("\n"); return v; };
     const contextData = {};
@@ -638,21 +351,18 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
         if (textareaInput) textareaInput.value = res;
         if (previewDiv && window.marked) previewDiv.innerHTML = window.marked.parse(res);
     } catch (e) {
-        alert("Erreur IA: " + e.message);
+        UI.showToast("Erreur IA: " + e.message, "danger");
     } finally {
-        btn.innerHTML = "✨"; btn.disabled = false;
+        btn.innerHTML = originalIcon; btn.disabled = false;
     }
 }
 
 async function loadModels() {
-    try {
-        const response = await fetch('models.json');
-        if (response.ok) {
-            auditAvailableModels = await response.json();
-            if (!Array.isArray(auditAvailableModels)) auditAvailableModels = [];
-        }
-    } catch (e) {
-        console.warn("Impossible de charger models.json", e);
+    const data = await Utils.safeFetch('models.json');
+    if (data && Array.isArray(data)) {
+        auditAvailableModels = data;
+    } else {
+        console.warn("Impossible de charger models.json ou format invalide");
     }
 }
 
@@ -690,7 +400,7 @@ function deleteRow(rIndex) {
     if (rIndex < 0 || rIndex >= currentForm.rows.length) return;
     const meta = currentForm.rowMeta[rIndex];
     if (!meta || !meta.isAdded) {
-        alert("Impossible de supprimer une ligne d'origine.");
+        UI.showToast("Impossible de supprimer une ligne d'origine.", "warning");
         return;
     }
     if (confirm("Supprimer cette ligne ?")) {

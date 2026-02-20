@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation Fonctionnelle - Ezio</title>
+    <title>Documentation Technique & Fonctionnelle - Ezio</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -16,7 +16,6 @@
             --sidebar-width: 300px;
         }
 
-        /* Dark Mode support system preference */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-body: #0f172a;
@@ -47,25 +46,22 @@
             height: 100%;
         }
 
-        /* Sidebar Navigation (Left) */
+        /* Sidebar */
         .nav-sidebar {
             width: var(--sidebar-width);
             background-color: #1e293b;
-            /* Dark background */
             border-right: 1px solid var(--border);
             padding: 2rem;
             overflow-y: auto;
             order: 1;
             flex-shrink: 0;
             color: #f1f5f9;
-            /* White/Light text */
         }
 
         .nav-sidebar h3 {
             font-size: 0.9rem;
             text-transform: uppercase;
             color: #94a3b8;
-            /* Muted light text */
             margin-top: 0;
             margin-bottom: 1rem;
         }
@@ -83,7 +79,6 @@
         .nav-sidebar a {
             text-decoration: none;
             color: #f1f5f9;
-            /* White text */
             font-size: 0.95rem;
             display: block;
             padding: 0.25rem 0;
@@ -92,21 +87,13 @@
 
         .nav-sidebar a:hover {
             color: #38bdf8;
-            /* Light Blue hover */
         }
 
         .nav-sidebar a.sub-link {
             padding-left: 1rem;
             font-size: 0.9rem;
             color: #cbd5e1;
-            /* Slightly muted white */
         }
-
-        .nav-sidebar a.sub-link:hover {
-            color: #38bdf8;
-        }
-
-        /* ... styles ... */
 
         /* Main Content */
         .content-area {
@@ -115,8 +102,6 @@
             overflow-y: auto;
             scroll-behavior: smooth;
             order: 2;
-            /* Changed from 1 */
-            /* Right side */
         }
 
         h1,
@@ -156,6 +141,7 @@
             margin-bottom: 1rem;
         }
 
+        /* Code Blocks */
         code {
             background-color: rgba(125, 125, 125, 0.1);
             padding: 0.2rem 0.4rem;
@@ -164,10 +150,12 @@
         }
 
         pre {
-            background-color: rgba(125, 125, 125, 0.1);
+            background-color: #1e293b;
+            color: #f8fafc;
             padding: 1rem;
             border-radius: 8px;
             overflow-x: auto;
+            font-family: Consolas, monospace;
         }
 
         .alert {
@@ -205,13 +193,6 @@
         th {
             background-color: rgba(125, 125, 125, 0.05);
         }
-
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
     </style>
 </head>
 
@@ -219,458 +200,213 @@
 
     <div class="container">
         <main class="content-area">
-            <h1 id="top">Documentation Fonctionnelle - Ezio</h1>
+            <h1>Documentation Technique & Fonctionnelle - Ezio</h1>
+            <p>Ezio est une application "Local-First" d'audit et de pilotage assisté par IA. Cette documentation couvre
+                l'installation pour les développeurs et l'architecture refondue.</p>
 
-            <p><strong>Ezio</strong> est une application web dédiée à l'audit et au pilotage assisté par Intelligence
-                Artificielle (IA). Elle permet de charger des grilles d'audit, de les remplir, d'analyser les données et
-                de générer des rapports ou des plans d'action grâce à l'IA.</p>
-
-            <hr>
-
-            <h2 id="vue-ensemble">1. Vue d'Ensemble & Fonctionnement</h2>
-            <p>L'application est structurée autour de quatre modules principaux accessibles via la barre de navigation
-                supérieure :</p>
-
-            <h3 id="module-audit">1.1 Module Audit (Vue Principale)</h3>
-            <p>C'est le cœur de l'application où l'utilisateur interagit avec la grille d'audit.</p>
-            <ul>
-                <li><strong>Affichage</strong> : Les données sont présentées sous forme de tableau dynamique.</li>
-                <li><strong>Navigation</strong> : Une barre latérale (à gauche) permet de naviguer rapidement entre les
-                    <strong>Chapitres</strong> et <strong>Sous-Chapitres</strong> définis dans la grille.
-                </li>
-                <li><strong>Fonctionnalités Clés</strong> :
-                    <ul>
-                        <li><strong>Filtrage</strong> : Par chapitre, sous-chapitre ou via la barre de recherche
-                            textuelle globale.</li>
-                        <li><strong>Tri</strong> : En cliquant sur les en-têtes de colonnes.</li>
-                        <li><strong>Édition</strong> : Les cellules peuvent être modifiées (texte, listes déroulantes,
-                            cases à cocher).</li>
-                        <li><strong>Assistant IA</strong> : Certaines colonnes spéciales permettent d'invoquer une IA
-                            pour générer du contenu (ex: recommandations, analyses) basé sur les autres colonnes de la
-                            ligne.</li>
-                    </ul>
-                </li>
-            </ul>
-            </li>
-            <li><strong>Gestion Dynamique des Lignes</strong> :
-                <ul>
-                    <li><strong>Duplication (+)</strong> : Chaque ligne possède un bouton "+" permettant de la dupliquer
-                        instantanément. La nouvelle ligne apparaît juste en dessous.</li>
-                    <li><strong>Édition de Question</strong> : Sur une ligne dupliquée, le texte de la colonne
-                        "Question" devient modifiable (champ texte).</li>
-                    <li><strong>Suppression (🗑️)</strong> : Les lignes ajoutées manuellement peuvent être supprimées
-                        via l'icône poubelle. (Protection : les lignes d'origine de l'audit ne sont pas supprimables).
-                    </li>
-                </ul>
-            </li>
-            </ul>
-
-            <h3 id="module-dashboard">1.2 Module Tableau de Bord</h3>
-            <p>Permet la visualisation graphique des données de l'audit en cours.</p>
-            <ul>
-                <li><strong>Configuration</strong> : L'utilisateur choisit une colonne à analyser (ex: "Conformité") et
-                    un type de graphique (Camembert, Barres, Anneau).</li>
-                <li><strong>Widgets</strong> : Les graphiques sont générés dynamiquement en comptant les occurrences des
-                    valeurs (ex: nombre de "Conforme" vs "Non Conforme").</li>
-            </ul>
-
-            <h3 id="module-createur">1.3 Module Formulaires (Créateur)</h3>
-            <p>Un outil pour transformer des données brutes en une application d'audit structurée.</p>
-            <ul>
-                <li><strong>Import</strong> : Charge un fichier JSON plat ou un CSV converti.</li>
-                <li><strong>Configuration</strong> : Permet de définir pour chaque colonne :
-                    <ul>
-                        <li>Son <strong>Type</strong> (Question, Réponse, Liste déroulante, IA, etc.).</li>
-                        <li>Sa <strong>Visibilité</strong>.</li>
-                        <li>Ses <strong>Paramètres</strong> (Options pour les listes, Prompt pour l'IA, couleurs).</li>
-                    </ul>
-                </li>
-                <li><strong>Ajout de Colonne</strong> : Possibilité d'ajouter de nouvelles colonnes à la volée via le
-                    bouton dédié.</li>
-                <li><strong>Génération</strong> : Produit un fichier JSON structuré (<code>audit_config.json</code>)
-                    prêt à être chargé dans le module Audit. Ce même fichier servira de support de sauvegarde tout au
-                    long de l'audit (en écrasant la version précédente à chaque enregistrement).</li>
-            </ul>
-
-            <h3 id="module-modeles">1.4 Module Modèles (Configuration IA)</h3>
-            <p>Ce module permet de gérer les connexions aux "Moteurs d'IA" (LLM) utilisés par l'application. Pour
-                ajouter ou modifier un modèle, vous devez renseigner les champs suivants :</p>
-
-            <h4>Champs Informatifs :</h4>
-            <ul>
-                <li><strong>Nom (Affiché)</strong> : Le nom qui apparaîtra dans les listes déroulantes de l'application
-                    (ex: "GPT-4 Expert").</li>
-                <li><strong>Description</strong> : Une note personnelle pour se souvenir de l'usage du modèle.</li>
-                <li><strong>Prompt Système</strong> : L'instruction de base qui définit la personnalité de l'IA (ex: "Tu
-                    es un auditeur certifié ISO 27001...").</li>
-            </ul>
-
-            <h4>Champs Techniques :</h4>
-            <ul>
-                <li><strong>Fournisseur (Provider)</strong> :
-                    <ul>
-                        <li><code>OpenAI</code> : Pour utiliser les modèles "cloud" de ChatGPT (nécessite une connexion
-                            internet et une clé payante) ou pour se connecter aux plateformes compatibles (Dragonfly,
-                            Cloud Temple).</li>
-                        <li><code>LM Studio (Local)</code> : Pour utiliser un modèle tournant sur votre propre machine
-                            (gratuit, privé, hors-ligne). L'adresse par défaut est souvent
-                            <code>http://localhost:1234/api/v1/chat</code>.
-                        </li>
-                        <li><code>Mock</code> : Un mode "bouchon" pour tester l'interface sans véritable IA.</li>
-                    </ul>
-                </li>
-                <li><strong>ID du Modèle</strong> : L'identifiant technique précis attendu par l'API (ex:
-                    <code>gpt-4-turbo</code>, <code>mistral-7b-instruct</code>).
-                    <ul>
-                        <li><em>Nouveau :</em> Un bouton <strong>"Tester la connexion"</strong> permet de récupérer
-                            automatiquement la liste des modèles disponibles depuis le fournisseur et de les proposer
-                            dans une liste déroulante.</li>
-                    </ul>
-                </li>
-                <li><strong>Endpoint API</strong> : L'adresse URL du serveur d'inférence.</li>
-                <li><strong>Clé API (API Key)</strong> : Le mot de passe pour accéder au service (laisser ou mettre
-                    "not-needed" pour LM Studio local).</li>
-            </ul>
-
-            <h4>Paramètres Avancés :</h4>
-            <ul>
-                <li><strong>Température (0.0 - 1.0)</strong> : Contrôle la "créativité".
-                    <ul>
-                        <li><code>0.0</code> : Très strict, déterministe (recommandé pour l'audit).</li>
-                        <li><code>0.7</code> : Équilibré (par défaut).</li>
-                        <li><code>1.0</code> : Très créatif, risque d'hallucination.</li>
-                    </ul>
-                </li>
-                <li><strong>Contexte (Tokens)</strong> : La mémoire maximale du modèle (ex: 4096, 8192, 32000). Plus ce
-                    chiffre est haut, plus l'IA peut traiter de texte en une seule fois.</li>
-            </ul>
+            <h2 id="installation">1. Installation en Local</h2>
+            <p>L'application est conçue pour être lancée sans build complexe (No Webpack/Vite requis pour le runtime),
+                mais nécessite un serveur HTTP local pour contourner les restrictions CORS des modules ES6.</p>
 
             <div class="alert alert-note">
-                <strong>Note :</strong> Ces configurations sont sauvegardées localement dans le fichier
-                <code>models.json</code> à la racine de l'application.
+                <strong>Pré-requis :</strong> Un navigateur moderne (Chrome, Edge, Firefox) et un environnement
+                d'exécution léger (Python, Node.js ou extension Chrome).
             </div>
 
-            <h3 id="module-rapports">1.5 Module Rapports (Templates)</h3>
-            <p>Ce module permet de définir la <strong>structure</strong> de vos futurs livrables.</p>
-            <ul>
-                <li><strong>Templates</strong> : Créez des modèles réutilisables (ex: "Rapport d'Audit Interne").</li>
-                <li><strong>Modules</strong> : Ajoutez des blocs fonctionnels à votre modèle (Introduction, Synthèse,
-                    Analyse Swot...).</li>
-                <li><strong>Liste Verticale</strong> : Organisez l'ordre des sections par simple glisser-déposer ou via
-                    les flèches.</li>
-                <li><em>Attention :</em> Ce module ne sert qu'à la définition. Aucune génération d'IA ne se produit ici.
-                </li>
-            </ul>
+            <h3>1.1 Démarrage Rapide</h3>
+            <p>Ouvrez un terminal à la racine du projet :</p>
+            <pre><code># Avec Python 3
+python -m http.server 8000
 
-            <h3 id="module-livrables">1.6 Module Livrables (Génération)</h3>
-            <p>C'est ici que la magie opère. Transformez vos modèles en documents concrets.</p>
-            <ul>
-                <li><strong>Création</strong> : Sélectionnez un modèle existant pour créer un nouveau "Livrable".</li>
-                <li><strong>Mode Carte (Horizontal)</strong> : Chaque module du modèle devient une "carte" interactive.
-                </li>
-                <li><strong>Customisation</strong> : Adaptez le prompt de l'IA, sélectionnez les colonnes et activez
-                    l'option <strong>"Tableau"</strong> pour inclure les données sources directement dans le rapport
-                    généré.</li>
-                <li><strong>Génération (Tester / Générer)</strong> : Lancez l'IA module par module pour construire votre
-                    rapport étape par étape.</li>
-                <li><strong>Persistance</strong> : Vos livrables sont sauvegardés à l'intérieur de votre fichier d'audit
-                    (<code>.json</code>). Vous ne perdez jamais vos générations.</li>
-                <li><strong>Export</strong> : Le bouton <strong>"Télécharger le Rapport"</strong> génère un fichier
-                    unique
-                    (<code>.md</code>) contenant tout votre livrable, prêt à être ouvert dans Word ou un éditeur
-                    Markdown.
-                </li>
-                <li><strong>Impression</strong> :
-                    <ul>
-                        <li>Cliquez sur le bouton <strong>"Impression"</strong> pour ouvrir le gestionnaire de sortie.
-                        </li>
-                        <li><strong>Word</strong> : Sélectionnez un modèle Word (configuré dans
-                            <code>output_config.json</code>). Le rapport sera injecté dans ce modèle (au niveau du tag
-                            <code>{{CONTENT}}</code>).</li>
-                        <li><strong>PowerPoint</strong> : Sélectionnez un style PPT pour générer une présentation (une
-                            slide par module).</li>
-                        <li>Pour configurer vos modèles (Styles PPT, Fichiers Word), consultez le guide technique : <a
-                                href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide Configuration Output</a>.</li>
-                    </ul>
-                </li>
-            </ul>
-
-            <h3 id="notes-tool">1.7 Outil de Notes</h3>
-            <p>Un bloc-notes persistent est accessible à tout moment pour noter des idées, des rappels ou des minutes
-                pendant l'audit.</p>
-            <ul>
-                <li><strong>Accès</strong> : Via le bouton <strong>📝 Notes</strong> dans l'en-tête.</li>
-                <li><strong>Fonctionnement</strong> :
-                    <ul>
-                        <li><strong>Fenêtre Flottante</strong> : La fenêtre s'ouvre au-dessus du contenu.</li>
-                        <li><strong>Déplaçable</strong> : Vous pouvez déplacer la fenêtre en maintenant le clic sur son
-                            en-tête ("Notes").</li>
-                        <li><strong>Persistance</strong> : Le texte est sauvegardé automatiquement à chaque caractère
-                            saisi. Il est conservé même si vous fermez le navigateur.</li>
-                    </ul>
-                </li>
-                <li><strong>Sauvegarde</strong> : Les notes sont incluses dans le fichier JSON lors de l'export
-                    ("Sauver" ou "Exporter").</li>
-            </ul>
+# Avec Node.js (http-server)
+npx http-server .</code></pre>
+            <p>Accédez ensuite à <code>http://localhost:8000</code>.</p>
 
             <hr>
 
-            <h2 id="logique-app">2. Logique de l'Application</h2>
+            <h2 id="architecture">2. Architecture & Refactoring (Phase 5)</h2>
+            <p>Le code a été restructuré pour séparer clairement le Cœur (Logiciels de base), les Modules (Logique
+                métier) et l'UI. Des optimisations majeures (Délégation d'événements, Debounce) ont été appliquées en
+                v2.2.1 pour la performance.</p>
 
-            <h3 id="chargement">2.1 Chargement des Données</h3>
-            <p>L'application peut charger des données de deux manières :</p>
-            <ol>
-                <li><strong>Templates (Modèles de Documents)</strong> : Des grilles pré-configurées stockées dans le
-                    dossier <code>/templates</code>. Elles servent de point de départ pour de nouveaux audits (ex: ISO
-                    42001, RGPD).</li>
-                <li><strong>Fichiers Locaux</strong> : Des fichiers <code>.json</code> sauvegardés par l'utilisateur
-                    contenant un audit en cours ou terminé.</li>
-            </ol>
-
-            <h3 id="structure-colonnes">2.2 Structure et Types de Colonnes</h3>
-            <p>Toute la logique de l'audit repose sur sa configuration des colonnes. Chaque colonne possède un
-                <strong>Type</strong> qui définit son comportement et ses options :
-            </p>
-
-            <ul>
-                <li><strong>Structurelles (Navigation)</strong>
-                    <ul>
-                        <li><code>Chapitre</code> & <code>Sous-Chapitre</code> : Ces colonnes sont en lecture seule.
-                            Elles ne servent pas à la saisie mais construisent automatiquement le <strong>menu de
-                                navigation latéral</strong>.</li>
-                    </ul>
-                </li>
-                <li><strong>Informatives (Lecture Seule)</strong>
-                    <ul>
-                        <li><code>Question</code> & <code>Référence</code> : Affichent du texte statique (ex: l'exigence
-                            de la norme).
-                            <ul>
-                                <li><em>Option :</em> <strong>Taille</strong> (S, M, L) pour ajuster la largeur de la
-                                    colonne.</li>
-                            </ul>
-                        </li>
-                        <li><code>Popup</code> : Affiche un contenu riche (Markdown) masqué par défaut sous un badge
-                            "Preuves". Au survol ou au clic, le contenu complet apparaît. Idéal pour les descriptions
-                            longues (supporte les sauts de ligne, listes à puces, gras, italique).</li>
-                    </ul>
-                </li>
-                <li><strong>Saisie (Intéractions)</strong>
-                    <ul>
-                        <li><code>Réponse</code> : Un champ texte libre (multiligne) pour saisir un constat ou une
-                            remarque.</li>
-                        <li><code>Combo</code> : Une liste déroulante pour un choix unique (ex: Conforme / Non
-                            Conforme).
-                            <ul>
-                                <li><em>Options :</em> Liste des valeurs possibles.</li>
-                                <li><em>Couleurs :</em> Possibilité d'associer un schéma de couleurs automatique (ex:
-                                    Vert/Orange/Rouge) selon la valeur choisie.</li>
-                            </ul>
-                        </li>
-                        <li><code>QCM</code> : Une liste de cases à cocher pour des choix multiples (ex: Documents
-                            manquants).</li>
-                    </ul>
-                </li>
-                <li><strong>Intelligentes (IA)</strong>
-                    <ul>
-                        <li><code>IA</code> : Une colonne spéciale dotée d'un bouton "✨".
-                            <ul>
-                                <li><em>Comportement :</em> En cliquant, l'IA génère du contenu (texte ou checklist)
-                                    directement dans la case.</li>
-                                <li><em>Configuration :</em> On définit un <strong>Prompt</strong> (l'ordre donné à
-                                    l'IA), un <strong>Modèle</strong> (le "cerveau" utilisé) et on sélectionne les
-                                    <strong>Colonnes Contextuelles</strong> (quelles informations de la ligne l'IA doit
-                                    lire pour répondre).
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-
-            <h3 id="logique-ia">2.3 L'Intelligence Artificielle (IA)</h3>
-            <p>L'application utilise deux types d'IA :</p>
-            <ul>
-                <li><strong>IA Contextuelle (Audit)</strong> : Opère ligne par ligne pour une assistance précise.</li>
-                <li><strong>IA Globale (Livrables)</strong> : Opère sur un ensemble de lignes (Scope) pour générer des
-                    synthèses ou des rapports, en se basant sur un tableau de données structuré.</li>
-            </ul>
-            <p><strong>Détail IA Contextuelle (Audit) :</strong></p>
-            <ul>
-                <li>Lorsqu'une colonne est de type <code>IA</code>, elle est configurée avec un <strong>Prompt</strong>
-                    spécifique (ex: "Génère une recommandation d'action...").</li>
-                <li>Elle peut lire le contenu d'autres colonnes de la <strong>même ligne</strong> (ex: "Description",
-                    "Constat", "Preuves") pour générer sa réponse.</li>
-                <li>Cela permet une assistance précise et ciblée (ex: analyser une non-conformité spécifique).</li>
-            </ul>
-
-            <hr>
-
-            <h2 id="installation">3. Installation et Structure Technique</h2>
-
-            <h3 id="install-local">3.1 Installation en Local</h3>
-
-            <h4 id="arborescence">3.1.1 Arborescence des Fichiers</h4>
-            <p>L'application est composée de fichiers statiques (HTML, JS, CSS). Voici les éléments essentiels :</p>
-
+            <h3 id="structure">2.1 Structure des Fichiers</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Fichier / Dossier</th>
-                        <th>Type</th>
-                        <th>Description Fonctionnelle</th>
+                        <th>Répertoire</th>
+                        <th>Rôle</th>
+                        <th>Fichiers Clés</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><code>index.html</code></td>
-                        <td>Application</td>
-                        <td><strong>Point d'entrée principal</strong>. C'est le fichier à ouvrir dans votre navigateur
-                            pour lancer Ezio.</td>
+                        <td><code>js/core/</code></td>
+                        <td>Fondations</td>
+                        <td>State.js, Utils.js, DataUtils.js, UIFactory.js</td>
                     </tr>
                     <tr>
-                        <td><code>app_*.js</code></td>
-                        <td>Scripts</td>
-                        <td>Contiennent la logique de chaque module (Audit, Créateur, Tableau de bord, Modèles, Export).
-                        </td>
+                        <td><code>js/modules/</code></td>
+                        <td>Fonctionnalités</td>
+                        <td>app_audit.js, AuditRenderer.js, app_deliveries.js, app_output_word.js</td>
                     </tr>
                     <tr>
-                        <td><code>api_ia.js</code></td>
-                        <td>API</td>
-                        <td>Gère spécifiquement les connecteurs avec les fournisseurs d'IA (OpenAI, etc.).</td>
+                        <td><code>js/ui/</code></td>
+                        <td>Interface</td>
+                        <td>Navigation.js, Sidebar.js, Modal.js</td>
                     </tr>
                     <tr>
-                        <td><code>style_*.css</code></td>
-                        <td>Styles</td>
-                        <td>Définissent l'apparence visuelle (Thèmes sombres/clairs, impression).</td>
-                    </tr>
-                    <tr>
-                        <td><code>models.json</code></td>
-                        <td>Configuration</td>
-                        <td>Stocke vos paramètres de connexion aux IA (URL, Clés, Prompts).</td>
-                    </tr>
-                    <tr>
-                        <td><code>/templates/</code></td>
-                        <td>Dossier</td>
-                        <td>Contient les grilles d'audit vierges "prêtes à l'emploi" (ex: <code>ISO42001.json</code>).
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><code>/docs/</code></td>
-                        <td>Dossier</td>
-                        <td>Contient la documentation utilisateur.</td>
+                        <td><code>js/api/</code></td>
+                        <td>Services</td>
+                        <td>api_ia.js</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h4 id="lancement-local">3.1.2 Lancement (Serveur Web Local)</h4>
-            <p>Bien qu'il soit possible d'ouvrir directement <code>index.html</code>, il est <strong>fortement
-                    recommandé</strong> d'utiliser un serveur web local.<br>
-                Pourquoi ? Les navigateurs modernes appliquent des règles de sécurité strictes (CORS) qui peuvent
-                bloquer le chargement des fichiers JSON (Templates ou Config) si le fichier est ouvert en "file://".</p>
+            <h3 id="core-examples">2.2 Utilisation des Fonctions Cœur</h3>
+            <p>Voici comment utiliser les nouvelles bibliothèques centrales introduites lors du refactoring.</p>
 
-            <p><strong>Méthode recommandée (Simple Web Server) :</strong></p>
-            <ol>
-                <li>Installez une extension de navigateur comme <strong>"Web Server for Chrome"</strong> ou un
-                    utilitaire léger type <strong>"SimpleWebServer"</strong> (Windows).
-                    <ul>
-                        <li><em>Alternative Python :</em> Ouvrez un terminal dans le dossier et tapez
-                            <code>python -m http.server</code>.
-                        </li>
-                    </ul>
-                </li>
-                <li>Configurez l'outil pour pointer vers le dossier racine de l'application Ezio.</li>
-                <li>Ouvrez l'adresse locale fournie (généralement <code>http://127.0.0.1:8887</code> ou
-                    <code>http://localhost:8000</code>).
-                </li>
-            </ol>
+            <h4>UIFactory (Toasts & Composants)</h4>
+            <p>Remplacez toutes les alertes natives par des Toasts non-bloquants.</p>
+            <pre><code>import { UI } from '../core/UIFactory.js';
 
-            <h3 id="typologie-fichiers">3.2 Typologie des Fichiers</h3>
-            <p>L'application manipule trois types de fichiers JSON distincts.</p>
+// Afficher une notification succés
+UI.showToast("Export réussi !", "success");
 
-            <div class="alert alert-note">
-                <strong>Modifications Manuelles</strong><br>
-                Vous avez la liberté de créer ou modifier ces fichiers manuellement si vous le souhaitez. Ils
-                fonctionneront parfaitement tant que la structure JSON est respectée. Cependant, pour plus de
-                simplicité, l'ensemble de ces opérations peut être réalisé directement depuis l'interface de
-                l'application.
-            </div>
+// Afficher une erreur
+UI.showToast("Fichier introuvable.", "danger");
 
-            <h4 id="fichier-audit">3.2.1 Fichier d'Audit / Données (<code>*.json</code>)</h4>
-            <p>C'est le fichier principal qui contient à la fois la structure de la grille et les données saisies.</p>
-            <p><strong>Structure technique :</strong></p>
-            <pre><code>{
-  "columns": [
-    {
-      "id": "ref",
-      "label": "Référence",
-      "type": "question", 
-      "visible": true,
-      "params": { ... }
-    },
-    ...
-  ],
-  "rows": [
-    ["1.1", "Politique", "Texte..."],
-    ["1.2", "Organisation", "Texte..."]
-  ],
-  "statics": []
-}</code></pre>
-            <p>Ce fichier est "autonome" : il contient tout ce qui est nécessaire pour afficher et continuer l'audit.
-            </p>
+// Générer un badge HTML
+const badgeHtml = UI.renderBadge("En cours", "#3b82f6");
+// &lt;span class="badge" style="..."&gt;En cours&lt;/span&gt;</code></pre>
 
-            <h4 id="fichiers-templates">3.2.2 Modèles de Documents (Templates)</h4>
-            <p>Ce sont des fichiers d'Audit (même structure que 3.1) mais "vides" ou "prêts à l'emploi".</p>
+            <h4>DataUtils (Traitement de données pur)</h4>
+            <p>Déléguez les tris et filtres complexes à ce module pour garder les contrôleurs légers.</p>
+            <pre><code>import { DataUtils } from '../core/DataUtils.js';
+
+const rows = [ ["Chap1", "Non"], ["Chap1", "Oui"] ];
+const columns = [ {id:"c1", type:"chapitre"}, {id:"c2", type:"combo"} ];
+
+// Filtrer et trier
+const results = DataUtils.processRows(
+    rows, 
+    columns, 
+    { chapter: "Chap1" }, // Filtre actif
+    {},                   // Filtres colonnes
+    "Oui",                // Recherche texte
+    { colIndex: 1, direction: 'asc' } // Tri
+);
+
+// results = [{ data: [...], originalIndex: 1 }]</code></pre>
+
+            <h2 id="modules">3. Modules Fonctionnels</h2>
+
+            <h3 id="mod-audit">3.1 Module Audit (Pattern MVC)</h3>
+            <p>Le module Audit applique désormais une séparation stricte :</p>
             <ul>
-                <li>Ils sont situés dans le dossier <code>/templates/</code>.</li>
-                <li>Ils définissent le standard (ex: toutes les exigences d'une norme) mais les colonnes de "Réponse" ou
-                    "Constat" sont généralement vides.</li>
+                <li><strong>Contrôleur (<code>app_audit.js</code>)</strong> : Gère l'état (State), les appels IA et la
+                    logique métier.</li>
+                <li><strong>Vue (<code>AuditRenderer.js</code>)</strong> : Reçoit un contexte (données + actions) et
+                    génère le HTML.</li>
+            </ul>
+            <pre><code>// Dans app_audit.js
+import { AuditRenderer } from './AuditRenderer.js';
+
+function renderTable() {
+    const context = {
+        currentForm,
+        filters: { ... },
+        actions: { handleSort, deleteRow, ... } // Bindings
+    };
+    AuditRenderer.render(container, context);
+}</code></pre>
+
+            <h3 id="mod-deliveries">3.2 Module Livrables (Async/Await & WYSIWYG)</h3>
+            <p>Ce module gère un workflow complexe de génération de documents via IA.</p>
+            <ul>
+                <li><strong>Scope</strong> : Sélectionne les chapitres à analyser.</li>
+                <li><strong>Context Build</strong> : Construit un tableau Markdown des données filtrées.</li>
+                <li><strong>IA Call</strong> : Envoie le contexte + prompt au LLM (via <code>api_ia.js</code>).</li>
+                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi (Titres,
+                    Listes, Tableaux redimensionnés automatiquement avec défilement horizontal) avec barre d'outils,
+                    assurant une stricte conversion bidirectionnelle du HTML visuel en Markdown pour la persistance.
+                </li>
+            </ul>
+            <pre><code>// Exemple de flux (simplifié)
+async function generateModule(delivery) {
+    try {
+        const context = await buildContext(delivery.scope, auditData);
+        const response = await ApiService.fetchLLM(modelConfig, [
+            { role: 'system', content: prompt },
+            { role: 'user', content: [instruction, context] }
+        ]);
+        delivery.result = response;
+    } catch (e) {
+        UI.showToast("Erreur IA: " + e.message, "danger");
+    }
+}</code></pre>
+
+            <h3 id="mod-printing">3.3 Impression & Export (Module Unifié)</h3>
+            <p>Le système d'impression remplace les anciens exports individuels.</p>
+            <ul>
+                <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles
+                    disponibles (Word et PPTX).</li>
+                <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le
+                    contenu dans des modèles existants.</li>
+                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides
+                    vectorielles.</li>
             </ul>
 
-            <h4 id="config-ia">3.2.3 Configuration des Modèles IA (<code>models.json</code>)</h4>
-            <p>Ce fichier stocke la liste des connecteurs IA disponibles.</p>
-            <p><strong>Emplacement</strong> : Racine de l'application (ou géré par le navigateur en local).</p>
-            <p><strong>Structure :</strong></p>
-            <pre><code>[
-  {
-    "nom": "GPT-4 Expert",
-    "provider": "openai",
-    "endpoint": "https://api.openai.com/v1/...",
-    "apikey": "sk-...",
-    "model": "gpt-4",
-    "prompt": "Tu es un expert auditeur..."
-  }
-]</code></pre>
-            <p>Ce fichier permet à l'application de savoir quel "cerveau" utiliser lorsqu'on clique sur le bouton "✨"
-                d'une colonne IA.</p>
+            <h2 id="features">4. Fonctionnalités Clés</h2>
+
+            <h3>4.1 Gestion des Données (JSON)</h3>
+            <p>L'état est persistant via <code>localStorage</code>. Structure type :</p>
+            <pre><code>{
+  "columns": [ { "id": "c1", "type": "combo", "label": "Conformité" } ],
+  "rows": [ ["R1", "Non"] ],
+  "reports": [ /* Livrables générés */ ]
+}</code></pre>
+
+            <h3>4.2 Assistant IA</h3>
+            <ul>
+                <li><strong>Configuration</strong> : Fichier <code>models.json</code> à la racine.</li>
+                <li><strong>Providers</strong> : Compatible OpenAI, Groq, et <strong>LM Studio</strong> (Local).</li>
+            </ul>
+
+            <h3 id="printing-features">4.3 Impression & Rapports</h3>
+            <p>La nouvelle interface d'impression unifiée permet de générer des livrables professionnels.</p>
+            <ul>
+                <li><strong>Format Word</strong> : Support des modèles <code>.docx</code> et <code>.dotx</code> pour
+                    conserver votre identité visuelle.</li>
+                <li><strong>Format PowerPoint</strong> : Génération de présentations basées sur des thèmes
+                    configurables.</li>
+            </ul>
+            <div class="alert alert-note">
+                <strong>Guide de Configuration :</strong> Pour apprendre à créer vos propres modèles, consultez le <a
+                    href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide de Configuration des Sorties</a>.
+            </div>
 
         </main>
 
         <nav class="nav-sidebar">
-            <h3>Navigation</h3>
+            <h3>Menu</h3>
             <ul>
-                <li><a href="#top">Introduction</a></li>
-                <li><a href="#vue-ensemble">1. Vue d'Ensemble</a>
+                <li><a href="#installation">1. Installation</a></li>
+                <li><a href="#architecture">2. Architecture</a>
                     <ul>
-                        <li><a href="#module-audit" class="sub-link">1.1 Module Audit</a></li>
-                        <li><a href="#module-dashboard" class="sub-link">1.2 Tableau de Bord</a></li>
-                        <li><a href="#module-createur" class="sub-link">1.3 Créateur</a></li>
-                        <li><a href="#module-modeles" class="sub-link">1.4 Modèles IA</a></li>
-                        <li><a href="#module-rapports" class="sub-link">1.5 Rapports (Templates)</a></li>
-                        <li><a href="#module-livrables" class="sub-link">1.6 Livrables (Génération)</a></li>
-                        <li><a href="#notes-tool" class="sub-link">1.7 Notes</a></li>
+                        <li><a href="#structure" class="sub-link">Structure Fichiers</a></li>
+                        <li><a href="#core-examples" class="sub-link">Exemples Code Cœur</a></li>
                     </ul>
                 </li>
-                <li><a href="#logique-app">2. Logique Application</a>
+                <li><a href="#modules">3. Modules</a>
                     <ul>
-                        <li><a href="#chargement" class="sub-link">2.1 Chargement</a></li>
-                        <li><a href="#structure-colonnes" class="sub-link">2.2 Colonnes & Types</a></li>
-                        <li><a href="#logique-ia" class="sub-link">2.3 IA Contextuelle</a></li>
+                        <li><a href="#mod-audit" class="sub-link">3.1 Audit (MVC)</a></li>
+                        <li><a href="#mod-deliveries" class="sub-link">3.2 Livrables (Async)</a></li>
+                        <li><a href="#mod-printing" class="sub-link">3.3 Impression</a></li>
                     </ul>
                 </li>
-                <li><a href="#installation">3. Installation</a>
+                <li><a href="#features">4. Fonctionnalités</a>
                     <ul>
-                        <li><a href="#install-local" class="sub-link">3.1 Installation Local</a></li>
-                        <li><a href="#typologie-fichiers" class="sub-link">3.2 Typologie Fichiers</a></li>
+                        <li><a href="#printing-features" class="sub-link">4.3 Impression</a></li>
                     </ul>
                 </li>
             </ul>
