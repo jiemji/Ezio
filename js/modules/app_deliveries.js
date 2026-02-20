@@ -116,6 +116,12 @@ function setupDelegation() {
             }
             return;
         }
+        if (target.classList.contains('btn-md-format')) {
+            const action = target.getAttribute('data-action');
+            const idx = parseInt(target.getAttribute('data-idx'));
+            handleMdFormatting(action, idx);
+            return;
+        }
     };
 
     // 2. CHANGE Delegation (Selects)
@@ -191,12 +197,137 @@ function setupDelegation() {
             if (delivery && card) {
                 const idx = parseInt(card.dataset.idx);
                 if (delivery.structure[idx]) {
-                    delivery.structure[idx].result = target.innerHTML;
+                    delivery.structure[idx].result = htmlToMarkdown(target.innerHTML);
                     store.save();
                 }
             }
         }
     }, true); // Capture phase for blur
+}
+
+function htmlToMarkdown(html) {
+    if (!html) return '';
+
+    // Create a temporary element to parse HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    // Clean up empty tags and weird spaces
+    temp.innerHTML = temp.innerHTML.replace(/\u200B/g, '');
+
+    function parseNodeToMd(node, listLevel = 0, isOrdered = false, counter = { val: 1 }) {
+        let md = '';
+        for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+
+            if (child.nodeType === 3) { // Text node
+                md += child.textContent;
+            } else if (child.nodeType === 1) { // Element node
+                const tag = child.tagName.toLowerCase();
+
+                switch (tag) {
+                    case 'b':
+                    case 'strong':
+                        md += '**' + parseNodeToMd(child) + '**';
+                        break;
+                    case 'i':
+                    case 'em':
+                        md += '*' + parseNodeToMd(child) + '*';
+                        break;
+                    case 'h1': md += '\n# ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h2': md += '\n## ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h3': md += '\n### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h4': md += '\n#### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h5': md += '\n##### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'h6': md += '\n###### ' + parseNodeToMd(child) + '\n\n'; break;
+                    case 'p':
+                    case 'div':
+                        md += '\n' + parseNodeToMd(child) + '\n';
+                        break;
+                    case 'br':
+                        md += '\n';
+                        break;
+                    case 'ul':
+                        md += '\n' + parseNodeToMd(child, listLevel + 1, false) + '\n';
+                        break;
+                    case 'ol':
+                        md += '\n' + parseNodeToMd(child, listLevel + 1, true, { val: 1 }) + '\n';
+                        break;
+                    case 'li':
+                        const indent = '  '.repeat(Math.max(0, listLevel - 1));
+                        const bullet = isOrdered ? `${counter.val++}. ` : '- ';
+                        md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter);
+                        break;
+                    default:
+                        md += parseNodeToMd(child, listLevel, isOrdered, counter);
+                }
+            }
+        }
+        return md;
+    }
+
+    let markdown = parseNodeToMd(temp).trim();
+    // Normalize multiple newlines
+    markdown = markdown.replace(/\n{3,}/g, '\n\n');
+    return markdown;
+}
+
+function handleMdFormatting(action, idx) {
+    const delivery = currentForm.reports.find(d => d.id === selection.id);
+    if (!delivery) return;
+
+    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
+    if (!editor) return;
+
+    editor.focus();
+
+    if (action === 'bold') {
+        document.execCommand('bold', false, null);
+    } else if (action === 'h-up' || action === 'h-down') {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        let node = selection.focusNode;
+        if (!node) return;
+
+        // Find closest block element
+        const blockNode = node.nodeType === 3 ? node.parentNode : node;
+        const blockWrapper = blockNode.closest('h1, h2, h3, h4, h5, h6, p, div');
+        let currentTag = blockWrapper ? blockWrapper.tagName.toLowerCase() : 'p';
+        if (currentTag === 'div' || currentTag === 'li') currentTag = 'p';
+
+        let newTag = currentTag;
+
+        if (action === 'h-up') { // [+] Minimum size is H2 (Level 2), default is P
+            // Decreasing # -> Heading up (larger size, smaller heading number)
+            if (currentTag === 'p' || currentTag === 'h4') newTag = 'h3';
+            else if (currentTag === 'h3') newTag = 'h2';
+            else if (currentTag === 'h2') newTag = 'h2'; // Max size requested
+        } else if (action === 'h-down') { // [-] Back towards normal text
+            // Increasing # -> Heading down (smaller size, larger heading number)
+            if (currentTag === 'h2') newTag = 'h3';
+            else if (currentTag === 'h3') newTag = 'h4';
+            else if (currentTag === 'h4') newTag = 'p'; // Back to standard text
+        }
+
+        if (newTag !== currentTag) {
+            document.execCommand('formatBlock', false, '<' + newTag.toUpperCase() + '>');
+        }
+    } else if (action === 'indent-up') {
+        document.execCommand('insertUnorderedList', false, null);
+    } else if (action === 'indent-down') {
+        // Technically outdent, but standard insertUnorderedList toggles it. 
+        // We'll trust native contenteditable behavior for nested lists and outdents.
+        document.execCommand('outdent', false, null);
+    } else if (action === 'list-num') {
+        document.execCommand('insertOrderedList', false, null);
+    }
+
+    // Save parsed Markdown back
+    if (delivery.structure[idx]) {
+        delivery.structure[idx].result = htmlToMarkdown(editor.innerHTML);
+        store.save();
+    }
 }
 
 // Helper functions for checkboxes to keep delegation clean
@@ -427,7 +558,15 @@ function renderMainView() {
                 </div>
                 <div class="dlv-card-footer">
                      <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
-                     <div class="dlv-card-result" contenteditable="true">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
+                     <div class="dlv-md-toolbar" style="margin-top: 15px; display: flex; gap: 5px; flex-wrap: wrap;">
+                         <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${idx}" title="Niveau de titre +">[+]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${idx}" title="Niveau de titre -">[-]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${idx}" title="Désindenter">[<]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${idx}" title="Indenter">[>]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée">[1.]</button>
+                         <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras">[G]</button>
+                     </div>
+                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>
             </div>
         `;
@@ -597,8 +736,8 @@ async function generateModule(delivery, index) {
         // Si l'option "Tableau" est cochée, on préfixe la réponse avec le tableau de contexte
         let finalResult = response;
         if (instance.config.isTable) {
-            // Utilisation de balises HTML <br> pour forcer l'espacement visuel après le tableau Markdown
-            finalResult = contextData + "\n\n<br><br>\n\n" + response;
+            // Utilisation d'un séparateur markdown standard au lieu de balises HTML
+            finalResult = contextData + "\n\n---\n\n" + response;
         }
 
         instance.result = finalResult;
