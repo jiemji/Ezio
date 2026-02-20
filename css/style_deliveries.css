@@ -269,6 +269,20 @@ body.dark-mode .sidebar-item.selected {
     display: list-item;
 }
 
+.dlv-card-result table {
+    width: 100%;
+    min-width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: calc(0.9rem - 0.25em);
+}
+
+.dlv-card-result th,
+.dlv-card-result td {
+    border: 1px solid var(--border);
+    padding: 8px;
+}
+
 /* CHAPTER SELECTOR (Scope) */
 .chapter-selector-container {
     max-height: 200px;

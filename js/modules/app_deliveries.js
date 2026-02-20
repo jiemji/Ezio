@@ -248,6 +248,23 @@ function htmlToMarkdown(html) {
                     case 'br':
                         md += '\n';
                         break;
+                    case 'table':
+                        const tRows = child.querySelectorAll('tr');
+                        let tableMd = '\n';
+                        tRows.forEach((tr, rIdx) => {
+                            let rMd = '|';
+                            const cells = tr.querySelectorAll('th, td');
+                            if (cells.length === 0) return;
+                            cells.forEach(cell => {
+                                rMd += ' ' + parseNodeToMd(cell).replace(/\n/g, '<br>').trim() + ' |';
+                            });
+                            tableMd += rMd + '\n';
+                            if (rIdx === 0 && tr.querySelector('th')) {
+                                tableMd += '|' + Array.from(cells).map(() => '---').join('|') + '|\n';
+                            }
+                        });
+                        md += tableMd + '\n';
+                        break;
                     case 'ul':
                         md += '\n' + parseNodeToMd(child, listLevel + 1, false) + '\n';
                         break;
@@ -570,7 +587,7 @@ function renderMainView() {
                          <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
                          <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras"><i class="fas fa-bold"></i></button>
                      </div>
-                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
+                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; overflow-x:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>
             </div>
         `;
@@ -601,6 +618,40 @@ function renderMainView() {
     });
 
     // Old individual listeners removed - handled by delegation in setupDelegation()
+
+    applyTableColumnWidths(els.main);
+}
+
+function applyTableColumnWidths(container) {
+    if (!container || !currentForm || !currentForm.columns) return;
+    const tables = container.querySelectorAll('table');
+    tables.forEach(table => {
+        const headers = table.querySelectorAll('th');
+        headers.forEach(th => {
+            const colName = th.textContent.trim();
+            const colDef = currentForm.columns.find(c => c.label === colName);
+            if (colDef) {
+                let width = 'auto';
+                const type = colDef.type || 'question';
+
+                if (type === 'chapitre' || type === 'sous-chapitre') width = '100px';
+                else if (type === 'reponse' || type === 'ia') width = '250px';
+                else if (type === 'qcm' || type === 'combo') width = '120px';
+                else if (type === 'popup') width = '200px';
+                else if (type === 'question' || type === 'reference') {
+                    const size = (colDef.params && colDef.params.size) || colDef.size || 'M';
+                    if (size === 'S') width = '50px';
+                    else if (size === 'L') width = '250px';
+                    else width = '120px'; // default
+                }
+
+                if (width !== 'auto') {
+                    th.style.minWidth = width;
+                    th.style.width = width;
+                }
+            }
+        });
+    });
 }
 
 function buildChapterHierarchy() {
@@ -748,6 +799,7 @@ async function generateModule(delivery, index) {
         store.save();
 
         resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
+        applyTableColumnWidths(resultContainer);
 
     } catch (e) {
         console.error("Generation Error", e);

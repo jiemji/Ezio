@@ -326,8 +326,10 @@ function renderTable() {
                 <li><strong>Scope</strong> : Sélectionne les chapitres à analyser.</li>
                 <li><strong>Context Build</strong> : Construit un tableau Markdown des données filtrées.</li>
                 <li><strong>IA Call</strong> : Envoie le contexte + prompt au LLM (via <code>api_ia.js</code>).</li>
-                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi avec
-                    barre d'outils, convertissant le HTML visuel en Markdown pour la persistance.</li>
+                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi (Titres,
+                    Listes, Tableaux redimensionnés automatiquement avec défilement horizontal) avec barre d'outils,
+                    assurant une stricte conversion bidirectionnelle du HTML visuel en Markdown pour la persistance.
+                </li>
             </ul>
             <pre><code>// Exemple de flux (simplifié)
 async function generateModule(delivery) {
