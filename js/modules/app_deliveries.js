@@ -587,7 +587,7 @@ function renderMainView() {
                          <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
                          <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras"><i class="fas fa-bold"></i></button>
                      </div>
-                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; max-height: 600px; overflow-y:auto; overflow-x:auto; margin-top: 5px; text-align: left;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
+                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; overflow-y:auto; overflow-x:auto; margin-top: 5px; text-align: left; resize: vertical;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
                 </div>
             </div>
         `;
@@ -800,6 +800,15 @@ async function generateModule(delivery, index) {
 
         resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
         applyTableColumnWidths(resultContainer);
+
+        // Auto-expand to bottom of window
+        requestAnimationFrame(() => {
+            const rect = resultContainer.getBoundingClientRect();
+            const newHeight = window.innerHeight - rect.top - 40; // 40px margin bottom
+            if (newHeight > 300) {
+                resultContainer.style.height = newHeight + 'px';
+            }
+        });
 
     } catch (e) {
         console.error("Generation Error", e);
