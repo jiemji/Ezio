@@ -298,16 +298,16 @@ function handleMdFormatting(action, idx) {
 
         let newTag = currentTag;
 
-        if (action === 'h-up') { // [+] Minimum size is H2 (Level 2), default is P
-            // Decreasing # -> Heading up (larger size, smaller heading number)
-            if (currentTag === 'p' || currentTag === 'h4') newTag = 'h3';
-            else if (currentTag === 'h3') newTag = 'h2';
-            else if (currentTag === 'h2') newTag = 'h2'; // Max size requested
-        } else if (action === 'h-down') { // [-] Back towards normal text
-            // Increasing # -> Heading down (smaller size, larger heading number)
-            if (currentTag === 'h2') newTag = 'h3';
+        if (action === 'h-up') { // [+] Level 2 -> Level 3 -> Level 4 -> Level 4 (Max Level)
+            if (currentTag === 'p') newTag = 'h2';
+            else if (currentTag === 'h2') newTag = 'h3';
             else if (currentTag === 'h3') newTag = 'h4';
-            else if (currentTag === 'h4') newTag = 'p'; // Back to standard text
+            else if (currentTag === 'h4') newTag = 'h4';
+        } else if (action === 'h-down') { // [-] Level 4 -> Level 3 -> Level 2 -> Normal Text 
+            if (currentTag === 'h4') newTag = 'h3';
+            else if (currentTag === 'h3') newTag = 'h2';
+            else if (currentTag === 'h2') newTag = 'p';
+            else if (currentTag === 'p') newTag = 'p';
         }
 
         if (newTag !== currentTag) {

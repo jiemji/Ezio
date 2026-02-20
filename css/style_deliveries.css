@@ -228,21 +228,20 @@ body.dark-mode .sidebar-item.selected {
 }
 
 .dlv-card-result h2 {
-    font-size: calc(0.9rem + 1.5pt);
+    font-size: calc(0.9rem + 0.75em);
     font-weight: bold;
     text-decoration: underline;
     margin: 0.5rem 0;
 }
 
 .dlv-card-result h3 {
-    font-size: calc(0.9rem + 1.0pt);
+    font-size: calc(0.9rem + 0.5em);
     font-weight: bold;
     margin: 0.5rem 0;
 }
 
 .dlv-card-result h4 {
-    font-size: 0.9rem;
-    /* base size */
+    font-size: calc(0.9rem + 0.25em);
     font-weight: bold;
     margin: 0.5rem 0;
 }
