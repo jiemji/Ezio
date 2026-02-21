@@ -4,6 +4,7 @@ import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
 import { reportsStore, reportsData } from '../core/State.js';
 import { Schemas } from '../core/Schemas.js';
+import { ReportsRenderer } from './ReportsRenderer.js';
 
 let availableModels = [];
 let selection = { id: null, type: null };
@@ -162,202 +163,92 @@ function renderSidebarLists() {
 function renderMainView() {
     if (!els.main) return;
 
-    if (!selection.id) {
-        els.main.innerHTML = `
-            <div class="reports-empty-state">
-                <p>Sélectionnez un rapport ou un module pour commencer.</p>
-            </div>`;
-        return;
-    }
-
-    if (selection.type === 'report') {
-        renderReportEditor(selection.id);
-    } else {
-        renderModuleEditor(selection.id);
-    }
-}
-
-function renderReportEditor(rptId) {
-    const report = reportsData.reports.find(r => r.id === rptId);
-    if (!report) return;
-
-    const headerHTML = `
-        <div class="rpt-editor-header">
-            <input type="text" id="inpRptName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(report.name)}">
-            <div class="rpt-actions">
-                <button id="btnAddModuleToRpt" class="btn-primary small">+ Ajouter un module</button>
-                ${report.deletable !== false ? `<button id="btnDeleteReport" class="btn-danger small" style="margin-left:10px;">🗑️</button>` : ''}
-            </div>
-        </div>
-    `;
-
-    let listHTML = `<div class="rpt-vertical-list">`;
-    if (!report.structure || report.structure.length === 0) {
-        listHTML += `<div style="padding:2rem; color:var(--text-muted);">Ce modèle est vide. Ajoutez des modules.</div>`;
-    } else {
-        report.structure.forEach((inst, idx) => {
-            const sourceMod = reportsData.modules.find(m => m.id === inst.sourceId) || { name: 'Module Inconnu', type: '?' };
-            listHTML += `
-                <div class="rpt-template-item">
-                    <span class="rpt-template-idx">${idx + 1}.</span>
-                    <span class="rpt-template-name">${Utils.escapeHtml(sourceMod.name)}</span>
-                    <div class="rpt-template-actions">
-                         ${idx > 0 ? `<button class="btn-icon-action btn-move-up" data-idx="${idx}" title="Monter">▲</button>` : ''}
-                         ${idx < report.structure.length - 1 ? `<button class="btn-icon-action btn-move-down" data-idx="${idx}" title="Descendre">▼</button>` : ''}
-                         <button class="btn-icon-action danger btn-remove-mod" data-idx="${idx}" title="Retirer">🗑️</button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    listHTML += `</div>`;
-
-    els.main.innerHTML = headerHTML + `<div class="rpt-editor-body vertical">${listHTML}</div>`;
-
-    document.getElementById('inpRptName').addEventListener('change', (e) => {
-        report.name = e.target.value;
-        saveToLocalStorage();
-        renderSidebarLists();
-    });
-
-    document.getElementById('btnAddModuleToRpt').addEventListener('click', () => showAddModuleModal(report));
-
-    const btnDel = document.getElementById('btnDeleteReport');
-    if (btnDel) {
-        btnDel.addEventListener('click', () => {
-            if (confirm('Supprimer ce modèle ?')) {
-                reportsData.reports = reportsData.reports.filter(r => r.id !== rptId);
-                selection = { id: null, type: null };
-                saveToLocalStorage();
-                renderSidebarLists();
-                renderMainView();
+    const context = {
+        selection,
+        data: {},
+        availableModels,
+        actions: {
+            onAddModuleToReport: () => {
+                const report = reportsData.reports.find(r => r.id === selection.id);
+                if (report) showAddModuleModal(report);
+            },
+            onDeleteReport: () => {
+                if (confirm('Supprimer ce modèle ?')) {
+                    reportsData.reports = reportsData.reports.filter(r => r.id !== selection.id);
+                    selection = { id: null, type: null };
+                    saveToLocalStorage();
+                    renderSidebarLists();
+                    renderMainView();
+                }
+            },
+            onMoveModule: (index, dir) => {
+                const report = reportsData.reports.find(r => r.id === selection.id);
+                if (report) {
+                    if (index + dir < 0 || index + dir >= report.structure.length) return;
+                    const temp = report.structure[index];
+                    report.structure[index] = report.structure[index + dir];
+                    report.structure[index + dir] = temp;
+                    saveToLocalStorage();
+                    renderMainView();
+                }
+            },
+            onRemoveModule: (index) => {
+                const report = reportsData.reports.find(r => r.id === selection.id);
+                if (report && confirm("Retirer ce module du modèle ?")) {
+                    report.structure.splice(index, 1);
+                    saveToLocalStorage();
+                    renderMainView();
+                }
+            },
+            onDeleteModule: () => {
+                if (confirm('Supprimer ce module ?')) {
+                    reportsData.modules = reportsData.modules.filter(m => m.id !== selection.id);
+                    reportsData.reports.forEach(r => {
+                        if (r.structure) {
+                            r.structure = r.structure.filter(inst => inst.sourceId !== selection.id);
+                        }
+                    });
+                    selection = { id: null, type: null };
+                    saveToLocalStorage();
+                    renderSidebarLists();
+                    renderMainView();
+                }
+            },
+            onUpdateReportName: (newName) => {
+                const report = reportsData.reports.find(r => r.id === selection.id);
+                if (report) {
+                    report.name = newName;
+                    saveToLocalStorage();
+                    renderSidebarLists();
+                }
+            },
+            onUpdateModule: (modData) => {
+                const module = reportsData.modules.find(m => m.id === selection.id);
+                if (module) {
+                    module.name = modData.name;
+                    module.type = modData.type;
+                    if (!module.config) module.config = { scope: {}, ai: {} };
+                    module.config.scope.type = modData.scopeType;
+                    module.config.ai.model = modData.aiModel;
+                    module.config.ai.prompt = modData.aiPrompt;
+                    saveToLocalStorage();
+                    renderSidebarLists();
+                }
             }
-        });
-    }
-
-    els.main.querySelectorAll('.btn-move-up').forEach(btn => btn.onclick = () => moveModule(report, parseInt(btn.dataset.idx), -1));
-    els.main.querySelectorAll('.btn-move-down').forEach(btn => btn.onclick = () => moveModule(report, parseInt(btn.dataset.idx), 1));
-    els.main.querySelectorAll('.btn-remove-mod').forEach(btn => btn.onclick = () => removeModule(report, parseInt(btn.dataset.idx)));
-}
-
-function moveModule(report, index, direction) {
-    if (index + direction < 0 || index + direction >= report.structure.length) return;
-    const temp = report.structure[index];
-    report.structure[index] = report.structure[index + direction];
-    report.structure[index + direction] = temp;
-    saveToLocalStorage();
-    renderReportEditor(report.id);
-}
-
-function removeModule(report, index) {
-    if (confirm("Retirer ce module du modèle ?")) {
-        report.structure.splice(index, 1);
-        saveToLocalStorage();
-        renderReportEditor(report.id);
-    }
-}
-
-function renderModuleEditor(modId) {
-    const module = reportsData.modules.find(m => m.id === modId);
-    if (!module) return;
-
-    if (!module.config) module.config = {};
-    if (!module.config.ai) module.config.ai = {};
-    if (!module.config.scope) module.config.scope = {};
-
-    const scopeType = module.config.scope.type || 'global';
-    const aiModel = module.config.ai.model || '';
-    const aiPrompt = module.config.ai.prompt || '';
-
-    const modelOptions = availableModels.map(m =>
-        `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom} (${m.provider})</option>`
-    ).join('');
-
-    els.main.innerHTML = `
-        <div class="editor-container" style="padding: 2rem; max-width: 900px; margin: 0 auto;">
-            <header style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
-                <label class="form-label" style="display:block; color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Nom du module (Bibliothèque)</label>
-                <input type="text" id="inpModName" class="form-control" style="font-size: 1.5rem; font-weight: bold; width: 100%;" value="${Utils.escapeHtml(module.name)}">
-            </header>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="slcModType" class="form-control">
-                            <option value="analysis" ${module.type === 'analysis' ? 'selected' : ''}>Analyse IA</option>
-                            <option value="raw" ${module.type === 'raw' ? 'selected' : ''}>Données Brutes</option>
-                        </select>
-                    </div>
-                </div>
-                 <div class="form-col">
-                    <div class="form-group">
-                        <label>Portée (Scope)</label>
-                        <select id="slcModScope" class="form-control">
-                            <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global</option>
-                            <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Chapitre Spécifique</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <hr style="margin: 2rem 0; border:0; border-top:1px solid var(--border);">
-
-            <h3>Configuration par défaut</h3>
-            <p class="text-muted" style="margin-bottom:1rem; font-size:0.9rem;">Ces réglages seront appliqués par défaut lorsque vous ajoutez ce module un à rapport.</p>
-
-            <div class="form-group">
-                <label>Modèle IA</label>
-                <select id="slcModLinkModel" class="form-control">
-                    <option value="">-- Choisir un modèle --</option>
-                    ${modelOptions}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Prompt / Instructions</label>
-                <textarea id="txtModPrompt" class="form-control" rows="8" placeholder="Instructions pour l'IA... (ex: Analyse les risques...)">${Utils.escapeHtml(aiPrompt)}</textarea>
-            </div>
-
-            <div style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                 ${module.deletable !== false ? `<button id="btnDeleteModule" class="btn-danger">Supprimer ce module</button>` : ''}
-            </div>
-        </div>
-    `;
-
-    const saveAll = () => {
-        module.name = document.getElementById('inpModName').value;
-        module.type = document.getElementById('slcModType').value;
-        module.config.scope.type = document.getElementById('slcModScope').value;
-        module.config.ai.model = document.getElementById('slcModLinkModel').value;
-        module.config.ai.prompt = document.getElementById('txtModPrompt').value;
-        saveToLocalStorage();
-        renderSidebarLists();
+        }
     };
 
-    ['inpModName', 'slcModType', 'slcModScope', 'slcModLinkModel', 'txtModPrompt'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', saveAll);
-    });
-
-    const btnDel = document.getElementById('btnDeleteModule');
-    if (btnDel) {
-        btnDel.addEventListener('click', () => {
-            if (confirm('Supprimer ce module ?')) {
-                reportsData.modules = reportsData.modules.filter(m => m.id !== modId);
-                reportsData.reports.forEach(r => {
-                    if (r.structure) {
-                        r.structure = r.structure.filter(inst => inst.sourceId !== modId);
-                    }
-                });
-                selection = { id: null, type: null };
-                saveToLocalStorage();
-                renderSidebarLists();
-                renderMainView();
-            }
-        });
+    if (selection.type === 'report') {
+        context.data.report = reportsData.reports.find(r => r.id === selection.id);
+        context.data.modules = reportsData.modules;
+    } else if (selection.type === 'module') {
+        context.data.module = reportsData.modules.find(m => m.id === selection.id);
     }
+
+    ReportsRenderer.render(els.main, context);
 }
+
+// Old render functions removed by ReportsRenderer refactor.
 
 function handleAddReport() {
     const modal = new Modal('modalNewReport', 'Nouveau Rapport',

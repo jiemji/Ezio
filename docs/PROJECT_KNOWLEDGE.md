@@ -109,10 +109,10 @@ graph TD
     *   Interface de gestion (CRUD) du fichier `models.json`.
     *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider.
 
-6.  **Module Rapports (`app_reports.js`)** :
-    *   Gestion des **Modèles de Rapports** (Templates).
-    *   Interface de définition de la structure : Ajout de modules re-utilisables dans une liste verticale.
-    *   *Note :* Ce module ne génère plus de contenu, il sert uniquement à définir la structure.
+6.  **Module Rapports (`app_reports.js` & `ReportsRenderer.js`)** :
+    *   Gestion des **Modèles de Rapports** (Templates) et configuration des **Modules IA** de la bibliothèque.
+    *   Architecture **MVC** : `ReportsRenderer.js` construit toute l'interface HTML et gère la "délégation d'événements", tandis que `app_reports.js` conserve l'état métier.
+    *   *Note :* Ce module ne génère plus de contenu direct, il sert uniquement à définir des structures réutilisables.
 
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.

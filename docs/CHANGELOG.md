@@ -8,7 +8,11 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 - **Audit Interactif** : Intégration du `MarkdownEditor` directement dans les cellules du tableau d'Audit pour les colonnes "IA" et "Réponse".
     - Conversion automatique bidirectionnelle HTML <-> Markdown à la volée.
     - Ajout d'un mode d'affichage "Compact" pour que la barre de formatage s'intègre harmonieusement dans les cellules de la grille.
+    - Hauteur initiale des champs "IA" et "Réponse" fixée strictement à 100px (avec défilement interne et redimensionnement manuel) pour éviter l'explosion de la hauteur de ligne lors de textes volumineux.
     - Les résultats générés par l'IA (bouton ✨) sont désormais formatés immédiatement (Titres, Listes, Gras) via le moteur enrichi sans ouvrir de pop-up.
+- **Module Rapports (`ReportsRenderer.js`)** : Découpage de `app_reports.js` en appliquant le patron d'architecture MVC (Model-View-Controller).
+    - L'intégralité de la génération HTML de l'interface et de la gestion des évènements (Délégation) est extraite vers `ReportsRenderer.js`.
+    - `app_reports.js` est allégé et se concentre désormais sur l'état des données (modèles de rapports, librairie de modules) et sur les actions métier, augmentant la lisibilité et la maintenance du module.
 
 ## [2.3.0] - 2026-02-20
 ### Ajouts
