@@ -1,102 +1,97 @@
 {
-    "reports": [
-        {
-            "id": "rpt_standard_iso",
-            "name": "Audit Complet ISO 27001",
-            "deletable": false,
-            "structure": [
-                "mod_intro",
-                "mod_compliance_iso",
-                "mod_action_plan",
-                "mod_risks"
-            ]
+  "reports": [
+    {
+      "id": "rpt_standard_iso",
+      "name": "Audit Complet ISO 27001",
+      "deletable": false,
+      "structure": [
+        "mod_intro",
+        "mod_compliance_iso",
+        "mod_action_plan",
+        "mod_risks"
+      ]
+    },
+    {
+      "id": "rpt_exec_summary",
+      "name": "Rapport Exécutif",
+      "deletable": true,
+      "structure": [
+        "mod_intro",
+        "mod_compliance_iso",
+        "mod_risks",
+        "mod_action_plan"
+      ]
+    },
+    {
+      "id": "rpt_compliance_focus",
+      "name": "Focus Conformité",
+      "deletable": true,
+      "structure": [
+        "mod_compliance_iso",
+        "mod_action_plan"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "mod_intro",
+      "name": "Introduction & Contexte",
+      "type": "analysis",
+      "deletable": false,
+      "config": {
+        "scope": {
+          "type": "chapter"
         },
-        {
-            "id": "rpt_exec_summary",
-            "name": "Rapport Exécutif",
-            "deletable": true,
-            "structure": [
-                "mod_intro",
-                "mod_compliance_iso",
-                "mod_action_plan",
-                "mod_risks",
-                "mod_compliance_iso",
-                "mod_compliance_iso",
-                "mod_risks",
-                "mod_risks",
-                "mod_action_plan"
-            ]
-        },
-        {
-            "id": "rpt_compliance_focus",
-            "name": "Focus Conformité",
-            "deletable": true,
-            "structure": [
-                "mod_compliance_iso",
-                "mod_action_plan"
-            ]
+        "ai": {
+          "model": "redsage-qwen3-8b-ins-i1",
+          "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
         }
-    ],
-    "modules": [
-        {
-            "id": "mod_intro",
-            "name": "Introduction & Contexte",
-            "type": "analysis",
-            "deletable": false,
-            "config": {
-                "scope": {
-                    "type": "chapter"
-                },
-                "ai": {
-                    "model": "redsage-qwen3-8b-ins-i1",
-                    "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
-                }
-            }
+      }
+    },
+    {
+      "id": "mod_compliance_iso",
+      "name": "Analyse Conformité ISO 27001",
+      "type": "analysis",
+      "deletable": false,
+      "config": {
+        "scope": {
+          "type": "global"
         },
-        {
-            "id": "mod_compliance_iso",
-            "name": "Analyse Conformité ISO 27001",
-            "type": "analysis",
-            "deletable": false,
-            "config": {
-                "scope": {
-                    "type": "global"
-                },
-                "ai": {
-                    "model": "gpt-4",
-                    "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
-                }
-            }
-        },
-        {
-            "id": "mod_risks",
-            "name": "Synthèse des Risques",
-            "type": "analysis",
-            "deletable": true,
-            "config": {
-                "scope": {
-                    "type": "global"
-                },
-                "ai": {
-                    "model": "gpt-4",
-                    "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
-                }
-            }
-        },
-        {
-            "id": "mod_action_plan",
-            "name": "Plan d'Action Recommandé",
-            "type": "analysis",
-            "deletable": true,
-            "config": {
-                "scope": {
-                    "type": "global"
-                },
-                "ai": {
-                    "model": "gpt-4",
-                    "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
-                }
-            }
+        "ai": {
+          "model": "redsage-qwen3-8b-ins-i1",
+          "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
         }
-    ]
+      }
+    },
+    {
+      "id": "mod_risks",
+      "name": "Synthèse des Risques",
+      "type": "analysis",
+      "deletable": true,
+      "config": {
+        "scope": {
+          "type": "global"
+        },
+        "ai": {
+          "model": "redsage-qwen3-8b-ins-i1",
+          "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
+        }
+      }
+    },
+    {
+      "id": "mod_action_plan",
+      "name": "Plan d'Action Recommandé",
+      "type": "analysis",
+      "deletable": true,
+      "config": {
+        "scope": {
+          "type": "global"
+        },
+        "ai": {
+          "model": "gpt-4",
+          "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
+        }
+      }
+    }
+  ]
 }
