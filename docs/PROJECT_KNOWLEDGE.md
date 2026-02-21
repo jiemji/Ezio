@@ -96,9 +96,10 @@ graph TD
     *   **Spécificité LM Studio** : Transforme le payload standard en une structure "plate" (`input: [{type:'text'}]`) pour maximiser la compatibilité avec les contextes longs locaux.
 
 3.  **Module Dashboard (`app_dashboard.js`)** :
-    *   Génération de KPIs dynamiques basés sur les colonnes "Combo".
-    *   **Optimisation** : Réutilise les instances `Chart.js` via `chart.update()` pour éviter le scintillement lors des rafraîchissements.
-    *   Types de graphiques : Camembert, Anneau, Barres, Empilement par chapitre.
+    *   Génération de KPIs dynamiques via une **Modale de configuration** avancée (édition de titre, axe principal, axe secondaire).
+    *   **Croisements Dynamiques** : Support des graphiques empilés ou groupés en croisant **n'importe quelles colonnes** du formulaire (listes déroulantes, champ libre, etc.).
+    *   **DataLabels & Pourcentages** : Intégration de `chartjs-plugin-datalabels` pour l'affichage optionnel des valeurs. Sélecteur intégré pour afficher en **Valeur brute** ou en **Pourcentage (%)** (avec redimensionnement dynamique de l'axe X pour les barres horizontales).
+    *   **Optimisation** : Réutilise les instances `Chart.js` via `chart.update()` pour éviter le scintillement lors des rafraîchissements et de l'édition (⚙️).
 
 4.  **Module Créateur (`app_creator.js`)** :
     *   Outil de configuration pour transformer un JSON plat importé en structure Ezio.

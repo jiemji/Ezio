@@ -93,15 +93,7 @@
                 <div class="dashboard-header">
                     <h2>Tableau de Bord</h2>
                     <div class="dashboard-actions">
-                        <select id="kpiColSelect" class="config-input" style="width: 250px;">
-                            <option value="">-- Chargement des colonnes... --</option>
-                        </select>
-                        <select id="kpiTypeSelect" class="config-input" style="width: 150px;">
-                            <option value="pie">Camembert</option>
-                            <option value="bar">Barres</option>
-                            <option value="doughnut">Anneau</option>
-                        </select>
-                        <button id="btnAddWidget" class="btn-primary">+ Ajouter le widget</button>
+                        <button id="btnAddWidget" class="btn-primary">+ Ajouter un graphique</button>
                     </div>
                 </div>
                 <div id="dashboardGrid" class="dashboard-grid"></div>
@@ -295,6 +287,7 @@
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

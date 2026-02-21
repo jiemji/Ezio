@@ -13,6 +13,12 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 - **Module Rapports (`ReportsRenderer.js`)** : Découpage de `app_reports.js` en appliquant le patron d'architecture MVC (Model-View-Controller).
     - L'intégralité de la génération HTML de l'interface et de la gestion des évènements (Délégation) est extraite vers `ReportsRenderer.js`.
     - `app_reports.js` est allégé et se concentre désormais sur l'état des données (modèles de rapports, librairie de modules) et sur les actions métier, augmentant la lisibilité et la maintenance du module.
+- **Évolution Dashboard (`app_dashboard.js`)** : Refonte de la création et de l'édition des widgets.
+    - Ajout d'une **Modale de configuration** complète remplaçant les listes déroulantes basiques du header, permettant de définir un titre personnalisé.
+    - Support des **Croisements Dynamiques** : l'Axe Principal et l'Axe Secondaire ne sont plus restreints aux colonnes de type "chapitre" ou "liste", mais acceptent **toutes les colonnes** valides du formulaire. Les valeurs sont extraites dynamiquement à la volée.
+    - Intégration du composant officiel `chartjs-plugin-datalabels` : nouvelle option cosmétique pour afficher les valeurs directement sur les graphiques.
+    - **Format de Valeurs** : Option pour afficher les valeurs en comptes bruts ou en pourcentages (%). Dans le cas des graphiques croisés en %, l'axe horizontal complet (X) s'ajuste dynamiquement sur une échelle de 0 à 100.
+    - Ajout d'un bouton d'édition (⚙️) sur chaque carte de graphique pour modifier sa configuration à la volée sans devoir le recréer.
 
 ## [2.3.0] - 2026-02-20
 ### Ajouts
