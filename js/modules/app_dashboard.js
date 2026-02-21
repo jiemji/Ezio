@@ -331,3 +331,111 @@ function getColorByIndex(i) {
     return palette[i % palette.length];
 }
 
+/**
+ * Génère l'image Base64 d'un widget pour l'export.
+ * @param {String} widgetId 
+ * @returns {Promise<String|null>} L'image en data URI Base64
+ */
+export async function exportWidgetImage(widgetId) {
+    const widget = currentForm.statics.find(w => w.id === widgetId);
+    if (!widget) return null;
+
+    const config = prepareChartConfig(widget);
+    if (!config || !window.Chart) return null;
+
+    // Désactiver toutes les animations pour un rendu immédiat et forcer une taille fixe
+    config.options.animation = false;
+    config.options.responsive = false;
+    config.options.maintainAspectRatio = false;
+
+    // Forcer un fond blanc opaque si non défini, car canvas transparent -> fond noir / moche dans docx/pptx
+    if (!config.options.plugins) config.options.plugins = {};
+    config.options.plugins.customCanvasBackgroundColor = { color: 'white' };
+
+    // Créer un conteneur fantôme dans le DOM pour forcer le rendu Chart.js
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '-9999px';
+    container.style.width = '800px';
+    container.style.height = widget.vizType === 'cross_stacked' ? '500px' : '400px';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = widget.vizType === 'cross_stacked' ? 500 : 400;
+    container.appendChild(canvas);
+    document.body.appendChild(container);
+
+    // Plugin local pour forcer le fond
+    const pluginBg = {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart, args, options) => {
+            const { ctx } = chart;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = options.color || '#ffffff';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    };
+
+    config.plugins = [pluginBg];
+
+    // On englobe dans une promise pour s'assurer que le chart.js a fini de dessiner
+    return new Promise((resolve) => {
+        // Remplacer l'option `animation: false` par un objet avec durée 0 et un callback
+        config.options.animation = {
+            duration: 0,
+            onComplete: function () {
+                // Attente d'un frame supplémentaire pour le rendu canvas (sécurité docx)
+                requestAnimationFrame(() => {
+                    const b64 = chart.toBase64Image('image/png', 1.0);
+                    chart.destroy();
+                    if (document.body.contains(container)) {
+                        document.body.removeChild(container);
+                    }
+                    resolve(b64);
+                });
+            }
+        };
+
+        const chart = new window.Chart(canvas, config);
+    });
+}
+
+/**
+ * Télécharge les images des widgets sélectionnés pour un livrable donné
+ * @param {Object} delivery 
+ */
+export async function downloadDeliveryWidgets(delivery) {
+    let order = 1;
+    for (const inst of delivery.structure) {
+        if (inst.config && inst.config.widgets && inst.config.widgets.length > 0) {
+            for (const wId of inst.config.widgets) {
+                const b64Data = await exportWidgetImage(wId);
+                if (b64Data) {
+                    const widgetDef = (currentForm?.statics || []).find(w => w.id === wId);
+                    const widgetTitle = widgetDef ? widgetDef.title : "Graphique";
+
+                    // Nettoyer les noms pour les fichiers
+                    const safeModuleTitle = (inst.name || "Module").replace(/[^a-z0-9\u00C0-\u017F]/gi, '_');
+                    const safeWidgetTitle = widgetTitle.replace(/[^a-z0-9\u00C0-\u017F]/gi, '_');
+
+                    const fileName = `${order}_${safeModuleTitle}_${safeWidgetTitle}.png`;
+
+                    const a = document.createElement('a');
+                    a.href = b64Data;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    // Petit délai pour laisser le navigateur souffler entre deux téléchargements
+                    await new Promise(r => setTimeout(r, 200));
+                }
+            }
+        }
+        order++;
+    }
+}
+

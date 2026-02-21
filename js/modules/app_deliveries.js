@@ -116,6 +116,24 @@ function setupDelegation() {
             }
             return;
         }
+        if (target.classList.contains('chk-widget')) {
+            const idx = parseInt(target.dataset.idx);
+            const widgetId = target.dataset.widgetid;
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery && delivery.structure[idx]) {
+                if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
+                if (!delivery.structure[idx].config.widgets) delivery.structure[idx].config.widgets = [];
+
+                const wList = delivery.structure[idx].config.widgets;
+                if (target.checked) {
+                    if (!wList.includes(widgetId)) wList.push(widgetId);
+                } else {
+                    delivery.structure[idx].config.widgets = wList.filter(id => id !== widgetId);
+                }
+                store.save();
+            }
+            return;
+        }
         const btnFormat = target.closest('.btn-md-format');
         if (btnFormat) {
             const action = btnFormat.getAttribute('data-action');
@@ -522,6 +540,11 @@ function renderMainView() {
             inst.config.columns = (currentForm.columns || []).map(c => c.id);
         }
 
+        // Initialize widgets config array
+        if (!inst.config.widgets) {
+            inst.config.widgets = [];
+        }
+
         const isCollapsed = inst.config.collapsed || false;
 
         trackHTML += `
@@ -561,6 +584,11 @@ function renderMainView() {
                             <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
                                 <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
                                 <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
+                            </div>
+
+                            <div class="form-group" style="margin-top:10px;">
+                                <label>Widgets Dashboard (Export Document)</label>
+                                ${renderWidgetSelector(idx, inst.config.widgets)}
                             </div>
 
                             <div class="form-group">
@@ -735,7 +763,28 @@ function renderColumnSelector(idx, selectedCols) {
     return html;
 }
 
+function renderWidgetSelector(idx, selectedWidgets) {
+    if (!currentForm.statics || currentForm.statics.length === 0) {
+        return `<div style="font-size: 0.85em; color: var(--text-muted); padding: 5px;">Aucun widget configuré dans le tableau de bord.</div>`;
+    }
 
+    let html = `<div class="chapter-selector-container" style="max-height:150px;">`;
+
+    currentForm.statics.forEach((widget, wIdx) => {
+        const isChecked = selectedWidgets.includes(widget.id);
+        const colDef = (currentForm.columns || []).find(c => c.id === widget.columnId);
+        const label = colDef ? colDef.label : `Widget ${wIdx + 1}`;
+        html += `
+            <label style="display:flex; align-items:center; margin-bottom:5px;">
+                <input type="checkbox" class="chk-widget" data-idx="${idx}" data-widgetid="${widget.id}" ${isChecked ? 'checked' : ''} style="margin-right:8px;">
+                ${Utils.escapeHtml(label)} (${Utils.escapeHtml(widget.vizType)})
+            </label>
+        `;
+    });
+
+    html += `</div>`;
+    return html;
+}
 
 function moveModule(delivery, index, direction) {
     if (index + direction < 0 || index + direction >= delivery.structure.length) return;
@@ -788,11 +837,12 @@ async function generateModule(delivery, index) {
 
         const response = await ApiService.fetchLLM(modelConfig, messages);
 
-        // Si l'option "Tableau" est cochée, on préfixe la réponse avec le tableau de contexte
+        // Si l'option "Tableau" est cochée, on sauvegarde le tableau de contexte séparément
         let finalResult = response;
         if (instance.config.isTable) {
-            // Utilisation d'un séparateur markdown standard au lieu de balises HTML
-            finalResult = contextData + "\n\n---\n\n" + response;
+            instance.contextTable = contextData;
+        } else {
+            delete instance.contextTable;
         }
 
         instance.result = finalResult;
@@ -953,6 +1003,9 @@ function downloadDeliveryReport(delivery) {
         const content = inst.result || '(Aucun contenu)';
 
         mdContent += `## ${title}\n\n`;
+        if (inst.config?.isTable && inst.contextTable) {
+            mdContent += `${inst.contextTable}\n\n---\n\n`;
+        }
         mdContent += `${content}\n\n`;
         mdContent += `---\n\n`;
     });

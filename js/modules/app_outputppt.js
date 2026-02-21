@@ -1,5 +1,6 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
+import { downloadDeliveryWidgets } from './app_dashboard.js';
 
 let pptConfig = null;
 
@@ -99,9 +100,13 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
 
     delivery.structure.forEach((inst, idx) => {
         const modTitle = inst.name || 'Module';
-        const content = inst.result || '';
+        let content = inst.result || '';
 
-        // Nouvelle slide
+        if (inst.config?.isTable && inst.contextTable) {
+            content = inst.contextTable + "\n\n" + content;
+        }
+
+        // Nouvelle slide pour le texte Markdown
         const slide = pptx.addSlide();
 
         if (contentMaster) {
@@ -125,6 +130,13 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
             parseMarkdownToSlide(slide, content, { x: 0.5, y: 1.5, w: 9.0, h: 4.0 }, template);
         }
     });
+
+    // Télécharger les widgets demandés en images individuelles
+    try {
+        await downloadDeliveryWidgets(delivery);
+    } catch (e) {
+        console.error("Erreur downloadDeliveryWidgets PPT:", e);
+    }
 
     // Sauvegarde
     pptx.writeFile({ fileName: `${Utils.toSlug(delivery.name)}.pptx` });

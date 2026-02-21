@@ -116,9 +116,9 @@ graph TD
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
-    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`contenteditable`) avec barre d'outils visuelle (Titres, Listes, Gras) qui convertit de manière bidirectionnelle et précise le HTML en Markdown (support complet des tableaux). Redimensionnement intelligent des colonnes basé sur le paramétrage de l'audit et ajout d'un scroll horizontal. Lors de la génération, l'éditeur calcule automatiquement l'espace disponible et s'étire jusqu'au bas de l'écran pour un confort de lecture optimal (tout en restant étirable manuellement). Prévisualisation immédiate et notifications non-intrusives (`UI.showToast`).
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`contenteditable`) avec barre d'outils visuelle (Titres, Listes, Gras) qui convertit de manière bidirectionnelle et précise le HTML en Markdown. Le "Tableau" généré par l'IA en contexte y est rendu invisible pour limiter la pollution visuelle.
     *   **Performance** : Sauvegarde des entrées texte (prompts) temporisée (**Debounce**) pour fluidifier la saisie.
-    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, et option Tableau.
+    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, Widgets à exporter, et option Tableau furtive (greffée uniquement à l'export).
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
 
 8.  **Module Export (Data) (`app_export.js`)** :
@@ -134,8 +134,9 @@ graph TD
 10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
     *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
-    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis.
-    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page.
+    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis. Intègre et formate automatiquement les Tableaux furtifs de l'éditeur Livrables.
+    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page. Intègre et formate automatiquement les Tableaux furtifs.
+    *   **Export Widgets (Nouveau)** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
 
 ### Styles (`css/`)
 *   `style_shared.css` : Styles globaux, variables, layout de base. **Gestion des Z-Index** : Header (2000) > Sidebar (10) > Contenu.
@@ -261,7 +262,7 @@ Le module Livrables utilise un **RAG Global (Batch)** :
     *   Filtre les colonnes sélectionnées.
     *   Génère un **Tableau Markdown** (`| Col1 | Col2 |...`).
 2.  **Message Utilisateur** : Composite `[Instruction, Tableau Markdown]`.
-3.  **Sortie** : Si l'option "Tableau" est active, le tableau Markdown est préfixé à l'analyse générée.
+3.  **Sortie** : L'analyse IA est stockée dans la vue "Résultat". Si l'option "Tableau" est active, le tableau Markdown du contexte est mémorisé secrètement sans surcharger l'Aperçu/Éditeur. Il n'apparaîtra complété de sa structure que lors de l'export final (Impression Word/PPT ou Export Markdown).
 
 ---
 

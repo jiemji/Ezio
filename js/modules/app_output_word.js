@@ -1,5 +1,6 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
+import { downloadDeliveryWidgets } from './app_dashboard.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -29,18 +30,32 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
                     const title = inst.name || 'Module';
                     const content = inst.result || '(Aucun contenu)';
 
-                    return [
+                    let blocks = [
                         new window.docx.Paragraph({
                             text: title,
-                            heading: window.docx.HeadingLevel.HEADING_1, // Utilise le style "Heading 1" du template
+                            heading: window.docx.HeadingLevel.HEADING_1,
                             spacing: { before: 400, after: 200 }
-                        }),
-                        ...parseMarkdownToDocx(content)
+                        })
                     ];
+
+                    if (inst.config?.isTable && inst.contextTable) {
+                        blocks.push(...parseMarkdownToDocx(inst.contextTable));
+                    }
+
+                    blocks.push(...parseMarkdownToDocx(content));
+
+                    return blocks;
                 })
             ]
         }]
     });
+
+    // Télécharger les widgets demandés en images individuelles
+    try {
+        await downloadDeliveryWidgets(delivery);
+    } catch (e) {
+        console.error("Erreur downloadDeliveryWidgets Word:", e);
+    }
 
     try {
         // 2. Packer le document temporaire pour obtenir son XML
