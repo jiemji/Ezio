@@ -252,7 +252,7 @@ npx http-server .</code></pre>
                     <tr>
                         <td><code>js/ui/</code></td>
                         <td>Interface</td>
-                        <td>Navigation.js, Sidebar.js, Modal.js</td>
+                        <td>Navigation.js, Sidebar.js, MarkdownEditor.js</td>
                     </tr>
                     <tr>
                         <td><code>js/api/</code></td>
@@ -305,8 +305,7 @@ const results = DataUtils.processRows(
             <ul>
                 <li><strong>Contrôleur (<code>app_audit.js</code>)</strong> : Gère l'état (State), les appels IA et la
                     logique métier.</li>
-                <li><strong>Vue (<code>AuditRenderer.js</code>)</strong> : Reçoit un contexte (données + actions) et
-                    génère le HTML.</li>
+                <li><strong>Vue (<code>AuditRenderer.js</code>)</strong> : Reçoit un contexte et génère le HTML (incluant le <code>MarkdownEditor</code> en mode compact pour l'édition de texte enrichie ligne par ligne).</li>
             </ul>
             <pre><code>// Dans app_audit.js
 import { AuditRenderer } from './AuditRenderer.js';
