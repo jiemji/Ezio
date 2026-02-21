@@ -3,67 +3,21 @@ import { registerModuleInit } from '../ui/Navigation.js';
 import { Utils } from '../core/Utils.js';
 import { Config } from '../core/Config.js';
 import { UI } from '../core/UIFactory.js';
+import { Modal } from '../ui/Modal.js';
 
 let chartsMap = new Map(); // Store chart instances by widget ID
 
 export function initDashboard() {
+    if (window.Chart && window.ChartDataLabels) {
+        window.Chart.register(window.ChartDataLabels);
+    }
     registerModuleInit('dashboard', renderDashboard);
 
     const btnAddWidget = document.getElementById('btnAddWidget');
-    const kpiColSelect = document.getElementById('kpiColSelect');
 
     if (btnAddWidget) {
         btnAddWidget.onclick = () => {
-            const kpiColSelect = document.getElementById('kpiColSelect');
-            const kpiTypeSelect = document.getElementById('kpiTypeSelect');
-
-            const colId = kpiColSelect.value;
-            const vizType = kpiTypeSelect.value;
-
-            if (!colId) return UI.showToast("Veuillez choisir une colonne.", "warning");
-            if (!vizType) return UI.showToast("Veuillez choisir un format de graphique.", "warning");
-
-            const col = currentForm.columns.find(c => c.id === colId);
-            if (!col) return;
-
-            if (!currentForm.statics) currentForm.statics = [];
-
-            currentForm.statics.push({
-                id: `widget_${Date.now()}`,
-                columnId: colId,
-                vizType: vizType,
-                title: `${col.label} - ${getVizLabel(vizType)}`
-            });
-
-            store.save(); // Direct save
-            renderDashboard();
-        };
-    }
-
-    if (kpiColSelect) {
-        kpiColSelect.onchange = () => {
-            const kpiTypeSelect = document.getElementById('kpiTypeSelect');
-            const colId = kpiColSelect.value;
-            kpiTypeSelect.innerHTML = '<option value="">-- Format --</option>';
-
-            if (!colId) return;
-
-            const col = currentForm.columns.find(c => c.id === colId);
-            if (!col) return;
-
-            if (col.type === 'combo') {
-                const grpGlobal = document.createElement('optgroup');
-                grpGlobal.label = "Analyse Globale";
-                grpGlobal.appendChild(new Option("Anneau (Donut)", "global_doughnut"));
-                grpGlobal.appendChild(new Option("Camembert (Pie)", "global_pie"));
-                grpGlobal.appendChild(new Option("Histogramme (Vertical)", "global_bar"));
-                kpiTypeSelect.add(grpGlobal);
-
-                const grpCross = document.createElement('optgroup');
-                grpCross.label = "Par Chapitre";
-                grpCross.appendChild(new Option("Empilement Horizontal", "cross_stacked"));
-                kpiTypeSelect.add(grpCross);
-            }
+            showWidgetModal();
         };
     }
 
@@ -76,50 +30,152 @@ export function initDashboard() {
     });
 }
 
-function getVizLabel(type) {
-    if (type.includes('doughnut')) return "Global (Anneau)";
-    if (type.includes('pie')) return "Global (Pie)";
-    if (type.includes('stacked')) return "Par Chapitre";
-    if (type.includes('horizontal')) return "Total (Horizontal)";
-    if (type.includes('bar')) return "Global (Barres)";
-    return "Analyse";
-}
+function showWidgetModal(widgetId = null) {
+    const isEdit = !!widgetId;
+    const widget = isEdit
+        ? currentForm.statics.find(w => w.id === widgetId)
+        : { vizType: 'global_pie', title: 'Nouveau Graphique', showLabels: true };
 
-function updateKpiSelectors() {
-    const kpiColSelect = document.getElementById('kpiColSelect');
-    const kpiTypeSelect = document.getElementById('kpiTypeSelect');
+    if (isEdit && !widget) return;
 
-    if (!kpiColSelect) return;
-    const currentVal = kpiColSelect.value;
+    const validCols = currentForm.columns.filter(c => c.type !== 'info' && c.type !== 'separator');
+    if (validCols.length === 0) {
+        return UI.showToast("Aucune colonne disponible pour générer un graphique.", "warning");
+    }
 
-    kpiColSelect.innerHTML = '<option value="">-- Choisir une colonne --</option>';
+    const colOptions = validCols.map(c => `<option value="${c.id}" ${widget.columnId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.label)}</option>`).join('');
 
-    if (currentForm && currentForm.columns) {
-        currentForm.columns.forEach(col => {
-            if (['combo'].includes(col.type)) {
-                const opt = document.createElement('option');
-                opt.value = col.id;
-                opt.innerText = `[${col.type.toUpperCase()}] ${col.label}`;
-                kpiColSelect.appendChild(opt);
+    // Cross columns can be any valid column
+    const crossCols = validCols;
+    const crossOptions = `<option value="">-- Aucun croisement --</option>` +
+        crossCols.map(c => `<option value="${c.id}" ${widget.crossColumnId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.label)}</option>`).join('');
+
+    const html = `
+        <div class="form-group mb-3">
+            <label>Titre du graphique</label>
+            <input type="text" id="wdgTitle" class="form-control" value="${Utils.escapeHtml(widget.title || '')}" placeholder="Titre...">
+        </div>
+        <div class="form-group mb-3">
+            <label>Axe Principal (Donnée à compter)</label>
+            <select id="wdgMainCol" class="form-control">
+                ${!isEdit ? '<option value="">-- Choisir une colonne --</option>' : ''}
+                ${colOptions}
+            </select>
+        </div>
+        <div class="form-group mb-3">
+            <label>Axe Secondaire (Croisement optionnel)</label>
+            <select id="wdgCrossCol" class="form-control">
+                ${crossOptions}
+            </select>
+        </div>
+        <div class="form-group mb-3">
+            <label>Format Visuel</label>
+            <select id="wdgVizType" class="form-control">
+                <!-- Populated dynamically based on crosscol -->
+            </select>
+        </div>
+        <div class="form-group mb-3" style="display:flex; align-items:center;">
+            <input type="checkbox" id="wdgShowLabels" ${widget.showLabels !== false ? 'checked' : ''} style="margin-right:8px; transform: scale(1.2);">
+            <label for="wdgShowLabels" style="margin:0; cursor:pointer; margin-right:15px;">Afficher les valeurs</label>
+            
+            <select id="wdgValueFormat" class="form-control" style="width: auto; display: inline-block; padding: 0.2rem 0.5rem; height: auto;">
+                <option value="raw" ${widget.valueFormat !== 'percent' ? 'selected' : ''}>Valeur Brute</option>
+                <option value="percent" ${widget.valueFormat === 'percent' ? 'selected' : ''}>Pourcentage (%)</option>
+            </select>
+        </div>
+    `;
+
+    const modal = new Modal('widgetConfigModal', isEdit ? 'Modifier le Graphique' : 'Nouveau Graphique', html, [
+        { label: 'Annuler', class: 'btn-secondary', onClick: (e, m) => m.close() },
+        { label: isEdit ? 'Enregistrer' : 'Créer', class: 'btn-primary', onClick: (e, m) => saveWidgetConfig(m, widgetId) }
+    ]);
+
+    modal.render();
+
+    const mainColSel = document.getElementById('wdgMainCol');
+    const crossColSel = document.getElementById('wdgCrossCol');
+    const vizTypeSel = document.getElementById('wdgVizType');
+
+    const updateVizOptions = () => {
+        const hasCross = !!crossColSel.value;
+        const currentViz = isEdit && !vizTypeSel.value ? widget.vizType : vizTypeSel.value;
+
+        vizTypeSel.innerHTML = '';
+        if (hasCross) {
+            vizTypeSel.innerHTML = `
+                <option value="cross_stacked" ${currentViz === 'cross_stacked' ? 'selected' : ''}>Barres Empilées</option>
+                <option value="cross_grouped" ${currentViz === 'cross_grouped' ? 'selected' : ''}>Barres Groupées</option>
+            `;
+        } else {
+            vizTypeSel.innerHTML = `
+                <option value="global_pie" ${currentViz === 'global_pie' ? 'selected' : ''}>Camembert (Pie)</option>
+                <option value="global_doughnut" ${currentViz === 'global_doughnut' ? 'selected' : ''}>Anneau (Donut)</option>
+                <option value="global_bar" ${currentViz === 'global_bar' ? 'selected' : ''}>Histogramme (Barres Verticales)</option>
+            `;
+        }
+    };
+
+    crossColSel.addEventListener('change', updateVizOptions);
+    updateVizOptions();
+
+    // Auto title if empty
+    if (!isEdit) {
+        mainColSel.addEventListener('change', () => {
+            const titleInp = document.getElementById('wdgTitle');
+            if (!titleInp.value || titleInp.value === 'Nouveau Graphique') {
+                const col = currentForm.columns.find(c => c.id === mainColSel.value);
+                if (col) titleInp.value = `Analyse: ${col.label}`;
             }
         });
     }
+}
 
-    if (currentVal) {
-        kpiColSelect.value = currentVal;
+function saveWidgetConfig(modal, existingId) {
+    const title = document.getElementById('wdgTitle').value.trim();
+    const columnId = document.getElementById('wdgMainCol').value;
+    const crossColumnId = document.getElementById('wdgCrossCol').value;
+    const vizType = document.getElementById('wdgVizType').value;
+    const showLabels = document.getElementById('wdgShowLabels').checked;
+    const valueFormat = document.getElementById('wdgValueFormat').value;
+
+    if (!columnId) return UI.showToast("Veuillez choisir un axe principal.", "warning");
+
+    if (!currentForm.statics) currentForm.statics = [];
+
+    if (existingId) {
+        const w = currentForm.statics.find(w => w.id === existingId);
+        if (w) {
+            w.title = title || 'Graphique';
+            w.columnId = columnId;
+            w.crossColumnId = crossColumnId;
+            w.vizType = vizType;
+            w.showLabels = showLabels;
+            w.valueFormat = valueFormat;
+        }
     } else {
-        kpiTypeSelect.innerHTML = '<option value="">-- D\'abord choisir une colonne --</option>';
+        currentForm.statics.push({
+            id: `widget_${Date.now()}`,
+            title: title || 'Graphique',
+            columnId,
+            crossColumnId,
+            vizType,
+            showLabels,
+            valueFormat
+        });
     }
+
+    store.save();
+    renderDashboard();
+    modal.close();
 }
 
 function renderDashboard() {
-    updateKpiSelectors();
 
     const dashboardGrid = document.getElementById('dashboardGrid');
     if (!dashboardGrid) return;
 
     if (!currentForm.statics || currentForm.statics.length === 0) {
-        dashboardGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); padding: 3rem; border: 2px dashed var(--border); border-radius: 8px;">
+        dashboardGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:3rem; border:2px dashed var(--border); border-radius:8px;">
             <h3>Tableau de bord vide</h3>
             <p>Sélectionnez une colonne ci-dessus pour générer un graphique.</p>
         </div>`;
@@ -182,6 +238,11 @@ function createWidgetDOM(widget) {
     header.className = 'widget-header';
     header.innerHTML = `<h3>${Utils.escapeHtml(widget.title)}</h3>`;
 
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn-icon';
+    btnEdit.innerHTML = '⚙️';
+    btnEdit.onclick = () => showWidgetModal(widget.id);
+
     const btnDel = document.createElement('button');
     btnDel.className = 'btn-icon danger';
     btnDel.innerHTML = '🗑️';
@@ -193,7 +254,13 @@ function createWidgetDOM(widget) {
             renderDashboard();
         }
     };
-    header.appendChild(btnDel);
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.style.display = 'flex';
+    actionsDiv.style.gap = '5px';
+    actionsDiv.appendChild(btnEdit);
+    actionsDiv.appendChild(btnDel);
+    header.appendChild(actionsDiv);
     card.appendChild(header);
 
     const canvasContainer = document.createElement('div');
@@ -245,44 +312,109 @@ function updateWidgetChart(widget) {
 }
 
 function prepareChartConfig(widget) {
-    const col = currentForm.columns.find(c => c.id === widget.columnId);
-    if (!col) return null;
+    const colMain = currentForm.columns.find(c => c.id === widget.columnId);
+    if (!colMain) return null;
 
-    const colIndex = currentForm.columns.findIndex(c => c.id === widget.columnId);
-    const rows = currentForm.rows;
-    const options = col.params?.options || [];
+    const mainIdx = currentForm.columns.findIndex(c => c.id === widget.columnId);
+    const rows = currentForm.rows || [];
+
+    let mainOptions = colMain.params?.options || [];
+    if (mainOptions.length === 0 && rows.length > 0) {
+        mainOptions = [...new Set(rows.map(r => r[mainIdx] || "Non défini"))];
+    }
+
     const vizType = widget.vizType;
 
-    if (vizType === 'cross_stacked') {
-        const chapIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
-        if (chapIdx === -1) return null;
+    const showLabels = widget.showLabels !== false;
+    const isPercent = widget.valueFormat === 'percent';
 
-        const chapters = [...new Set(rows.map(r => r[chapIdx] || "Sans chapitre"))];
+    // Configuration par défaut pour chartjs-plugin-datalabels
+    const datalabelsConfig = {
+        display: showLabels,
+        color: '#000', // Noir pour plus de lisibilité sur les fonds colorés
+        font: { weight: 'bold', size: 13 },
+        formatter: (value, context) => {
+            if (value === 0) return '';
+            if (isPercent) {
+                let total = 0;
+                if (vizType.startsWith('cross_')) {
+                    context.chart.data.datasets.forEach(ds => {
+                        total += ds.data[context.dataIndex] || 0;
+                    });
+                } else {
+                    const dataset = context.chart.data.datasets[context.datasetIndex];
+                    total = dataset.data.reduce((acc, val) => acc + (val || 0), 0);
+                }
+                if (total === 0) return '';
+                const percentage = Math.round((value / total) * 100);
+                return percentage + '%';
+            }
+            return value;
+        }
+    };
 
-        const datasets = options.map(opt => {
-            const data = chapters.map(chap => {
-                return rows.filter(r => (r[chapIdx] || "Sans chapitre") === chap && r[colIndex] === opt).length;
+    if (vizType.startsWith('cross_')) {
+        const crossIdx = currentForm.columns.findIndex(c => c.id === widget.crossColumnId);
+        if (crossIdx === -1) return null;
+
+        const crossCol = currentForm.columns[crossIdx];
+        const isStacked = vizType === 'cross_stacked';
+
+        let crossValues = [];
+        if (crossCol.params?.options) {
+            crossValues = [...crossCol.params.options];
+            const actualValues = new Set(rows.map(r => r[crossIdx] || "Non défini"));
+            actualValues.forEach(v => { if (!crossValues.includes(v)) crossValues.push(v); });
+        } else {
+            crossValues = [...new Set(rows.map(r => r[crossIdx] || "Non défini"))];
+        }
+
+        const datasets = mainOptions.map((mainOpt, idx) => {
+            let data = crossValues.map(crossVal => {
+                return rows.filter(r => (r[crossIdx] || "Non défini") === crossVal && r[mainIdx] === mainOpt).length;
             });
 
+            if (isPercent) {
+                data = data.map((val, dataIdx) => {
+                    let totalForCrossValue = 0;
+                    mainOptions.forEach(opt => {
+                        totalForCrossValue += rows.filter(r => (r[crossIdx] || "Non défini") === crossValues[dataIdx] && r[mainIdx] === opt).length;
+                    });
+                    return totalForCrossValue > 0 ? Math.round((val / totalForCrossValue) * 100) : 0;
+                });
+            }
+
             return {
-                label: opt,
+                label: mainOpt,
                 data: data,
-                backgroundColor: Utils.getComboColor(col.params?.colorScheme, opt, options) || '#ccc'
+                backgroundColor: Utils.getComboColor(colMain.params?.colorScheme, mainOpt, mainOptions) || getColorByIndex(idx)
             };
         });
 
         return {
             type: 'bar',
-            data: { labels: chapters, datasets: datasets },
+            data: { labels: crossValues, datasets: datasets },
             options: {
-                indexAxis: 'y',
+                indexAxis: 'y', // horizontal
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    x: { stacked: true, beginAtZero: true },
-                    y: { stacked: true }
+                    x: {
+                        stacked: isStacked,
+                        beginAtZero: true,
+                        max: isPercent ? 100 : undefined,
+                        ticks: {
+                            callback: function (value) {
+                                return isPercent ? value + '%' : value;
+                            }
+                        }
+                    },
+                    y: { stacked: isStacked }
                 },
-                plugins: { legend: { position: 'bottom' } }
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: datalabelsConfig
+                }
             }
         };
     }
@@ -290,18 +422,18 @@ function prepareChartConfig(widget) {
     if (vizType.startsWith('global_')) {
         const counts = {};
         rows.forEach(r => {
-            const val = r[colIndex] || "Non défini";
+            const val = r[mainIdx] || "Non défini";
             counts[val] = (counts[val] || 0) + 1;
         });
 
-        const labels = options.length > 0
-            ? options.filter(o => counts[o])
+        const labels = mainOptions.length > 0
+            ? mainOptions.filter(o => counts[o])
             : Object.keys(counts);
 
         Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
 
-        const data = labels.map(l => counts[l]);
-        const colors = labels.map(l => Utils.getComboColor(col.params?.colorScheme, l, options) || getColorByIndex(0));
+        const data = labels.map(l => counts[l] || 0);
+        const colors = labels.map((l, idx) => Utils.getComboColor(colMain.params?.colorScheme, l, mainOptions) || getColorByIndex(idx));
 
         const type = vizType.split('_')[1];
 
@@ -319,7 +451,10 @@ function prepareChartConfig(widget) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: type === 'bar' ? 'none' : 'right' } }
+                plugins: {
+                    legend: { position: type === 'bar' ? 'none' : 'right' },
+                    datalabels: datalabelsConfig
+                }
             }
         };
     }
