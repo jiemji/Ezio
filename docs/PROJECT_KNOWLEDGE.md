@@ -81,12 +81,13 @@ graph TD
 *   `Navigation.js` : Orchestrateur des vues et initilialisation des modules.
 *   `Sidebar.js` : Gestionnaire générique de listes latérales.
 *   `Modal.js` : Service de fenêtres modales.
+*   `MarkdownEditor.js` : Composant d'édition de texte enrichi (WYSIWYG) avec barre d'outils et conversion Markdown. Utilisable en mode Standard (Livrables) ou Compact (Audit).
 *   `DOM.js` : Cache des sélecteurs DOM fréquents.
 
 ### Modules Fonctionnels (`js/modules/`)
 1.  **Module Audit (`app_audit.js` & `AuditRenderer.js`)** :
     *   **Contrôleur (`app_audit.js`)** : Gère les événements utilisateurs, les appels API (IA) et la manipulation de l'état via `State.js`.
-    *   **Vue (`AuditRenderer.js`)** : Gère exclusivement la génération du HTML du tableau. Utilise la **Délégation d'Événements** sur le conteneur principal pour gérer les clics performants sur des milliers de cellules.
+    *   **Vue (`AuditRenderer.js`)** : Génère le HTML du tableau. Intègre le `MarkdownEditor` dynamique pour les cellules "Réponse" et "IA". Utilise la **Délégation d'Événements** sur le conteneur principal pour gérer les clics performants sur des milliers de cellules.
     *   **Logique** : Délègue le tri/filtre complexe à `DataUtils.js`.
 
 2.  **Module IA (`js/api/api_ia.js`)** :

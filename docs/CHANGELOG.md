@@ -2,6 +2,14 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.4.0] - 2026-02-21
+### Refactoring & UI
+- **WYSIWYG Global (`MarkdownEditor.js`)** : Extraction de l'éditeur de texte enrichi (Markdown) des Livrables vers un composant UI autonome et réutilisable.
+- **Audit Interactif** : Intégration du `MarkdownEditor` directement dans les cellules du tableau d'Audit pour les colonnes "IA" et "Réponse".
+    - Conversion automatique bidirectionnelle HTML <-> Markdown à la volée.
+    - Ajout d'un mode d'affichage "Compact" pour que la barre de formatage s'intègre harmonieusement dans les cellules de la grille.
+    - Les résultats générés par l'IA (bouton ✨) sont désormais formatés immédiatement (Titres, Listes, Gras) via le moteur enrichi sans ouvrir de pop-up.
+
 ## [2.3.0] - 2026-02-20
 ### Ajouts
 - **Livrables WYSIWYG** : Remplacement de la zone de texte brut par un éditeur de texte enrichi dynamique (Gras, Titres, Listes, Tableaux avec redimensionnement intelligent des colonnes et scroll horizontal embarqué). L'éditeur s'agrandit automatiquement jusqu'au bas de l'écran après génération (et reste redimensionnable manuellement). Conversion automatique bidirectionnelle parfaite vers le format Markdown. Ajout d'une barre d'outils avec icônes. La présence du "Tableau" de contexte est désormais invisible dans l'éditeur pour plus de propreté, mais correctement greffé lors de l'export final.
