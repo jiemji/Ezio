@@ -247,7 +247,7 @@ npx http-server .</code></pre>
                     <tr>
                         <td><code>js/modules/</code></td>
                         <td>Fonctionnalités</td>
-                        <td>app_audit.js, AuditRenderer.js, app_deliveries.js, app_output_word.js</td>
+                        <td>app_audit.js, AuditRenderer.js, app_reports.js, ReportsRenderer.js, app_deliveries.js</td>
                     </tr>
                     <tr>
                         <td><code>js/ui/</code></td>
@@ -305,7 +305,9 @@ const results = DataUtils.processRows(
             <ul>
                 <li><strong>Contrôleur (<code>app_audit.js</code>)</strong> : Gère l'état (State), les appels IA et la
                     logique métier.</li>
-                <li><strong>Vue (<code>AuditRenderer.js</code>)</strong> : Reçoit un contexte et génère le HTML (incluant le <code>MarkdownEditor</code> en mode compact pour l'édition de texte enrichie ligne par ligne).</li>
+                <li><strong>Vue (<code>AuditRenderer.js</code>)</strong> : Reçoit un contexte et génère le HTML
+                    (incluant le <code>MarkdownEditor</code> en mode compact pour l'édition de texte enrichie ligne par
+                    ligne).</li>
             </ul>
             <pre><code>// Dans app_audit.js
 import { AuditRenderer } from './AuditRenderer.js';
@@ -361,6 +363,16 @@ async function generateModule(delivery) {
                 <li><strong>Widgets & Graphiques</strong> : Durant l'Impression Word ou PPTX, les graphiques du
                     Dashboard sélectionnés pour l'export sont automatiquement téléchargés en images PNG renommées à la
                     volée. Cela permet de les intégrer d'un simple glisser-déposer au sein de vos rapports.</li>
+            </ul>
+
+            <h3 id="mod-reports">3.4 Module Rapports (Pattern MVC)</h3>
+            <p>Le module Rapports gère les bibliothèques de modules IA et la composition des rapports. Il applique le
+                pattern MVC :</p>
+            <ul>
+                <li><strong>Contrôleur (<code>app_reports.js</code>)</strong> : Gère l'état global et les actions
+                    logiques (ajouts, suppressions, mouvements).</li>
+                <li><strong>Vue (<code>ReportsRenderer.js</code>)</strong> : Construit l'interface HTML complète et
+                    centralise l'écoute des actions utilisateur (Event Delegation).</li>
             </ul>
 
             <h2 id="features">4. Fonctionnalités Clés</h2>
