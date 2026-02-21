@@ -4,10 +4,10 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 
 ## [2.3.0] - 2026-02-20
 ### Ajouts
-- **Livrables WYSIWYG** : Remplacement de la zone de texte brut par un éditeur de texte enrichi dynamique (Gras, Titres, Listes, Tableaux avec redimensionnement intelligent des colonnes et scroll horizontal embarqué). L'éditeur s'agrandit automatiquement jusqu'au bas de l'écran après génération (et reste redimensionnable manuellement). Conversion automatique bidirectionnelle parfaite vers le format Markdown. Ajout d'une barre d'outils avec icônes.
-- **Impression Unifiée** : Remplacement des boutons d'export Word/PPT par un bouton unique "Impression" avec une interface de sélection de modèles.
+- **Livrables WYSIWYG** : Remplacement de la zone de texte brut par un éditeur de texte enrichi dynamique (Gras, Titres, Listes, Tableaux avec redimensionnement intelligent des colonnes et scroll horizontal embarqué). L'éditeur s'agrandit automatiquement jusqu'au bas de l'écran après génération (et reste redimensionnable manuellement). Conversion automatique bidirectionnelle parfaite vers le format Markdown. Ajout d'une barre d'outils avec icônes. La présence du "Tableau" de contexte est désormais invisible dans l'éditeur pour plus de propreté, mais correctement greffé lors de l'export final.
+- **Impression Unifiée** : Remplacement des boutons d'export Word/PPT par un bouton unique "Impression" avec une interface de sélection de modèles. L'export déclenche également le téléchargement séparé des widgets (graphiques) sélectionnés sous forme d'images PNG.
 - **Configuration Output** : Centralisation des configurations de sortie dans `output_config.json` (remplace `ppt_config.json`) avec support d'une liste de documents Word modèles.
-- **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres.
+- **Office Export** : Ajout de l'export des livrables au format Word (`.docx`) avec conservation des tableaux et de la hiérarchie des titres. L'export Markdown (`.md`) a aussi été enrichi de l'export des tableaux de contexte cachés.
 - **Refonte UI/UX (Premium)** : Nouvelle identité visuelle "Midnight/Indigo".
     - **Design** : Adoption des polices *Inter* & *Outfit*, Glassmorphism sur le header, Ombres portées modernes.
     - **Navigation** : Nouveau menu latéral rétractable avec activation au survol (Handle) et épinglage (Pin). Optimisation de l'espace de travail.

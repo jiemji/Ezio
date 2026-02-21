@@ -329,7 +329,10 @@ function renderTable() {
                 <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi (Titres,
                     Listes, Tableaux redimensionnés) avec barre d'outils. L'éditeur s'étire dynamiquement jusqu'au bas
                     de la fenêtre après génération pour maximiser la zone de lecture (tout en restant redimensionnable).
-                    La conversion bidirectionnelle du HTML visuel en Markdown garantit une persistance parfaite.
+                    La conversion bidirectionnelle du HTML visuel en Markdown garantit une persistance parfaite. Le
+                    module "Triche" visuellement en omettant d'afficher le tableau complet de l'audit pour éviter de
+                    polluer l'éditeur, et greffera proprement ce dernier au document complet exclusivement lors de
+                    l'Impression ou de la Sauvegarde MD.
                 </li>
             </ul>
             <pre><code>// Exemple de flux (simplifié)
@@ -352,9 +355,13 @@ async function generateModule(delivery) {
                 <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles
                     disponibles (Word et PPTX).</li>
                 <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le
-                    contenu dans des modèles existants.</li>
+                    contenu formaté Markdown (et les tableaux de données cachés lors de la prévisualisation) dans des
+                    modèles existants.</li>
                 <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides
-                    vectorielles.</li>
+                    vectorielles intégrant le même contenu étendu.</li>
+                <li><strong>Widgets & Graphiques</strong> : Durant l'Impression Word ou PPTX, les graphiques du
+                    Dashboard sélectionnés pour l'export sont automatiquement téléchargés en images PNG renommées à la
+                    volée. Cela permet de les intégrer d'un simple glisser-déposer au sein de vos rapports.</li>
             </ul>
 
             <h2 id="features">4. Fonctionnalités Clés</h2>
