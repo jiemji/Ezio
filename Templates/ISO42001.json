@@ -23,7 +23,7 @@
       "id": "exigence_controle",
       "label": "Exigence/Contrôle",
       "type": "question",
-      "visible": true,
+      "visible": false,
       "size": "M"
     },
     {
@@ -85,20 +85,20 @@
       [
         {
           "label": "Documentation des enjeux externes (ex: exigences légales, contexte concurrentiel)",
-          "checked": false
+          "checked": true
         },
         {
           "label": "Documentation des enjeux externes (ex: gouvernance, obligations contractuelles)",
-          "checked": false
+          "checked": true
         },
         {
           "label": "Documentation des rôles de l'organisme vis-à-vis du système d'IA .",
-          "checked": false
+          "checked": true
         }
       ],
       "",
-      "",
-      "[La réponse est la suivante :]\n\n**Quickwin :**\n1. Mettre en place un processus de documentation et de suivi des enjeux externes et internes pertinents pour le SMIA. Cela permettra de s'assurer que tous les aspects importants sont pris en compte et documentés.\n\n**Action prioritaire :**\n2. Définir clairement les rôles de l'organisme vis-à-vis des systèmes d'IA (fournisseur, producteur, client). Cela implique la rédaction d'une documentation détaillée qui clarifie ces rôles et leurs implications pour le SMIA.\n\n**Action à moyens termes :**\n3. Élaborer un plan spécifique pour évaluer l'impact du changement climatique sur les opérations de l'organisme, en particulier dans le contexte du SMIA. Ce plan devrait inclure des stratégies d'adaptation et de mitigation pour s'assurer que le changement climatique est bien pris en compte dans la gestion des risques."
+      "Conforme",
+      "[La réponse en français]\n\nRecommandations pour atteindre la conformité :\n\n1. Quickwin : \n   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.\n\n2. Action prioritaire :\n   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.\n\n3. Action à moyens termes :\n   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.\n\nCes recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle."
     ],
     [
       "Exigences",
@@ -113,8 +113,8 @@
         }
       ],
       "",
-      "",
-      ""
+      "Peu Conforme",
+      "[En tant qu'assistant expert en audit, voici trois recommandations pour atteindre la conformité avec l'exigence :\n\n1. **Quickwin :** \n   - Mettre à jour immédiatement la liste des parties intéressées et de leurs exigences pertinentes pour le SMIA, en s'assurant qu'elle est complète et actualisée. Cela peut être réalisé grâce à une revue rapide par l'équipe de gestion du risque.\n\n2. **Action prioritaire :**\n   - Organiser un atelier ou une session de brainstorming avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement. Cela permettra d'obtenir des feedbacks précieux et d'établir un consensus sur la direction à suivre.\n\n3. **Action à moyens termes :**\n   - Développer une stratégie de communication régulière avec les parties intéressées pour maintenir leur engagement et veiller à ce que leurs besoins continuent d'être satisfaits au fil du temps. Cette stratégie devrait inclure des réunions périodiques, des rapports mensuels ou trimestriels, et une plateforme de communication en ligne dédiée.]"
     ],
     [
       "Exigences",
@@ -133,7 +133,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -461,7 +461,7 @@
         }
       ],
       "",
-      "",
+      "Peu Conforme",
       ""
     ],
     [
@@ -477,7 +477,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -493,7 +493,7 @@
         }
       ],
       "",
-      "",
+      "Conforme",
       ""
     ],
     [
@@ -509,7 +509,7 @@
         }
       ],
       "",
-      "",
+      "Peu Conforme",
       ""
     ],
     [
@@ -525,7 +525,7 @@
         }
       ],
       "",
-      "",
+      "Conforme",
       ""
     ],
     [
@@ -541,7 +541,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -557,7 +557,7 @@
         }
       ],
       "",
-      "",
+      "Peu Conforme",
       ""
     ],
     [
@@ -573,7 +573,7 @@
         }
       ],
       "",
-      "",
+      "Peu Conforme",
       ""
     ],
     [
@@ -589,7 +589,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -605,7 +605,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -621,7 +621,7 @@
         }
       ],
       "",
-      "",
+      "Pas Conforme",
       ""
     ],
     [
@@ -769,7 +769,6 @@
       ""
     ]
   ],
-  "statics": [],
   "rowMeta": [
     {},
     {},
@@ -811,5 +810,162 @@
     {},
     {},
     {}
+  ],
+  "statics": [
+    {
+      "id": "widget_1771630526946",
+      "columnId": "conformite",
+      "vizType": "global_doughnut",
+      "title": "Conformité - Global (Anneau)"
+    },
+    {
+      "id": "widget_1771633253078",
+      "columnId": "conformite",
+      "vizType": "cross_stacked",
+      "title": "Conformité - Par Chapitre"
+    }
+  ],
+  "notes": "",
+  "deliveries": [],
+  "reports": [
+    {
+      "id": "dlv_1771540172028",
+      "name": "Audit Complet ISO 27001 - 19/02/2026",
+      "created": "2026-02-19T22:29:32.033Z",
+      "structure": [
+        {
+          "sourceId": "mod_intro",
+          "name": "Introduction & Contexte",
+          "config": {
+            "scope": {
+              "type": "chapter"
+            },
+            "ai": {
+              "model": "redsage-qwen3-8b-ins-i1",
+              "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
+            },
+            "columns": [
+              "constat",
+              "conformite",
+              "recommandation",
+              "domaine",
+              "typologie"
+            ],
+            "collapsed": true,
+            "isTable": true,
+            "widgets": [
+              "widget_1771630526946",
+              "widget_1771633253078"
+            ]
+          },
+          "result": "[La réponse en français]\n\n**Introduction**\n\nL'organisation [Nom de l'Organisation] est une entreprise leader dans le secteur [secteur d'activité], dédiée à la fourniture de solutions innovantes et durables. Fondée en [année de fondation], elle a connu un développement significatif au fil des années, se hissant parmi les acteurs majeurs du marché grâce à son engagement constant dans l'excellence opérationnelle et l'innovation technologique.\n\nLe présent rapport d'audit de sécurité vise à évaluer la posture en matière de cybersécurité de [Nom de l'Organisation], ainsi que les pratiques internes liées au traitement des données. L'objectif principal est de garantir une gestion efficace et sécurisée des actifs informatiques, tout en respectant les normes légales et réglementaires applicables.\n\nL'audit a été mené par [Nom du Fournisseur d'Audit], qui s'est appuyé sur un ensemble complet d'outils et de méthodes éprouvées pour examiner la structure organisationnelle, les processus en place et les contrôles mis en œuvre. Les résultats obtenus fournissent une vue d'ensemble des forces et des faiblesses actuelles de l'organisation dans le domaine de la sécurité, ainsi que des recommandations concrètes pour améliorer sa posture.\n\nCette introduction offre un aperçu du contexte organisationnel et des objectifs de l'audit. Les sections suivantes détailleront les constats, les conformités et les recommandations, permettant à [Nom de l'Organisation] d'affiner ses pratiques en matière de sécurité et de continuer sa croissance tout en minimisant les risques potentiels.\n\n[Fin de la réponse]",
+          "contextTable": "| Domaine | Typologie | Constat | Conformité | Recommandation |\n| --- | --- | --- | --- | --- |\n| Exigences | Contexte de l'organisme  |  | Conforme | [La réponse en français]<br><br>Recommandations pour atteindre la conformité :<br><br>1. Quickwin : <br>   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.<br><br>2. Action prioritaire :<br>   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.<br><br>3. Action à moyens termes :<br>   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.<br><br>Ces recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle. |\n| Exigences | Contexte de l'organisme  |  | Peu Conforme | [En tant qu'assistant expert en audit, voici trois recommandations pour atteindre la conformité avec l'exigence :<br><br>1. **Quickwin :** <br>   - Mettre à jour immédiatement la liste des parties intéressées et de leurs exigences pertinentes pour le SMIA, en s'assurant qu'elle est complète et actualisée. Cela peut être réalisé grâce à une revue rapide par l'équipe de gestion du risque.<br><br>2. **Action prioritaire :**<br>   - Organiser un atelier ou une session de brainstorming avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement. Cela permettra d'obtenir des feedbacks précieux et d'établir un consensus sur la direction à suivre.<br><br>3. **Action à moyens termes :**<br>   - Développer une stratégie de communication régulière avec les parties intéressées pour maintenir leur engagement et veiller à ce que leurs besoins continuent d'être satisfaits au fil du temps. Cette stratégie devrait inclure des réunions périodiques, des rapports mensuels ou trimestriels, et une plateforme de communication en ligne dédiée.] |\n| Exigences | Contexte de l'organisme  |  | Pas Conforme |  |\n| Exigences | Contexte de l'organisme  |  |  |  |\n| Exigences | Leadership  |  |  |  |\n| Exigences | Leadership  |  |  |  |\n| Exigences | Leadership  |  |  |  |\n| Exigences | Planification  |  |  |  |\n| Exigences | Planification  |  |  |  |\n| Exigences | Planification  |  |  |  |\n| Exigences | Planification  |  |  |  |\n| Exigences | Planification  |  |  |  |\n| Exigences | Soutien  |  |  |  |\n| Exigences | Soutien  |  |  |  |\n| Exigences | Soutien  |  |  |  |\n| Exigences | Réalisation  |  |  |  |\n| Exigences | Évaluation de la performance  |  |  |  |\n| Exigences | Évaluation de la performance  |  |  |  |\n| Exigences | Évaluation de la performance  |  |  |  |\n| Exigences | Amélioration  |  |  |  |\n| Contrôles | Politiques relatives à l'IA  |  |  |  |\n| Contrôles | Organisation interne  |  |  |  |\n| Contrôles | Organisation interne  |  |  |  |\n| Contrôles | Ressources pour les systèmes IA  |  |  |  |\n| Contrôles | Ressources pour les systèmes IA  |  |  |  |\n| Contrôles | Évaluation des impacts des systèmes IA  |  |  |  |\n| Contrôles | Évaluation des impacts des systèmes IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Cycle de vie du système IA  |  |  |  |\n| Contrôles | Données pour les systèmes IA  |  |  |  |\n| Contrôles | Information pour les parties intéressées  |  |  |  |\n| Contrôles | Information pour les parties intéressées  |  |  |  |\n| Contrôles | Utilisation des systèmes IA  |  |  |  |\n| Contrôles | Utilisation des systèmes IA  |  |  |  |\n| Contrôles | Relations avec les tiers et les clients  |  |  |  |\n| Contrôles | Relations avec les tiers et les clients  |  |  |  |\n"
+        },
+        {
+          "sourceId": "mod_compliance_iso",
+          "name": "Analyse Conformité ISO 27001",
+          "config": {
+            "scope": {
+              "type": "global"
+            },
+            "ai": {
+              "model": "redsage-qwen3-8b-ins-i1",
+              "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
+            },
+            "columns": [
+              "constat",
+              "conformite",
+              "recommandation"
+            ],
+            "collapsed": true,
+            "isTable": true,
+            "widgets": []
+          },
+          "result": "[La réponse en français]\n\n| Constat | Conformité | Recommandation |\n| --- | --- | --- |\n| 1. Quickwin : Mise à jour immédiate de la documentation sur les enjeux externes et internes, y compris les exigences légales, le contexte concurrentiel, la gouvernance et les obligations contractuelles. | Conforme | [La réponse en français]<br><br>Recommandations pour atteindre la conformité :<br><br>1. Quickwin : <br>   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.<br><br>2. Action prioritaire :<br>   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.<br><br>3. Action à moyens termes :<br>   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.<br><br>Ces recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle. |\n| 2. Action prioritaire : Définition claire des rôles de l'organisme vis-à-vis du système d'IA, y compris les relations avec les fournisseurs, producteurs et clients. | Conforme | [La réponse en français]<br><br>Recommandations pour atteindre la conformité :<br><br>1. Quickwin : <br>   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.<br><br>2. Action prioritaire :<br>   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.<br><br>3. Action à moyens termes :<br>   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.<br><br>Ces recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle. |\n| 3. Action à moyens termes : Évaluation systématique des impacts du changement climatique sur l'organisation et intégration de cette évaluation dans le processus de gestion des risques. | Conforme | [La réponse en français]<br><br>Recommandations pour atteindre la conformité :<br><br>1. Quickwin : <br>   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.<br><br>2. Action prioritaire :<br>   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.<br><br>3. Action à moyens termes :<br>   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.<br><br>Ces recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle. |\n\n[Les points de non-conformité majeurs et mineurs ne sont pas spécifiés dans les données fournies.]",
+          "contextTable": "| Constat | Conformité | Recommandation |\n| --- | --- | --- |\n|  | Conforme | [La réponse en français]<br><br>Recommandations pour atteindre la conformité :<br><br>1. Quickwin : <br>   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.<br><br>2. Action prioritaire :<br>   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.<br><br>3. Action à moyens termes :<br>   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.<br><br>Ces recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle. |\n|  | Peu Conforme | [En tant qu'assistant expert en audit, voici trois recommandations pour atteindre la conformité avec l'exigence :<br><br>1. **Quickwin :** <br>   - Mettre à jour immédiatement la liste des parties intéressées et de leurs exigences pertinentes pour le SMIA, en s'assurant qu'elle est complète et actualisée. Cela peut être réalisé grâce à une revue rapide par l'équipe de gestion du risque.<br><br>2. **Action prioritaire :**<br>   - Organiser un atelier ou une session de brainstorming avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement. Cela permettra d'obtenir des feedbacks précieux et d'établir un consensus sur la direction à suivre.<br><br>3. **Action à moyens termes :**<br>   - Développer une stratégie de communication régulière avec les parties intéressées pour maintenir leur engagement et veiller à ce que leurs besoins continuent d'être satisfaits au fil du temps. Cette stratégie devrait inclure des réunions périodiques, des rapports mensuels ou trimestriels, et une plateforme de communication en ligne dédiée.] |\n|  | Pas Conforme |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n|  |  |  |\n"
+        },
+        {
+          "sourceId": "mod_action_plan",
+          "name": "Plan d'Action Recommandé",
+          "config": {
+            "scope": {
+              "type": "global"
+            },
+            "ai": {
+              "model": "redsage-qwen3-8b-ins-i1",
+              "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
+            },
+            "columns": [
+              "domaine",
+              "typologie",
+              "reference",
+              "exigence_controle",
+              "description",
+              "preuves",
+              "constat",
+              "conformite",
+              "recommandation"
+            ],
+            "collapsed": true,
+            "widgets": []
+          },
+          "result": "[La réponse en français]\n\nPour remédier aux non-conformités et réduire les risques identifiés, voici un plan d'action priorisé :\n\n1. **Quickwin :**\n   - Mise à jour immédiate de la documentation sur les enjeux externes et internes.\n   - Assurer que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.\n\n2. **Action prioritaire :**\n   - Définition claire des rôles de l'organisme vis-à-vis du système d'IA.\n   - Identification précise des relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.\n\n3. **Action à moyens termes :**\n   - Évaluation systématique des impacts du changement climatique sur l'organisation.\n   - Intégration de cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.\n\n4. **Action à long terme :**\n   - Développement d'un programme d'audit interne régulier pour s'assurer que le SMIA est conforme à ses propres exigences et à celles du document.\n   - Révision périodique de la direction du SMIA par la direction pour assurer sa pertinence, son adéquation et son efficacité.\n\nCes recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle."
+        },
+        {
+          "sourceId": "mod_risks",
+          "name": "Synthèse des Risques",
+          "config": {
+            "scope": {
+              "type": "global"
+            },
+            "ai": {
+              "model": "redsage-qwen3-8b-ins-i1",
+              "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
+            },
+            "columns": [
+              "domaine",
+              "typologie",
+              "reference",
+              "exigence_controle",
+              "description",
+              "preuves",
+              "constat",
+              "conformite",
+              "recommandation"
+            ],
+            "collapsed": true,
+            "widgets": []
+          },
+          "result": "[Les risques principaux basés sur les vulnérabilités détectées, classés par criticité :]\n\n**Élevé:**\n1. **Vulnérabilité de la politique IA (A.2.2) :** L'absence d'une documentation claire et complète de la politique IA peut entraîner des non-conformités importantes avec les normes légales et réglementaires, ainsi qu'un manque de cohérence dans l'application des principes éthiques.\n\n**Moyen:**\n1. **Rôles et responsabilités insuffisants (A.3.2) :** Une définition et une attribution inadéquates des rôles et responsabilités peuvent conduire à des lacunes dans la gestion du risque, des erreurs de communication et des retards dans la prise d'action.\n\n2. **Qualité des données insuffisante (A.7.4) :** Une mauvaise qualité des données peut entraîner des modèles incohérents ou biaisés, affectant ainsi l'efficacité et l'équité du système IA.\n\n**Faible:**\n1. **Documentation technique insuffisante (A.6.2.7) :** Une documentation technique incomplète peut compliquer la maintenance et l'utilisation du système IA, mais ne constitue généralement pas une menace directe sur la sécurité ou l'efficacité.\n\nCes classifications permettent de prioriser les actions correctives en fonction de leur impact potentiel sur le système d'IA."
+        },
+        {
+          "sourceId": "mod_risks",
+          "name": "Synthèse des Risques",
+          "config": {
+            "scope": {
+              "type": "global"
+            },
+            "ai": {
+              "model": "redsage-qwen3-8b-ins-i1",
+              "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
+            },
+            "columns": [
+              "domaine",
+              "typologie",
+              "reference",
+              "exigence_controle",
+              "description",
+              "preuves",
+              "constat",
+              "conformite",
+              "recommandation"
+            ],
+            "collapsed": true,
+            "widgets": []
+          },
+          "result": "[Les risques principaux basés sur les vulnérabilités détectées sont classés par criticité comme suit :]\n\n- **Élevé**:\n  - Risque lié à la non-conformité des politiques de l'IA, qui peut entraîner des violations légales et réglementaires.\n  - Risque d'inadéquation du processus d'évaluation des impacts sur les individus ou groupes, ce qui peut conduire à des dommages juridiques et réputationnels.\n\n- **Moyen**:\n  - Risque lié à la non-documentation de l'information technique du système IA, ce qui peut compromettre sa maintenance et son évolution.\n  - Risque d'absence de planification pour adresser les risques liés aux données, y compris leur qualité et leur gestion.\n\n- **Faible**:\n  - Risque lié à la non-maîtrise des changements dans le système IA, qui peut entraîner une perte de conformité temporaire.\n  - Risque d'absence de communication claire sur les incidents liés au système IA, ce qui peut affecter la confiance des utilisateurs et des parties intéressées."
+        }
+      ]
+    }
   ]
 }

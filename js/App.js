@@ -70,12 +70,12 @@ function updateMenuState() {
 
 function setupGlobalListeners() {
     // Navigation Buttons
-    if (DOM.btnShowCreator) DOM.btnShowCreator.onclick = () => switchView('creator');
-    if (DOM.btnShowApp) DOM.btnShowApp.onclick = () => switchView('app');
-    if (DOM.btnShowDashboard) DOM.btnShowDashboard.onclick = () => switchView('dashboard');
-    if (DOM.btnShowModels) DOM.btnShowModels.onclick = () => switchView('models');
-    if (DOM.btnShowReports) DOM.btnShowReports.onclick = () => switchView('reports');
-    if (DOM.btnShowDeliveries) DOM.btnShowDeliveries.onclick = () => switchView('deliveries');
+    DOM.btnShowCreator?.addEventListener('click', () => switchView('creator'));
+    DOM.btnShowApp?.addEventListener('click', () => switchView('app'));
+    DOM.btnShowDashboard?.addEventListener('click', () => switchView('dashboard'));
+    DOM.btnShowModels?.addEventListener('click', () => switchView('models'));
+    DOM.btnShowReports?.addEventListener('click', () => switchView('reports'));
+    DOM.btnShowDeliveries?.addEventListener('click', () => switchView('deliveries'));
 
     // Sidebar
     // Sidebar

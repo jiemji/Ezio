@@ -192,7 +192,7 @@ function renderSidebar() {
 
     currentForm.rows.forEach(row => {
         const chapName = row[chapColIdx] || "Sans chapitre";
-        const subChapName = (subChapColIdx !== -1) ? (row[subChapColIdx] || null) : null;
+        const subChapName = subChapColIdx !== -1 ? (row[subChapColIdx] ?? null) : null;
 
         if (!hierarchy.has(chapName)) {
             hierarchy.set(chapName, { count: 0, subChapters: new Map() });
@@ -318,7 +318,7 @@ function updateValue(r, c, val) {
     // The original code does saveState() but not renderApp() inside updateValue.
 }
 
-async function runIA(r, c, col, btn, textareaInput, previewDiv) {
+async function runIA(r, c, col, btn, editorDiv) {
     const modelName = col.params?.modele;
     if (!modelName) return UI.showToast("Aucun modèle IA configuré pour cette colonne.", "warning");
 
@@ -348,8 +348,9 @@ async function runIA(r, c, col, btn, textareaInput, previewDiv) {
     try {
         const res = await ApiService.fetchLLM(modelConfig, messages);
         updateValue(r, c, res);
-        if (textareaInput) textareaInput.value = res;
-        if (previewDiv && window.marked) previewDiv.innerHTML = window.marked.parse(res);
+        if (editorDiv) {
+            editorDiv.innerHTML = window.marked ? window.marked.parse(res) : res;
+        }
     } catch (e) {
         UI.showToast("Erreur IA: " + e.message, "danger");
     } finally {
@@ -367,8 +368,9 @@ async function loadModels() {
 }
 
 function duplicateRow(rIndex) {
-    rIndex = parseInt(rIndex, 10);
-    if (isNaN(rIndex) || rIndex < 0 || rIndex >= currentForm.rows.length) return;
+    const parsedIndex = parseInt(rIndex, 10);
+    if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= currentForm.rows.length) return;
+    rIndex = parsedIndex;
 
     const sourceRow = currentForm.rows[rIndex];
     const newRow = [...sourceRow];

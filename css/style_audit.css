@@ -239,10 +239,10 @@ tbody tr:first-child .popup-content {
 .ia-cell {
     position: relative;
     display: flex;
-    flex-direction: row;
-    /* Input à gauche, bouton à droite */
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: column;
+    /* Toolbar en haut, editeur en bas */
+    align-items: stretch;
+    gap: 0;
 }
 
 .btn-ia {

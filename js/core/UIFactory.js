@@ -75,7 +75,7 @@ export const UI = {
             warning: '#eab308',
             info: '#3b82f6'
         };
-        const bgColor = colors[type] || colors.info;
+        const bgColor = colors[type] ?? colors.info;
         const textColor = '#fff';
 
         toast.style.cssText = `
