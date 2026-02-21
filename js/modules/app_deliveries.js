@@ -7,6 +7,9 @@ import { ApiService } from '../api/api_ia.js';
 import { downloadDeliveryWord } from './app_output_word.js';
 import { downloadDeliveryPpt } from './app_outputppt.js';
 import { showImpressionPopup } from './app_impression_logic.js';
+import { MarkdownUtils } from '../core/MarkdownUtils.js';
+import { DeliveriesRenderer } from './DeliveriesRenderer.js';
+import { MarkdownEditor } from '../ui/MarkdownEditor.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -216,96 +219,12 @@ function setupDelegation() {
             if (delivery && card) {
                 const idx = parseInt(card.dataset.idx);
                 if (delivery.structure[idx]) {
-                    delivery.structure[idx].result = htmlToMarkdown(target.innerHTML);
+                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(target.innerHTML);
                     store.save();
                 }
             }
         }
     }, true); // Capture phase for blur
-}
-
-function htmlToMarkdown(html) {
-    if (!html) return '';
-
-    // Create a temporary element to parse HTML
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-
-    // Clean up empty tags and weird spaces
-    temp.innerHTML = temp.innerHTML.replace(/\u200B/g, '');
-
-    function parseNodeToMd(node, listLevel = 0, isOrdered = false, counter = { val: 1 }) {
-        let md = '';
-        for (let i = 0; i < node.childNodes.length; i++) {
-            const child = node.childNodes[i];
-
-            if (child.nodeType === 3) { // Text node
-                md += child.textContent;
-            } else if (child.nodeType === 1) { // Element node
-                const tag = child.tagName.toLowerCase();
-
-                switch (tag) {
-                    case 'b':
-                    case 'strong':
-                        md += '**' + parseNodeToMd(child) + '**';
-                        break;
-                    case 'i':
-                    case 'em':
-                        md += '*' + parseNodeToMd(child) + '*';
-                        break;
-                    case 'h1': md += '\n# ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'h2': md += '\n## ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'h3': md += '\n### ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'h4': md += '\n#### ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'h5': md += '\n##### ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'h6': md += '\n###### ' + parseNodeToMd(child) + '\n\n'; break;
-                    case 'p':
-                    case 'div':
-                        md += '\n' + parseNodeToMd(child) + '\n';
-                        break;
-                    case 'br':
-                        md += '\n';
-                        break;
-                    case 'table':
-                        const tRows = child.querySelectorAll('tr');
-                        let tableMd = '\n';
-                        tRows.forEach((tr, rIdx) => {
-                            let rMd = '|';
-                            const cells = tr.querySelectorAll('th, td');
-                            if (cells.length === 0) return;
-                            cells.forEach(cell => {
-                                rMd += ' ' + parseNodeToMd(cell).replace(/\n/g, '<br>').trim() + ' |';
-                            });
-                            tableMd += rMd + '\n';
-                            if (rIdx === 0 && tr.querySelector('th')) {
-                                tableMd += '|' + Array.from(cells).map(() => '---').join('|') + '|\n';
-                            }
-                        });
-                        md += tableMd + '\n';
-                        break;
-                    case 'ul':
-                        md += '\n' + parseNodeToMd(child, listLevel + 1, false) + '\n';
-                        break;
-                    case 'ol':
-                        md += '\n' + parseNodeToMd(child, listLevel + 1, true, { val: 1 }) + '\n';
-                        break;
-                    case 'li':
-                        const indent = '  '.repeat(Math.max(0, listLevel - 1));
-                        const bullet = isOrdered ? `${counter.val++}. ` : '- ';
-                        md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter);
-                        break;
-                    default:
-                        md += parseNodeToMd(child, listLevel, isOrdered, counter);
-                }
-            }
-        }
-        return md;
-    }
-
-    let markdown = parseNodeToMd(temp).trim();
-    // Normalize multiple newlines
-    markdown = markdown.replace(/\n{3,}/g, '\n\n');
-    return markdown;
 }
 
 function handleMdFormatting(action, idx) {
@@ -315,56 +234,11 @@ function handleMdFormatting(action, idx) {
     const editor = els.main.querySelector(`#dlv-editor-${idx}`);
     if (!editor) return;
 
-    editor.focus();
-
-    if (action === 'bold') {
-        document.execCommand('bold', false, null);
-    } else if (action === 'h-up' || action === 'h-down') {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-
-        let node = selection.focusNode;
-        if (!node) return;
-
-        // Find closest block element
-        const blockNode = node.nodeType === 3 ? node.parentNode : node;
-        const blockWrapper = blockNode.closest('h1, h2, h3, h4, h5, h6, p, div');
-        let currentTag = blockWrapper ? blockWrapper.tagName.toLowerCase() : 'p';
-        if (currentTag === 'div' || currentTag === 'li') currentTag = 'p';
-
-        let newTag = currentTag;
-
-        if (action === 'h-up') { // [+] Level 2 -> Level 3 -> Level 4 -> Level 4 (Max Level)
-            if (currentTag === 'p') newTag = 'h2';
-            else if (currentTag === 'h2') newTag = 'h3';
-            else if (currentTag === 'h3') newTag = 'h4';
-            else if (currentTag === 'h4') newTag = 'h4';
-        } else if (action === 'h-down') { // [-] Level 4 -> Level 3 -> Level 2 -> Normal Text 
-            if (currentTag === 'h4') newTag = 'h3';
-            else if (currentTag === 'h3') newTag = 'h2';
-            else if (currentTag === 'h2') newTag = 'p';
-            else if (currentTag === 'p') newTag = 'p';
-        }
-
-        if (newTag !== currentTag) {
-            document.execCommand('formatBlock', false, '<' + newTag.toUpperCase() + '>');
-        }
-    } else if (action === 'indent-up') {
-        const isList = document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList');
-        if (isList) {
-            document.execCommand('indent', false, null);
-        } else {
-            document.execCommand('insertUnorderedList', false, null);
-        }
-    } else if (action === 'indent-down') {
-        document.execCommand('outdent', false, null);
-    } else if (action === 'list-num') {
-        document.execCommand('insertOrderedList', false, null);
-    }
+    MarkdownEditor.handleFormatAction(action, editor);
 
     // Save parsed Markdown back
     if (delivery.structure[idx]) {
-        delivery.structure[idx].result = htmlToMarkdown(editor.innerHTML);
+        delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(editor.innerHTML);
         store.save();
     }
 }
@@ -523,102 +397,16 @@ function renderMainView() {
         trackHTML += `<div style="padding:2rem;">Ce livrable est vide.</div>`;
     }
 
+    const context = {
+        availableModels,
+        availableModules,
+        currentForm,
+        hierarchy,
+        totalInstances: instances.length
+    };
+
     instances.forEach((inst, idx) => {
-        const sourceModName = inst.name || ((availableModules || []).find(m => m.id === inst.sourceId) || { name: 'Module' }).name;
-
-        // Ensure config structure exists
-        if (!inst.config) inst.config = {};
-        if (!inst.config.ai) inst.config.ai = {};
-        if (!inst.config.scope) inst.config.scope = { type: 'global', selection: [] };
-
-        const aiPrompt = inst.config.ai.prompt || '';
-        const aiModel = inst.config.ai.model || '';
-        const scopeType = inst.config.scope.type || 'global';
-
-        // Initialize columns config if missing (default to all)
-        if (!inst.config.columns) {
-            inst.config.columns = (currentForm.columns || []).map(c => c.id);
-        }
-
-        // Initialize widgets config array
-        if (!inst.config.widgets) {
-            inst.config.widgets = [];
-        }
-
-        const isCollapsed = inst.config.collapsed || false;
-
-        trackHTML += `
-            <div class="dlv-card ${isCollapsed ? 'collapsed' : ''}" data-idx="${idx}">
-                <div class="dlv-card-header">
-                     <div class="dlv-card-nav">
-                        ${idx > 0 ? `<button class="btn-card-action btn-move-left" data-idx="${idx}" title="Reculer">&lt;</button>` : ''}
-                        <span style="font-weight:bold; font-size:0.9rem;">${idx + 1}. ${Utils.escapeHtml(sourceModName)}</span>
-                        ${idx < instances.length - 1 ? `<button class="btn-card-action btn-move-right" data-idx="${idx}" title="Avancer">&gt;</button>` : ''}
-                     </div>
-                     <div class="dlv-card-actions">
-                        <button class="btn-card-action danger btn-remove-mod" data-idx="${idx}" title="Retirer du livrable">🗑️</button>
-                     </div>
-                </div>
-                <div class="dlv-card-body">
-                    <div class="form-group">
-                        <div style="display:flex; align-items:center; margin-bottom:5px;">
-                            <label style="margin-bottom:0; margin-right: 10px;">Scope (Périmètre)</label>
-                            <button class="btn-toggle-collapse" data-idx="${idx}" title="Replier/Déplier" style="padding:0; border:none; background:none; cursor:pointer;">
-                                ${isCollapsed ? '▶' : '▼'}
-                            </button>
-                        </div>
-                        
-                        <div class="dlv-inputs-wrapper" style="${isCollapsed ? 'display:none;' : ''}">
-                            <select class="form-control slc-inst-scope" data-idx="${idx}">
-                                <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
-                                <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
-                            </select>
-
-                            ${renderChapterSelector(idx, scopeType, hierarchy, inst.config.scope.selection || [])}
-
-                            <div class="form-group" style="margin-top:1rem;">
-                                <label>Colonnes à inclure</label>
-                                ${renderColumnSelector(idx, inst.config.columns)}
-                            </div>
-
-                            <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
-                                <input type="checkbox" class="chk-format-table" data-idx="${idx}" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
-                                <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
-                            </div>
-
-                            <div class="form-group" style="margin-top:10px;">
-                                <label>Widgets Dashboard (Export Document)</label>
-                                ${renderWidgetSelector(idx, inst.config.widgets)}
-                            </div>
-
-                            <div class="form-group">
-                                <label>Prompt IA</label>
-                                <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Modèle IA</label>
-                                <select class="form-control slc-inst-model" data-idx="${idx}">
-                                    <option value="">-- Défaut --</option>
-                                    ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="dlv-card-footer">
-                     <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
-                     <div class="dlv-md-toolbar" style="margin-top: 15px; display: flex; gap: 5px; flex-wrap: wrap;">
-                         <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${idx}" title="Niveau de titre +"><i class="fas fa-heading"></i> <i class="fas fa-plus" style="font-size:0.7em;"></i></button>
-                         <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${idx}" title="Niveau de titre -"><i class="fas fa-heading"></i> <i class="fas fa-minus" style="font-size:0.7em;"></i></button>
-                         <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${idx}" title="Désindenter"><i class="fas fa-outdent"></i></button>
-                         <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${idx}" title="Indenter"><i class="fas fa-indent"></i></button>
-                         <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${idx}" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
-                         <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${idx}" title="Gras"><i class="fas fa-bold"></i></button>
-                     </div>
-                     <div class="dlv-card-result form-control" id="dlv-editor-${idx}" contenteditable="true" style="width:100%; min-height:300px; overflow-y:auto; overflow-x:auto; margin-top: 5px; text-align: left; resize: vertical;">${inst.result ? (window.marked ? window.marked.parse(inst.result) : inst.result) : ''}</div>
-                </div>
-            </div>
-        `;
+        trackHTML += DeliveriesRenderer.renderCard(inst, idx, context);
     });
     trackHTML += `</div>`;
 
@@ -708,82 +496,6 @@ function buildChapterHierarchy() {
         name: chap,
         subs: Array.from(tree[chap])
     }));
-}
-
-function renderChapterSelector(idx, scopeType, hierarchy, selection) {
-    if (scopeType !== 'chapter') return '';
-
-    let html = `<div class="chapter-selector-container">`;
-
-    hierarchy.forEach((chap, cIdx) => {
-        // Check if all subs are selected to determine chapter check state
-        const allChecked = chap.subs.every(s => selection.includes(s));
-        const someChecked = !allChecked && chap.subs.some(s => selection.includes(s));
-
-        html += `
-            <div class="chap-item">
-                <label style="font-weight:bold; display:flex; align-items:center;">
-                    <input type="checkbox" class="chk-chapter" data-idx="${idx}" data-chap="${Utils.escapeHtml(chap.name)}" ${allChecked ? 'checked' : ''} style="margin-right:5px;">
-                    ${Utils.escapeHtml(chap.name)}
-                </label>
-                <div class="sub-list" style="margin-left: 20px;">
-        `;
-
-        chap.subs.forEach(sub => {
-            const isChecked = selection.includes(sub);
-            html += `
-                <label style="display:flex; align-items:center; font-size:0.9em;">
-                    <input type="checkbox" class="chk-subchap" data-idx="${idx}" data-sub="${Utils.escapeHtml(sub)}" ${isChecked ? 'checked' : ''} style="margin-right:5px;">
-                    ${Utils.escapeHtml(sub)}
-                </label>
-            `;
-        });
-
-        html += `</div></div>`;
-    });
-
-    html += `</div>`;
-    return html;
-}
-
-function renderColumnSelector(idx, selectedCols) {
-    let html = `<div class="chapter-selector-container" style="max-height:150px;">`; // Reuse container style
-
-    (currentForm.columns || []).forEach(col => {
-        const isChecked = selectedCols.includes(col.id);
-        html += `
-            <label style="display:flex; align-items:center; margin-bottom:5px;">
-                <input type="checkbox" class="chk-col" data-idx="${idx}" data-colid="${col.id}" ${isChecked ? 'checked' : ''} style="margin-right:8px;">
-                ${Utils.escapeHtml(col.label)}
-            </label>
-        `;
-    });
-
-    html += `</div>`;
-    return html;
-}
-
-function renderWidgetSelector(idx, selectedWidgets) {
-    if (!currentForm.statics || currentForm.statics.length === 0) {
-        return `<div style="font-size: 0.85em; color: var(--text-muted); padding: 5px;">Aucun widget configuré dans le tableau de bord.</div>`;
-    }
-
-    let html = `<div class="chapter-selector-container" style="max-height:150px;">`;
-
-    currentForm.statics.forEach((widget, wIdx) => {
-        const isChecked = selectedWidgets.includes(widget.id);
-        const colDef = (currentForm.columns || []).find(c => c.id === widget.columnId);
-        const label = colDef ? colDef.label : `Widget ${wIdx + 1}`;
-        html += `
-            <label style="display:flex; align-items:center; margin-bottom:5px;">
-                <input type="checkbox" class="chk-widget" data-idx="${idx}" data-widgetid="${widget.id}" ${isChecked ? 'checked' : ''} style="margin-right:8px;">
-                ${Utils.escapeHtml(label)} (${Utils.escapeHtml(widget.vizType)})
-            </label>
-        `;
-    });
-
-    html += `</div>`;
-    return html;
 }
 
 function moveModule(delivery, index, direction) {

@@ -2,6 +2,8 @@ import { Utils } from '../core/Utils.js';
 import { Config } from '../core/Config.js';
 import { UI } from '../core/UIFactory.js';
 import { DataUtils } from '../core/DataUtils.js';
+import { MarkdownEditor } from '../ui/MarkdownEditor.js';
+import { MarkdownUtils } from '../core/MarkdownUtils.js';
 
 export const AuditRenderer = {
     render: (container, context) => {
@@ -121,7 +123,7 @@ function renderCellHtml(col, value, r, c, currentForm) {
             return Utils.escapeHtml(valStr);
 
         case 'reponse':
-            return `<textarea class="inp-reponse" data-r="${r}" data-c="${c}">${Utils.escapeHtml(valStr)}</textarea>`;
+            return MarkdownEditor.render(`editor-${r}-${c}`, valStr, `${r}-${c}`, '100px', true);
 
         case 'combo':
             const options = col.params?.options || [];
@@ -161,11 +163,10 @@ function renderCellHtml(col, value, r, c, currentForm) {
             </div>`;
 
         case 'ia':
+            const iaBtnHtml = `<button class="btn-ia" data-r="${r}" data-c="${c}" title="Générer IA" style="border-radius: 4px; padding: 4px 6px; font-size: 0.9rem; background: var(--primary); color: #fff; border: 1px solid var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 26px;">✨</button>`;
             return `<div class="ia-cell">
-                <button class="btn-ia" data-r="${r}" data-c="${c}" title="Générer IA">✨</button>
-                <textarea class="ia-textarea" data-r="${r}" data-c="${c}" placeholder="IA...">${Utils.escapeHtml(valStr)}</textarea>
-                <div id="ia-${r}-${c}" class="ia-content hidden"></div> 
-            </div>`; // Added hidden preview div for consistent targeting
+                ${MarkdownEditor.render(`editor-${r}-${c}`, valStr, `${r}-${c}`, '100px', true, iaBtnHtml)}
+            </div>`;
 
         default:
             return Utils.escapeHtml(valStr);
@@ -205,9 +206,28 @@ function attachEvents(container, actions, currentForm) {
             const r = parseInt(btnIA.dataset.r);
             const c = parseInt(btnIA.dataset.c);
             const col = currentForm.columns[c];
-            const txt = btnIA.parentElement.querySelector('.ia-textarea');
-            const preview = container.querySelector(`#ia-${r}-${c}`);
-            actions.runIA(r, c, col, btnIA, txt, preview);
+            const editor = container.querySelector(`#editor-${r}-${c}`);
+            actions.runIA(r, c, col, btnIA, editor);
+            return;
+        }
+
+        // D. MARKDOWN FORMATTING
+        const btnFormat = target.closest('.btn-md-format');
+        if (btnFormat) {
+            const action = btnFormat.getAttribute('data-action');
+            const idxStr = btnFormat.getAttribute('data-idx'); // `${r}-${c}`
+            const editor = container.querySelector(`#editor-${idxStr}`);
+            MarkdownEditor.handleFormatAction(action, editor);
+
+            // Save after formatting
+            if (editor) {
+                const parts = idxStr.split('-');
+                if (parts.length === 2) {
+                    const r = parseInt(parts[0]);
+                    const c = parseInt(parts[1]);
+                    actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(editor.innerHTML));
+                }
+            }
             return;
         }
     };
@@ -265,17 +285,21 @@ function attachEvents(container, actions, currentForm) {
     };
 
     // 3. INPUT DELEGATION
-    // Handles: Text Inputs (Reponse, Editable Question, IA Textarea)
+    // Handles: Text Inputs (Editable Question, Markdown Editor)
     container.oninput = (e) => {
         const target = e.target;
 
-        if (target.classList.contains('inp-reponse') ||
-            target.classList.contains('editable-question') ||
-            target.classList.contains('ia-textarea')) {
-
+        if (target.classList.contains('editable-question')) {
             const r = parseInt(target.dataset.r);
             const c = parseInt(target.dataset.c);
             actions.updateValue(r, c, target.value);
+        } else if (target.classList.contains('markdown-editor-content')) {
+            const parts = target.id.split('-');
+            if (parts.length === 3) {
+                const r = parseInt(parts[1]);
+                const c = parseInt(parts[2]);
+                actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(target.innerHTML));
+            }
         }
     };
 }
