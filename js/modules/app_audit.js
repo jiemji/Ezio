@@ -192,7 +192,7 @@ function renderSidebar() {
 
     currentForm.rows.forEach(row => {
         const chapName = row[chapColIdx] || "Sans chapitre";
-        const subChapName = (subChapColIdx !== -1) ? (row[subChapColIdx] || null) : null;
+        const subChapName = subChapColIdx !== -1 ? (row[subChapColIdx] ?? null) : null;
 
         if (!hierarchy.has(chapName)) {
             hierarchy.set(chapName, { count: 0, subChapters: new Map() });
@@ -367,8 +367,9 @@ async function loadModels() {
 }
 
 function duplicateRow(rIndex) {
-    rIndex = parseInt(rIndex, 10);
-    if (isNaN(rIndex) || rIndex < 0 || rIndex >= currentForm.rows.length) return;
+    const parsedIndex = parseInt(rIndex, 10);
+    if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= currentForm.rows.length) return;
+    rIndex = parsedIndex;
 
     const sourceRow = currentForm.rows[rIndex];
     const newRow = [...sourceRow];

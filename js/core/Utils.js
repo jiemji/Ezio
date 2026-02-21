@@ -112,9 +112,7 @@ export const Utils = {
         } else if (color.startsWith('rgb')) {
             const vals = color.match(/\d+/g);
             if (vals) {
-                r = parseInt(vals[0]);
-                g = parseInt(vals[1]);
-                b = parseInt(vals[2]);
+                [r, g, b] = vals.map(Number);
             }
         } else {
             return '';
