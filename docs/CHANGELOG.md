@@ -2,6 +2,10 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.4.1] - 2026-02-22
+### Refonte UI/UX (Mode Clair)
+- **Nouvelle Palette** : Remplacement de la palette Indigo/Ardoise du mode clair par des tons plus chaleureux et moins contrastés (Beige chaud, Sable, et Rose poudré "Dusty Rose"). Le contraste texte/fond a été adouci pour limiter la fatigue visuelle (fonds crème au lieu de blanc pur, textes brun sombre au lieu de noir).
+
 ## [2.4.0] - 2026-02-21
 ### Refactoring & UI
 - **WYSIWYG Global (`MarkdownEditor.js`)** : Extraction de l'éditeur de texte enrichi (Markdown) des Livrables vers un composant UI autonome et réutilisable.

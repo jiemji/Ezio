@@ -1,17 +1,16 @@
 :root {
     /* --- THEME PREMIUM (Light) --- */
-    /* Palette principale : Indigo / Slate */
-    --primary: #4f46e5;
-    /* Indigo 600 - Plus vibrant */
-    --primary-hover: #4338ca;
-    /* Indigo 700 */
-    --primary-light: #e0e7ff;
-    /* Indigo 100 (Badges background) */
+    /* Palette principale : Warm Beige / Dusty Rose */
+    --primary: #b88682;
+    /* Dusty Rose Assombri */
+    --primary-hover: #a67470;
+    /* Darker Dusty Rose */
+    --primary-light: #ebd6d4;
+    /* Light Rose (Badges background) */
 
-    --secondary: #64748b;
-    /* Slate 500 */
-    --secondary-hover: #475569;
-    /* Slate 600 */
+    --secondary: #c0aa96;
+    /* Tan / Medium Beige */
+    --secondary-hover: #ad9681;
 
     --danger: #ef4444;
     /* Red 500 */
@@ -21,23 +20,23 @@
     /* Red 100 */
 
     /* Backgrounds & Surfaces */
-    --bg-color: #f8fafc;
-    /* Slate 50 */
-    --card-bg: #ffffff;
-    --header-bg: rgba(255, 255, 255, 0.85);
+    --bg-color: #eee6dc;
+    /* Very Light Cream (from palette) */
+    --card-bg: #fcf8f2;
+    --header-bg: rgba(238, 230, 220, 0.85);
     /* Glassmorphism base */
 
     /* Typography Colors */
-    --text-main: #0f172a;
-    /* Slate 900 - Très sombre, pas noir pur */
-    --text-muted: #64748b;
-    /* Slate 500 */
+    --text-main: #3d3530;
+    /* Warm dark gray / brown */
+    --text-muted: #7a6e64;
+    /* Warm muted gray */
 
     /* Borders & Dividers */
-    --border: #e2e8f0;
-    /* Slate 200 */
-    --readonly: #f1f5f9;
-    /* Slate 100 */
+    --border: #dfd3c5;
+    /* Light Beige (from palette) */
+    --readonly: #e8dcd0;
+    /* Very light beige for readonly inputs */
 
     /* IA Specific */
     --ia-color: #10b981;
