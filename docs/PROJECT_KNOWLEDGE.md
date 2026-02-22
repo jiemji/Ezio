@@ -108,6 +108,7 @@ graph TD
 
 5.  **Module Modèles (`app_models.js`)** :
     *   Interface de gestion (CRUD) du fichier `models.json`.
+    *   **Propriétés Étendues** : Gère la propriété `locked` (empêche la suppression de modèles par défaut, visible via 🔒) et la propriété `outil` (rend le modèle disponible comme Outil IA rapide dans l'éditeur Markdown, visible via 🛠️).
     *   **Test de Connexion** : Vérifie la validité des crédenitals et récupère la liste des modèles disponibles via l'API du provider.
 
 6.  **Module Rapports (`app_reports.js` & `ReportsRenderer.js`)** :
@@ -118,9 +119,9 @@ graph TD
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
-    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`contenteditable`) avec barre d'outils visuelle (Titres, Listes, Gras) qui convertit de manière bidirectionnelle et précise le HTML en Markdown. Le "Tableau" généré par l'IA en contexte y est rendu invisible pour limiter la pollution visuelle.
-    *   **Performance** : Sauvegarde des entrées texte (prompts) temporisée (**Debounce**) pour fluidifier la saisie.
-    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, Widgets à exporter, et option Tableau furtive (greffée uniquement à l'export).
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`MarkdownEditor.js`) avec barre d'outils visuelle (Titres, Listes, Gras, Outils IA) convertissant le HTML en Markdown. Comprend une fenêtre modale d'**Outils IA** permettant des traitements contextuels rapides (ex: traduction, correction) via les modèles configurés comme "outils".
+    *   **Performance** : Sauvegarde des entrées texte temporisée (**Debounce**).
+    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, Widgets à exporter, et option Tableau furtive (greffée à l'export).
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
 
 8.  **Module Export (Data) (`app_export.js`)** :

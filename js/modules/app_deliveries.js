@@ -144,6 +144,20 @@ function setupDelegation() {
             handleMdFormatting(action, idx);
             return;
         }
+
+        const btnAITool = target.closest('.btn-md-ai-tool');
+        if (btnAITool) {
+            const idx = parseInt(btnAITool.getAttribute('data-idx'));
+            const editor = els.main.querySelector(`#dlv-editor-${idx}`);
+            MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
+                const delivery = currentForm.reports.find(d => d.id === selection.id);
+                if (delivery && delivery.structure[idx]) {
+                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(newHtml);
+                    store.save();
+                }
+            });
+            return;
+        }
     };
 
     // 2. CHANGE Delegation (Selects)

@@ -2,6 +2,11 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.4.2] - 2026-02-22
+### Ajouts et Améliorations
+- **Modèles IA Non-Supprimables** : Ajout d'une propriété `locked: true` pour protéger les modèles vitaux configurés par défaut dans `models.json`.
+- **Outils IA rapides** : Ajout d'une propriété `outil: true` sur les modèles. L'éditeur Markdown (Audit & Livrables) s'enrichit d'un bouton "Baguette magique" permettant d'invoquer ces outils IA (ex: Relecture, Traduction) directement sur le texte sélectionné via une fenêtre modale ergonomique (Split-view).
+
 ## [2.4.1] - 2026-02-22
 ### Refonte UI/UX (Mode Clair)
 - **Nouvelle Palette** : Remplacement de la palette Indigo/Ardoise du mode clair par des tons plus chaleureux et moins contrastés (Beige chaud, Sable, et Rose poudré "Dusty Rose"). Le contraste texte/fond a été adouci pour limiter la fatigue visuelle (fonds crème au lieu de blanc pur, textes brun sombre au lieu de noir).

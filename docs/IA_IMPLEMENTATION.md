@@ -56,7 +56,17 @@ Fichier maître situé à la racine.
 
 ---
 
-## 4. Module Livrables (Rapports)
+## 4. Outils IA (Éditeur Markdown)
+
+### Spécifications Fonctionnelles
+*   **Objectif :** Appliquer un traitement rapide (traduction, correction, synthèse) sur le texte saisi.
+*   **Trigger :** Clic sur le bouton Baguette Magique (✨) de l'éditeur Markdown (`MarkdownEditor.js`).
+*   **Sélection :** Modèles avec `"outil": true`.
+*   **Action :** Le texte de l'éditeur est envoyé au modèle outil sélectionné, et la réponse remplace le texte original une fois validée.
+
+---
+
+## 5. Module Livrables (Rapports)
 
 ### Spécifications Fonctionnelles
 *   **Objectif :** Générer une section de rapport basée sur un ensemble de lignes.

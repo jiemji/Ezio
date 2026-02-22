@@ -230,6 +230,22 @@ function attachEvents(container, actions, currentForm) {
             }
             return;
         }
+
+        // E. AI TOOLS
+        const btnAITool = target.closest('.btn-md-ai-tool');
+        if (btnAITool) {
+            const idxStr = btnAITool.getAttribute('data-idx');
+            const editor = container.querySelector(`#editor-${idxStr}`);
+            MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
+                const parts = idxStr.split('-');
+                if (parts.length === 2) {
+                    const r = parseInt(parts[0]);
+                    const c = parseInt(parts[1]);
+                    actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(newHtml));
+                }
+            });
+            return;
+        }
     };
 
     // 2. CHANGE DELEGATION
