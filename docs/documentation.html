@@ -202,9 +202,87 @@
         <main class="content-area">
             <h1>Documentation Technique & Fonctionnelle - Ezio</h1>
             <p>Ezio est une application "Local-First" d'audit et de pilotage assisté par IA. Cette documentation couvre
-                l'installation pour les développeurs et l'architecture refondue.</p>
+                le guide fonctionnel pour les utilisateurs, l'installation pour les développeurs et l'architecture
+                refondue.</p>
 
-            <h2 id="installation">1. Installation en Local</h2>
+            <h2 id="guide-fonctionnel">1. Guide Fonctionnel (Par Écran)</h2>
+            <p>Ezio est conçu pour simplifier et automatiser la saisie d'audits, de formulaires complexes, et la
+                génération de rapports via l'Intelligence Artificielle. Ce guide décrit les fonctions offertes par
+                chaque écran.</p>
+
+            <h3 id="screen-audit">1.1 Éditeur de Formulaire / Audit (Accueil)</h3>
+            <p>C'est le cœur de la saisie des données. Il se présente sous la forme d'un tableur dynamique interactif.
+            </p>
+            <ul>
+                <li><strong>Création du formulaire</strong> : Définition des colonnes libres (Texte, Liste déroulante,
+                    Chapitre) via le bouton "Gérer les colonnes".</li>
+                <li><strong>Saisie en grille</strong> : Les utilisateurs peuvent ajouter des lignes (Constats,
+                    Questions) et les remplir comme dans Excel.</li>
+                <li><strong>Intervention IA (Baguette Magique ✨)</strong> : Colonnes dédiées (<code>ia</code>)
+                    permettant de générer automatiquement un contenu à partir des autres cellules de la ligne courante.
+                </li>
+                <li><strong>Éditeur de texte enrichi</strong> : Les grandes cellules peuvent être éditées via un
+                    mini-éditeur Markdown pour une meilleure mise en page, et disposent aussi d'outils de "Traitement IA
+                    rapide" (Traduction, Relecture) accessibles via la fenêtre 🛠️.</li>
+                <li><strong>Filtres et Tris</strong> : Permet de filtrer l'affichage par chapitre ou sous-chapitre.</li>
+            </ul>
+            <div class="alert alert-note">
+                <strong>Exemple d'utilisation :</strong> Un auditeur cyber définit une colonne "Question", une
+                "Constat", et une "Reco. (IA)". Il remplit 50 lignes, clique sur "Générer tout" (ou ✨ par ligne), et
+                l'IA rédige les recommandations adaptées. L'auditeur relit, modifie le texte via l'éditeur enrichi, et
+                le verrouille (🔒).
+            </div>
+
+            <h3 id="screen-dashboard">1.2 Dashboard (Tableau de bord interactif)</h3>
+            <p>Construit automatiquement des graphiques statistiques à partir des données saisies dans l'Audit.</p>
+            <ul>
+                <li><strong>Création de Widgets (Graphiques)</strong> : Creer des camemberts, barres, etc.</li>
+                <li><strong>Croisement de données matricielles</strong> : Chaque graphique permet de croiser deux
+                    colonnes de l'audit.</li>
+                <li><strong>Filtres</strong> : Chaque graphique peut être restreint à un "Chapitre".</li>
+                <li><strong>Affichages personnalisés</strong> : Afficher valeurs brutes ou pourcentages. Option
+                    d'inclusion aux rapports.</li>
+            </ul>
+
+            <h3 id="screen-modeles">1.3 Modèles de Rapports</h3>
+            <p>Gère la bibliothèque logicielle des "briques" (Modules) qui serviront à composer les livrables IA.</p>
+            <ul>
+                <li><strong>Gestion des Modèles</strong> : Créer différents types de modèles finaux (ex: "Synthèse
+                    Managériale").</li>
+                <li><strong>Composition</strong> : Glisser/déposer des modules IA dans les modèles.</li>
+                <li><strong>Scope</strong> : Définir si le module IA lit l'intégralité du formulaire ou un filtre
+                    précis.</li>
+            </ul>
+
+            <h3 id="screen-livrables">1.4 Rapports / Livrables</h3>
+            <p>Le moteur d'exécution et de relecture finaux des modèles créés précédemment.</p>
+            <ul>
+                <li><strong>Création de Livrable</strong> : Instancie un nouveau livrable depuis un Modèle.</li>
+                <li><strong>Génération IA</strong> : Génération des textes et graphiques.</li>
+                <li><strong>Éditeur WYSIWYG Global</strong> : L'utilisateur peut faire de la mise en page, corriger le
+                    texte ou utiliser les "Outils IA" modaux (Traduire, Reformuler).</li>
+            </ul>
+
+            <h3 id="screen-impression">1.5 Impression (Exportation)</h3>
+            <p>Le centre de compilation physique des données.</p>
+            <ul>
+                <li><strong>Injection Word (.docx)</strong> : Utilise des fichiers locaux Word comme gabarits et y coule
+                    les textes générés et graphiques du Dashboard à l'emplacement de <code>{{CONTENT}}</code>.</li>
+                <li><strong>Export PowerPoint (.pptx)</strong> : Génère des slides structurées avec graphiques natifs.
+                </li>
+            </ul>
+
+            <h3 id="screen-agents">1.6 Agents IA (Configuration)</h3>
+            <p>L'espace d'administration technique de l'Intelligence Artificielle.</p>
+            <ul>
+                <li><strong>Verrouillage (🔒) & Outils (🛠️)</strong> : Protège les modèles ou les transforme en
+                    "Macros" (outils rapides pour l'éditeur Markdown).</li>
+                <li><strong>Prompts Systèmes</strong> : Définition de l'âme du modèle.</li>
+            </ul>
+
+            <hr>
+
+            <h2 id="installation">2. Installation en Local</h2>
             <p>L'application est conçue pour être lancée sans build complexe (No Webpack/Vite requis pour le runtime),
                 mais nécessite un serveur HTTP local pour contourner les restrictions CORS des modules ES6.</p>
 
@@ -213,7 +291,7 @@
                 d'exécution léger (Python, Node.js ou extension Chrome).
             </div>
 
-            <h3>1.1 Démarrage Rapide</h3>
+            <h3>2.1 Démarrage Rapide</h3>
             <p>Ouvrez un terminal à la racine du projet :</p>
             <pre><code># Avec Python 3
 python -m http.server 8000
@@ -391,63 +469,35 @@ async function generateModule(delivery) {
                         Brutes</strong> ou <strong>Pourcentages (%)</strong>, avec mise à l'échelle dynamique des
                     graduations locales (axe X capé à 100%).</li>
             </ul>
-
-            <h2 id="features">4. Fonctionnalités Clés</h2>
-
-            <h3>4.1 Gestion des Données (JSON)</h3>
-            <p>L'état est persistant via <code>localStorage</code>. Structure type :</p>
-            <pre><code>{
-  "columns": [ { "id": "c1", "type": "combo", "label": "Conformité" } ],
-  "rows": [ ["R1", "Non"] ],
-  "reports": [ /* Livrables générés */ ]
-}</code></pre>
-
-            <h3>4.2 Assistant IA</h3>
-            <ul>
-                <li><strong>Configuration</strong> : Fichier <code>models.json</code> à la racine.</li>
-                <li><strong>Providers</strong> : Compatible OpenAI, Groq, et <strong>LM Studio</strong> (Local).</li>
-                <li><strong>Attributs Protégés</strong> : Les modèles configurés avec <code>locked: true</code> ne
-                    peuvent
-                    pas être supprimés. Ceux avec <code>outil: true</code> agissent comme des macros de traitement de
-                    texte dans l'éditeur Markdown.
-                </li>
-            </ul>
-
-            <h3 id="printing-features">4.3 Impression & Rapports</h3>
-            <p>La nouvelle interface d'impression unifiée permet de générer des livrables professionnels.</p>
-            <ul>
-                <li><strong>Format Word</strong> : Support des modèles <code>.docx</code> et <code>.dotx</code> pour
-                    conserver votre identité visuelle.</li>
-                <li><strong>Format PowerPoint</strong> : Génération de présentations basées sur des thèmes
-                    configurables.</li>
-            </ul>
-            <div class="alert alert-note">
-                <strong>Guide de Configuration :</strong> Pour apprendre à créer vos propres modèles, consultez le <a
-                    href="OUTPUT_CONFIG_GUIDE.md" target="_blank">Guide de Configuration des Sorties</a>.
-            </div>
-
         </main>
 
         <nav class="nav-sidebar">
             <h3>Menu</h3>
             <ul>
-                <li><a href="#installation">1. Installation</a></li>
-                <li><a href="#architecture">2. Architecture</a>
+                <li><a href="#guide-fonctionnel">1. Guide Fonctionnel</a>
                     <ul>
-                        <li><a href="#structure" class="sub-link">Structure Fichiers</a></li>
-                        <li><a href="#core-examples" class="sub-link">Exemples Code Cœur</a></li>
+                        <li><a href="#screen-audit" class="sub-link">1.1 Audit</a></li>
+                        <li><a href="#screen-dashboard" class="sub-link">1.2 Dashboard</a></li>
+                        <li><a href="#screen-modeles" class="sub-link">1.3 Modèles Rapports</a></li>
+                        <li><a href="#screen-livrables" class="sub-link">1.4 Livrables</a></li>
+                        <li><a href="#screen-impression" class="sub-link">1.5 Impression</a></li>
+                        <li><a href="#screen-agents" class="sub-link">1.6 Agents IA</a></li>
                     </ul>
                 </li>
-                <li><a href="#modules">3. Modules</a>
+                <li><a href="#installation">2. Installation</a></li>
+                <li><a href="#architecture">3. Architecture</a>
                     <ul>
-                        <li><a href="#mod-audit" class="sub-link">3.1 Audit (MVC)</a></li>
-                        <li><a href="#mod-deliveries" class="sub-link">3.2 Livrables (Async)</a></li>
-                        <li><a href="#mod-printing" class="sub-link">3.3 Impression</a></li>
+                        <li><a href="#structure" class="sub-link">3.1 Structure Fichiers</a></li>
+                        <li><a href="#core-examples" class="sub-link">3.2 Code Cœur</a></li>
                     </ul>
                 </li>
-                <li><a href="#features">4. Fonctionnalités</a>
+                <li><a href="#modules">4. Structure Code</a>
                     <ul>
-                        <li><a href="#printing-features" class="sub-link">4.3 Impression</a></li>
+                        <li><a href="#mod-audit" class="sub-link">4.1 Audit (MVC)</a></li>
+                        <li><a href="#mod-deliveries" class="sub-link">4.2 Livrables (Async)</a></li>
+                        <li><a href="#mod-printing" class="sub-link">4.3 Impression</a></li>
+                        <li><a href="#mod-reports" class="sub-link">4.4 Modèles</a></li>
+                        <li><a href="#mod-dashboard" class="sub-link">4.5 Dashboard</a></li>
                     </ul>
                 </li>
             </ul>
