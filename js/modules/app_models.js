@@ -33,7 +33,8 @@ export function initModels() {
         endpoint: document.getElementById('inpEndpoint'),
         apikey: document.getElementById('inpApiKey'),
         temperature: document.getElementById('inpTemp'),
-        context_length: document.getElementById('inpContext')
+        context_length: document.getElementById('inpContext'),
+        outil: document.getElementById('inpOutil')
     };
 
     const btnNewModel = document.getElementById('btnNewModel');
@@ -76,7 +77,7 @@ function renderModelList() {
             onAddClick: null,
             onItemClick: (item) => selectModelItem(item.id),
             hideListTitle: true,
-            itemRenderer: (item) => `<h4>${Utils.escapeHtml(item.nom || 'Sans nom')}</h4><p>${Utils.escapeHtml(item.provider)} - ${Utils.escapeHtml(item.model)}</p>`
+            itemRenderer: (item) => `<h4>${item.outil ? '🛠️ ' : ''}${Utils.escapeHtml(item.nom || 'Sans nom')}${item.locked ? ' <span style="font-size: 0.8em; opacity: 0.6;" title="Verrouillé">🔒</span>' : ''}</h4><p>${Utils.escapeHtml(item.provider)} - ${Utils.escapeHtml(item.model)}</p>`
         });
     }
 
@@ -102,6 +103,12 @@ function selectModelItem(idx) {
     domModels.inputs.apikey.value = m.apikey || "";
     domModels.inputs.temperature.value = m.temperature || 0.7;
     domModels.inputs.context_length.value = m.context_length || 4096;
+    if (domModels.inputs.outil) domModels.inputs.outil.checked = m.outil || false;
+
+    const btnDeleteModel = document.getElementById('btnDeleteModel');
+    if (btnDeleteModel) {
+        btnDeleteModel.style.display = m.locked ? 'none' : 'inline-block';
+    }
 
     const dl = document.getElementById('modelListOptions');
     if (dl) dl.innerHTML = "";
@@ -118,6 +125,7 @@ function createNewModel() {
         endpoint: "http://localhost:1234/v1/chat/completions",
         apikey: "not-needed",
         model: "model-identifier",
+        outil: false,
         temperature: 0.7,
         context_length: 8192
     };
@@ -137,6 +145,7 @@ function saveModelInMemory() {
     m.apikey = domModels.inputs.apikey.value;
     m.temperature = parseFloat(domModels.inputs.temperature.value);
     m.context_length = parseInt(domModels.inputs.context_length.value);
+    if (domModels.inputs.outil) m.outil = domModels.inputs.outil.checked;
 }
 
 function saveModelsToFile() {
@@ -147,6 +156,10 @@ function saveModelsToFile() {
 
 function deleteCurrentModel() {
     if (currentModelIndex === -1) return;
+    if (modelsData[currentModelIndex].locked) {
+        showModelStatus("Ce modèle est verrouillé par défaut et ne peut être supprimé.", "error");
+        return;
+    }
     if (!confirm("Supprimer ce modèle ?")) return;
     modelsData.splice(currentModelIndex, 1);
     currentModelIndex = -1;

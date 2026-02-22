@@ -252,7 +252,7 @@ npx http-server .</code></pre>
                     <tr>
                         <td><code>js/ui/</code></td>
                         <td>Interface</td>
-                        <td>Navigation.js, Sidebar.js, MarkdownEditor.js</td>
+                        <td>Navigation.js, Sidebar.js, Modal.js, MarkdownEditor.js</td>
                     </tr>
                     <tr>
                         <td><code>js/api/</code></td>
@@ -335,6 +335,9 @@ function renderTable() {
                     polluer l'éditeur, et greffera proprement ce dernier au document complet exclusivement lors de
                     l'Impression ou de la Sauvegarde MD.
                 </li>
+                <li><strong>Outils IA (Baguette Magique ✨)</strong> : Via une pop-up (Split-view), le texte peut être
+                    envoyé à un Agent configuré en "Outil". Cela permet de scinder la relectures, la traduction ou
+                    d'autres traitements de la génération initiale.</li>
             </ul>
             <pre><code>// Exemple de flux (simplifié)
 async function generateModule(delivery) {
@@ -403,6 +406,11 @@ async function generateModule(delivery) {
             <ul>
                 <li><strong>Configuration</strong> : Fichier <code>models.json</code> à la racine.</li>
                 <li><strong>Providers</strong> : Compatible OpenAI, Groq, et <strong>LM Studio</strong> (Local).</li>
+                <li><strong>Attributs Protégés</strong> : Les modèles configurés avec <code>locked: true</code> ne
+                    peuvent
+                    pas être supprimés. Ceux avec <code>outil: true</code> agissent comme des macros de traitement de
+                    texte dans l'éditeur Markdown.
+                </li>
             </ul>
 
             <h3 id="printing-features">4.3 Impression & Rapports</h3>
