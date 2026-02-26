@@ -642,7 +642,22 @@ export async function buildContext(scope, columnsIds, data) {
     rows.forEach(row => {
         const cells = colsToInclude.map(c => {
             let val = row[c.index];
+            const colDef = data.columns[c.index];
+
             if (val === null || val === undefined) val = "";
+
+            // Handle Combo colors
+            if (colDef && colDef.type === 'combo' && colDef.params?.colorScheme && val) {
+                const options = colDef.params.options || [];
+                // Use the built-in function to get the color, or default to a safe value
+                const bg = Utils.getComboColor(colDef.params.colorScheme, val, options);
+                if (bg) {
+                    // Use a recognizable HTML span that the PPTX/Word parsers can potentially read later
+                    // But for strict MD, we just inject the background color string.
+                    val = `<span style="background-color:${bg};color:#fff;padding:2px 4px;border-radius:3px;">${val}</span>`;
+                }
+            }
+
             // Nettoyage basique pour ne pas casser le tableau MD
             val = String(val).replace(/\n/g, "<br>").replace(/\|/g, "\\|");
             return val;
@@ -741,12 +756,9 @@ export async function downloadDeliveryReport(delivery) {
         mdContent += `## ${title}\n\n`;
 
         if (inst.config?.isTable) {
-            if (!inst.contextTable) {
-                // Régénérer le tableau Markdown à la volée s'il est manquant 
-                // (cas d'une ancienne sauvegarde ou si l'utilisateur n'a pas régénéré)
-                inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
-                store.save(); // Met à jour l'instance pour la prochaine fois
-            }
+            // Toujours régénérer le tableau à la volée pour avoir les dernières données et couleurs
+            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+
             if (inst.contextTable) {
                 mdContent += `${inst.contextTable}\n\n---\n\n`;
             }
@@ -755,6 +767,9 @@ export async function downloadDeliveryReport(delivery) {
         mdContent += `${content}\n\n`;
         mdContent += `---\n\n`;
     }
+
+    // Save one last time in case contextTables were updated
+    store.save();
 
     const filename = `${Utils.toSlug(delivery.name)}.md`;
     Utils.downloadFile(mdContent, filename, 'text/markdown');

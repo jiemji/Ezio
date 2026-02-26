@@ -137,7 +137,11 @@ graph TD
 10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
     *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
-    *   **Génération PPTX Avancée** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis. Supporte la création organique d'une slide de couverture (`TITRE`), d'intercalaires de sections (`CHAPITRE`), et de contenu (`SLIDE`). Le moteur inclut un algorithme de **Pagination Intelligente (Overflow)** qui scinde automatiquement les longs textes Markdown et génère de nouvelles diapositives à la volée pour éviter toute troncature. Intègre et formate automatiquement les Tableaux furtifs sur des slides dédiées.
+    *   **Génération PPTX Avancée** : Crée des présentations PowerPoint natives via `PptxGenJS`. Supporte la création organique d'une slide de couverture (`TITRE`), d'intercalaires de sections (`CHAPITRE`), et de contenu (`SLIDE`). Le moteur inclut un algorithme de **Pagination Intelligente (Overflow)** qui scinde automatiquement les longs textes Markdown et génère de nouvelles diapositives à la volée. Intègre et formate automatiquement les Tableaux furtifs sur des slides dédiées.
+    *   **Formatage des Tableaux (PPTX & Word)** :
+        *   Les cellules de type "Combo" (listes déroulantes) de l'Audit injectent automatiquement leur schéma de couleur (`colorScheme`) dans le code HTML Markdown.
+        *   Les moteurs Word et PPTX interceptent ces couleurs HTML à la volée, colorisant nativement l'arrière-plan des cellules exportées et adaptant la couleur de police pour un contraste optimal.
+        *   `output_config.json` permet de structurer un objet `tableFormat` par template PPTX (en-tête, bordures, zébrage).
     *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page. Intègre et formate automatiquement les Tableaux furtifs.
     *   **Export Widgets** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
 

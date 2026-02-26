@@ -157,10 +157,7 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
 
         // Dessin du Tableau de Contexte (isolé)
         if (inst.config?.isTable) {
-            if (!inst.contextTable) {
-                inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
-                store.save();
-            }
+            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
                 parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat);
             }
@@ -490,11 +487,44 @@ function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
         let bold = isHeader ? format.headerBold : false;
 
         return row.map(cellText => {
+            let cellFill = fill;
+            let cellColor = color;
+            let rawText = cellText;
+
+            // Simple regex to parse our specific span format: 
+            // <span style="background-color:rgba(x,y,z,a);color:#fff;padding:2px 4px;border-radius:3px;">Value</span>
+            const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
+
+            if (spanMatch) {
+                let extractedBg = spanMatch[1].trim();
+                let extractedColor = spanMatch[2].trim();
+
+                // PptxGenJS hex only format (strip # and handle rgb/rgba)
+                if (extractedBg.startsWith('#')) {
+                    cellFill = extractedBg.replace('#', '');
+                } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
+                    // Try to convert rgb to hex for PPTX, since PptxGenJS prefers hex without #
+                    const rgbVals = extractedBg.match(/\d+/g);
+                    if (rgbVals && rgbVals.length >= 3) {
+                        const r = parseInt(rgbVals[0]).toString(16).padStart(2, '0');
+                        const g = parseInt(rgbVals[1]).toString(16).padStart(2, '0');
+                        const b = parseInt(rgbVals[2]).toString(16).padStart(2, '0');
+                        cellFill = (r + g + b).toUpperCase();
+                    }
+                }
+
+                if (extractedColor.startsWith('#')) {
+                    cellColor = extractedColor.replace('#', '');
+                }
+
+                rawText = spanMatch[3]; // The actual text inside the span
+            }
+
             return {
-                text: cellText,
+                text: rawText,
                 options: {
-                    fill: fill,
-                    color: color,
+                    fill: cellFill,
+                    color: cellColor,
                     bold: bold,
                     fontFace: font,
                     fontSize: format.fontSize,
