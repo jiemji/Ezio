@@ -7,6 +7,7 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 - **Couleurs de Cellules Combo** : Le moteur de génération intercepte désormais les codes couleurs (`colorScheme`) définis sur les colonnes de type "Combo" (listes déroulantes) dans l'Audit. Ces couleurs sont converties à la volée en balises HTML furtives dans le code Markdown du Tableau de Contexte.
 - **Support Natif Word & PPTX** : Les moteurs d'export PPTX (`app_outputppt.js`) et Word (`app_output_word.js`) intègrent un nouveau parseur pour lire ces balises HTML. Les cellules des tableaux reprennent nativement la couleur de fond associée à la valeur sélectionnée, tout en adaptant dynamiquement la couleur du texte (noir/blanc) pour garantir le contraste. Le fichier `.md` téléchargé intègre également ces marqueurs de couleurs prêts à être interprétés par un viewer.
 - **Global Table Styling PPTX** : Ajout de la configuration `tableFormat` au niveau de chaque `template` PPTX dans `output_config.json`, permettant de configurer finement les tons de l'en-tête (Gras, Couleur Fond, Couleur Texte) et le zébrage des lignes (RowFill, RowAltFill) de manière granulaire par template.
+- **Rendu Markdown Fidèle (PPTX)** : Le parseur PowerPoint simule désormais la mise en forme du texte riche (WYSIWYG) avec prise en charge automatique des **Puces** (`- ` ou `* `), des niveaux d'**Indentation** et du texte **Gras** en ligne (`**texte**`), le tout s'intégrant parfaitement dans le système de pagination automatique.
 
 ## [2.4.3] - 2026-02-26
 ### Impression PowerPoint (PPTX) Avancée

@@ -365,7 +365,8 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
     };
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const originalLine = lines[i];
+        const line = originalLine.trim();
 
         // 1. Tableaux
         if (line.startsWith('|')) {
@@ -395,47 +396,52 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
             }
 
             if (line === '') {
-                // Empty line = line break
+                // Empty line = empty text run for spacing
+                textRuns.push({ text: '', options: { fontSize: 12, breakLine: true } });
                 textHeightAccumulated += 0.15;
                 continue;
             }
 
+            // Detect Indentation and Bullets
+            const leadingSpacesMatch = originalLine.match(/^(\s*)/);
+            const leadingSpacesCount = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
+            const indentLvl = Math.floor(leadingSpacesCount / 2); // 2 spaces = 1 indent level
+
+            let isBullet = false;
+            let textContent = line;
+
+            if (textContent.startsWith('- ') || textContent.startsWith('* ')) {
+                isBullet = true;
+                textContent = textContent.substring(2).trim();
+            }
+
             // 2. Titres et Texte
-            let run = {};
+            let baseOptions = { breakLine: true };
             let h = lineHeightBase;
 
-            if (line.startsWith('# ')) {
-                run = {
-                    text: line.replace('# ', ''),
-                    options: { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title, breakLine: true }
-                };
+            if (textContent.startsWith('# ')) {
+                baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
+                textContent = textContent.replace('# ', '');
                 h = 0.6;
-            } else if (line.startsWith('## ')) {
-                run = {
-                    text: line.replace('## ', ''),
-                    options: { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title, breakLine: true }
-                };
+            } else if (textContent.startsWith('## ')) {
+                baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
+                textContent = textContent.replace('## ', '');
                 h = 0.5;
-            } else if (line.startsWith('### ')) {
-                run = {
-                    text: line.replace('### ', ''),
-                    options: { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title, breakLine: true }
-                };
+            } else if (textContent.startsWith('### ')) {
+                baseOptions = { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace('### ', '');
                 h = 0.5;
             } else {
-                // Texte normal
-                const cleanLine = line.replace(/\*\*/g, '');
-                run = {
-                    text: cleanLine,
-                    options: { fontSize: 12, color: theme.text, fontFace: fontBody, breakLine: true }
-                };
-                h = lineHeightBase;
-
-                const wrapFactor = Math.ceil(cleanLine.length / (contentW * 12));
+                baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
+                // Wrap height estimation
+                const wrapFactor = Math.ceil(textContent.length / (contentW * 12));
                 if (wrapFactor > 1) {
                     h *= wrapFactor;
                 }
             }
+
+            if (isBullet) baseOptions.bullet = true;
+            if (indentLvl > 0) baseOptions.indentLevel = indentLvl;
 
             if (currentY + textHeightAccumulated + h > maxY && currentY > area.y) {
                 flushText();
@@ -443,7 +449,40 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 currentY = area.y;
             }
 
-            textRuns.push(run);
+            // Parse Inline Bold (**text**)
+            const parts = textContent.split(/(\*\*.*?\*\*)/g).filter(p => p.length > 0);
+            if (parts.length === 0) parts.push('');
+
+            for (let pIdx = 0; pIdx < parts.length; pIdx++) {
+                let pText = parts[pIdx];
+                let pBold = baseOptions.bold || false;
+
+                if (pText.startsWith('**') && pText.endsWith('**')) {
+                    pText = pText.slice(2, -2);
+                    pBold = true;
+                }
+
+                const isLastInLine = (pIdx === parts.length - 1);
+
+                let runOptions = {
+                    ...baseOptions,
+                    bold: pBold,
+                    breakLine: isLastInLine
+                };
+
+                // Seulement le premier bloc de texte d'une ligne doit porter la propriété bullet/indent
+                // Sinon, PptxGenJS crée une nouvelle puce à chaque sous-bloc formaté
+                if (pIdx > 0) {
+                    delete runOptions.bullet;
+                    delete runOptions.indentLevel;
+                }
+
+                textRuns.push({
+                    text: pText,
+                    options: runOptions
+                });
+            }
+
             textHeightAccumulated += h;
         }
     }
