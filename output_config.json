@@ -7,8 +7,13 @@
     ],
     "templates": [
         {
-            "id": "extracted_1771110192358",
-            "name": "Support ISEC",
+            "id": "extracted_1772134936046",
+            "name": "Slides ISEC",
+            "layout": {
+                "name": "custom",
+                "width": 13.33,
+                "height": 7.5
+            },
             "theme": {
                 "primary": "000000",
                 "secondary": "666666",
@@ -42,7 +47,7 @@
                             "h": 0.84,
                             "text": "INTRINSEC CONSEIL",
                             "fontSize": 44,
-                            "color": "000000",
+                            "color": "bg1",
                             "bold": true
                         },
                         {
@@ -91,34 +96,23 @@
                     },
                     "elements": [
                         {
-                            "type": "rect",
+                            "type": "text",
                             "x": 0,
                             "y": 0,
                             "w": 13.33,
-                            "h": 1.46,
-                            "fill": "C00000"
-                        },
-                        {
-                            "type": "text",
-                            "x": 0.31,
-                            "y": 0.31,
-                            "w": 12.72,
-                            "h": 0.84,
+                            "h": 1.07,
                             "text": "{{title}}",
-                            "fontSize": 44,
-                            "color": "000000",
+                            "fontSize": 40,
+                            "color": "bg1",
                             "bold": true,
-                            "align": "right"
-                        },
-                        {
-                            "type": "text",
-                            "x": 0.43,
-                            "y": 1.76,
-                            "w": 12.6,
-                            "h": 5.32,
-                            "text": "{{CONTENT_PLACEHOLDER}}",
-                            "fontSize": 12,
-                            "color": "000000"
+                            "align": "right",
+                            "margin": [
+                                14.2,
+                                42.5,
+                                14.2,
+                                42.5
+                            ],
+                            "fill": "C00000"
                         }
                     ],
                     "contentArea": {

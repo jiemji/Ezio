@@ -2,6 +2,12 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.4.3] - 2026-02-26
+### Impression PowerPoint (PPTX) Avancée
+- **Extracteur Intelligent (`extract.html`)** : Récupération des dimensions réelles du modèle (`layout` en pouces), conversion et préservation exacte des marges internes (en points `pt`), et ajout de la gestion avancée des couleurs de thèmes de police (`schemeClr`). Configuration simplifiée des familles de typographies "Titres" et "Corps" via l'interface.
+- **Pagination Automatique (Overflow)** : Le moteur d'export PPT (`app_outputppt.js`) incorpore désormais une fonctionnalité de saut de page mathématique. Si le texte généré dépasse la zone allouée (`contentArea`) d'une diapositive, le contenu débordant est instantanément reporté sur une **nouvelle diapositive fraîchement générée**, évitant toute troncature.
+- **Diapositives Dédiées** : Isolation intelligente des `Tableaux` sur des slides uniques générées à la volée, et support natif de slides intercalaires de couverture `TITRE` et de sous-sections `CHAPITRE`.
+
 ## [2.4.2] - 2026-02-22
 ### Ajouts et Améliorations
 - **Modèles IA Non-Supprimables** : Ajout d'une propriété `locked: true` pour protéger les modèles vitaux configurés par défaut dans `models.json`.

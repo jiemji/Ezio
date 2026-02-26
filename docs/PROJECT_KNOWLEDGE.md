@@ -137,9 +137,14 @@ graph TD
 10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
     *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
-    *   **Génération PPTX** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis. Intègre et formate automatiquement les Tableaux furtifs de l'éditeur Livrables.
+    *   **Génération PPTX Avancée** : Crée des présentations PowerPoint natives via `PptxGenJS` selon les templates définis. Supporte la création organique d'une slide de couverture (`TITRE`), d'intercalaires de sections (`CHAPITRE`), et de contenu (`SLIDE`). Le moteur inclut un algorithme de **Pagination Intelligente (Overflow)** qui scinde automatiquement les longs textes Markdown et génère de nouvelles diapositives à la volée pour éviter toute troncature. Intègre et formate automatiquement les Tableaux furtifs sur des slides dédiées.
     *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page. Intègre et formate automatiquement les Tableaux furtifs.
-    *   **Export Widgets (Nouveau)** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
+    *   **Export Widgets** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
+
+11. **Outil d'Extraction PowerPoint (`extract.html`)** :
+    *   **Utilitaire Autonome** : Script exécutable localement en glisser-déposer.
+    *   **Rétro-Ingénierie** : Parse les archives `.pptx` brutes pour en extraire la structure XML (`p:spTree`, `a:t`).
+    *   **Génération de JSON** : Produit un objet JSON compatible avec `output_config.json` contenant précisément la taille (`layout`), le fond, les marges (`points`), et les couleurs de police (`srgbClr`, `schemeClr`) du masque d'origine, évitant la configuration manuelle fastidieuse du layout PptxGenJS.
 
 ### Styles (`css/`)
 *   `style_shared.css` : Styles globaux, variables, layout de base. **Gestion des Z-Index** : Header (2000) > Sidebar (10) > Contenu.

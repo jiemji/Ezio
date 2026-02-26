@@ -268,7 +268,10 @@
             <ul>
                 <li><strong>Injection Word (.docx)</strong> : Utilise des fichiers locaux Word comme gabarits et y coule
                     les textes générés et graphiques du Dashboard à l'emplacement de <code>{{CONTENT}}</code>.</li>
-                <li><strong>Export PowerPoint (.pptx)</strong> : Génère des slides structurées avec graphiques natifs.
+                <li><strong>Export PowerPoint (.pptx)</strong> : Génère des présentations complètes avec une couverture
+                    (<code>TITRE</code>), des intercalaires (<code>CHAPITRE</code>) et pagine automatiquement le
+                    résultat texte de l'Intelligence Artificielle de slide en slide (<code>SLIDE</code>) sans aucune
+                    troncature. Les tableaux disposent de leurs propres diapositives dédiées.
                 </li>
             </ul>
 
@@ -439,8 +442,15 @@ async function generateModule(delivery) {
                 <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le
                     contenu formaté Markdown (et les tableaux de données cachés lors de la prévisualisation) dans des
                     modèles existants.</li>
-                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour générer des slides
-                    vectorielles intégrant le même contenu étendu.</li>
+                <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour créer des présentations
+                    natives selon les matrices définies dans <code>output_config.json</code>. Prise en charge experte de
+                    **l'Overflow** : le moteur divise automatiquement votre texte Markdown généré par l'IA sur autant de
+                    nouvelles diapositives que nécessaire pour empêcher toute coupure, et isole dynamiquement les
+                    Tableaux Markdown de contexte.</li>
+                <li><strong>Outil d'Extraction (extract.html)</strong> : Utilitaire compagnon glisser-déposer qui
+                    rétro-conçoit vos masques <code>.pptx</code> bruts (XML interne) pour en extraire parfaitement le
+                    ratio largeur/hauteur réel (en pouces), les marges (en points), et les palettes de couleurs
+                    thématiques pour alimenter ezio sans effort.</li>
                 <li><strong>Widgets & Graphiques</strong> : Durant l'Impression Word ou PPTX, les graphiques du
                     Dashboard sélectionnés pour l'export sont automatiquement téléchargés en images PNG renommées à la
                     volée. Cela permet de les intégrer d'un simple glisser-déposer au sein de vos rapports.</li>

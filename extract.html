@@ -287,6 +287,10 @@
                 const slideWidthEmu = parseInt(sldSz.getAttribute("cx"));
                 const slideHeightEmu = parseInt(sldSz.getAttribute("cy"));
 
+                // Calculer la taille en pouces
+                const layoutW = parseFloat((slideWidthEmu / EMU_PER_INCH).toFixed(2));
+                const layoutH = parseFloat((slideHeightEmu / EMU_PER_INCH).toFixed(2));
+
                 // 2. Identify Slide Layouts
                 const layouts = [];
                 // Filter only valid slideLayout files
@@ -360,6 +364,11 @@
                         {
                             id: "extracted_" + Date.now(),
                             name: file.name.replace('.pptx', ''),
+                            layout: {
+                                name: "custom",
+                                width: layoutW,
+                                height: layoutH
+                            },
                             theme: {
                                 primary: "000000",
                                 secondary: "666666",
@@ -582,9 +591,9 @@
                     if (anchor === "ctr") valign = "middle";
                     else if (anchor === "b") valign = "bottom";
 
-                    // margins are in EMU (914400 per inch)
+                    // margins in PptxGenJS are in Points (pt). 1 pt = 12700 EMU
                     // lIns, tIns, rIns, bIns
-                    const toInch = (emu) => parseFloat((parseInt(emu || 0) / 914400).toFixed(2));
+                    const toPt = (emu) => parseFloat((parseInt(emu || 0) / 12700).toFixed(1));
                     const lIns = bodyPr.getAttribute("lIns");
                     const tIns = bodyPr.getAttribute("tIns");
                     const rIns = bodyPr.getAttribute("rIns");
@@ -592,10 +601,10 @@
 
                     if (lIns !== null || tIns !== null || rIns !== null || bIns !== null) {
                         margin = [
-                            toInch(tIns !== null ? tIns : 45720), // Top default: 0.05"
-                            toInch(rIns !== null ? rIns : 91440), // Right default: 0.1"
-                            toInch(bIns !== null ? bIns : 45720), // Bottom default: 0.05"
-                            toInch(lIns !== null ? lIns : 91440)  // Left default: 0.1"
+                            tIns !== null ? toPt(tIns) : 3.6, // Top default: 3.6 pt (0.05")
+                            rIns !== null ? toPt(rIns) : 7.2, // Right default: 7.2 pt (0.1")
+                            bIns !== null ? toPt(bIns) : 3.6, // Bottom default: 3.6 pt (0.05")
+                            lIns !== null ? toPt(lIns) : 7.2  // Left default: 7.2 pt (0.1")
                         ];
                     }
                 }
@@ -625,7 +634,9 @@
                                 const solidFillText = rPr.getElementsByTagName("a:solidFill")[0];
                                 if (solidFillText) {
                                     const srgb = solidFillText.getElementsByTagName("a:srgbClr")[0];
-                                    if (srgb) color = srgb.getAttribute("val");
+                                    const scheme = solidFillText.getElementsByTagName("a:schemeClr")[0];
+                                    const fillNodeText = srgb || scheme;
+                                    if (fillNodeText) color = fillNodeText.getAttribute("val");
                                 }
                             }
                         }
@@ -656,6 +667,7 @@
                     if (fontFace) element.fontFace = fontFace;
                     if (border) element.border = border;
                     if (margin) element.margin = margin;
+                    if (fill) element.fill = fill;
                 } else if (type === "image" && imageData) {
                     element.src = imageData;
                     if (border) element.border = border;

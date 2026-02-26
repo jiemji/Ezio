@@ -54,12 +54,18 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
 
     const pptx = new window.PptxGenJS();
 
-    // Configuration globale
-    pptx.layout = 'LAYOUT_16x9';
-    pptx.author = 'Ezio Audit';
+    // Configuration de base pptxgenjs
+    pptx.author = 'Ezio IA';
     pptx.company = 'Ezio';
-    pptx.subject = delivery.name;
     pptx.title = delivery.name;
+
+    // Définir la taille personnalisée de la diapositive si présente dans le template
+    if (template.layout) {
+        pptx.defineLayout({ name: template.layout.name || 'customLayout', width: template.layout.width, height: template.layout.height });
+        pptx.layout = template.layout.name || 'customLayout';
+    } else {
+        pptx.layout = 'LAYOUT_16x9'; // Fallback par défaut
+    }
 
     // Helper pour trouver un master
     const findMaster = (keys, searchTerms) => {
@@ -91,43 +97,58 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
     }
 
 
-    // 2. Slides par Module
-    let contentMasterKey = findMaster(masterKeys, ['CONTENT_SLIDE', 'CONTENU', 'CONTENT']);
-    if (!contentMasterKey && masterKeys.length > 1) contentMasterKey = masterKeys[1];
-    if (!contentMasterKey && masterKeys.length > 0) contentMasterKey = masterKeys[0];
+    // 2. Gestion des Masques
+    let chapterMasterKey = findMaster(masterKeys, ['CHAPITRE', 'CHAPTER', 'SECTION']);
+    let slideMasterKey = findMaster(masterKeys, ['SLIDE', 'CONTENT_SLIDE', 'CONTENU', 'CONTENT']);
+    if (!slideMasterKey && masterKeys.length > 1) slideMasterKey = masterKeys[1];
 
-    const contentMaster = template.masters[contentMasterKey];
+    const chapterMaster = chapterMasterKey ? template.masters[chapterMasterKey] : null;
+    const slideMaster = slideMasterKey ? template.masters[slideMasterKey] : null;
 
     delivery.structure.forEach((inst, idx) => {
         const modTitle = inst.name || 'Module';
-        let content = inst.result || '';
 
-        if (inst.config?.isTable && inst.contextTable) {
-            content = inst.contextTable + "\n\n" + content;
+        // Slide "CHAPITRE"
+        if (chapterMaster) {
+            const chapSlide = pptx.addSlide();
+            if (chapterMaster.background && chapterMaster.background.color) {
+                chapSlide.background = { color: chapterMaster.background.color };
+            }
+            drawMasterElements(pptx, chapSlide, chapterMaster.elements, {
+                chapter: modTitle,
+                chapitre: modTitle,
+                TITLE: modTitle
+            }, template);
         }
 
-        // Nouvelle slide pour le texte Markdown
-        const slide = pptx.addSlide();
-
-        if (contentMaster) {
-            // Fond
-            if (contentMaster.background && contentMaster.background.color) {
-                slide.background = { color: contentMaster.background.color };
+        // Fonction pour créer une nouvelle slide "SLIDE" au besoin
+        const createContentSlide = () => {
+            const slide = pptx.addSlide();
+            if (slideMaster) {
+                if (slideMaster.background && slideMaster.background.color) {
+                    slide.background = { color: slideMaster.background.color };
+                }
+                drawMasterElements(pptx, slide, slideMaster.elements, {
+                    title: modTitle,
+                    MODULE_TITLE: modTitle,
+                    SLIDE_NUMBER: (idx + 1).toString()
+                }, template);
+            } else {
+                slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
             }
+            return slide;
+        };
 
-            // Éléments Master Contenu
-            drawMasterElements(pptx, slide, contentMaster.elements, {
-                MODULE_TITLE: modTitle,
-                SLIDE_NUMBER: (idx + 1).toString()
-            }, template);
+        const area = slideMaster?.contentArea || { x: 0.5, y: 1.0, w: 9.0, h: 4.5 };
 
-            // Parsing Markdown dans la Content Area
-            const area = contentMaster.contentArea || { x: 0.5, y: 1.0, w: 9.0, h: 4.5 };
-            parseMarkdownToSlide(slide, content, area, template);
-        } else {
-            // Fallback minimaliste si aucun master trouvé
-            slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
-            parseMarkdownToSlide(slide, content, { x: 0.5, y: 1.5, w: 9.0, h: 4.0 }, template);
+        // Dessin du Tableau de Contexte (isolé)
+        if (inst.config?.isTable && inst.contextTable) {
+            parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template);
+        }
+
+        // Dessin du Résultat (isolé et paginé)
+        if (inst.result) {
+            parseMarkdownToSlide(createContentSlide, inst.result, area, template);
         }
     });
 
@@ -240,6 +261,8 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
             isTextBox: el.isTextBox,
             hyperlink: el.link || el.hyperlink,
             outline: el.outline,
+            // PptxGenJS expecting [Left, Right, Bottom, Top] instead of [Top, Right, Bottom, Left] on this version 
+            margin: el.margin ? [el.margin[3], el.margin[1], el.margin[2], el.margin[0]] : undefined,
 
             // Propriétés de ligne/bordure
             dashType: el.dashType,
@@ -284,11 +307,14 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
 /**
  * Parse Markdown et insère dans la zone définie
  */
-function parseMarkdownToSlide(slide, mdText, area, template) {
+function parseMarkdownToSlide(createSlideFn, mdText, area, template) {
     const lines = mdText.split('\n');
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
+    const maxH = area.h;
+    const maxY = area.y + maxH;
+
     // Estimation hauteur ligne
     const lineHeightBase = 0.3; // pouces
 
@@ -302,6 +328,8 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
     let textRuns = [];
     let textHeightAccumulated = 0;
 
+    let slide = createSlideFn();
+
     // Helper to flush current text buffer
     const flushText = () => {
         if (textRuns.length > 0) {
@@ -309,7 +337,9 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
                 x: marginX, y: currentY, w: contentW, h: textHeightAccumulated,
                 fontFace: fontBody, // Default font
                 color: theme.text,   // Default color
-                fontSize: 12         // Default size
+                fontSize: 12,        // Default size
+                valign: 'top',
+                margin: 0
             });
             currentY += textHeightAccumulated;
             textRuns = [];
@@ -336,8 +366,11 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
             if (inTable) {
                 if (tableRows.length > 0) {
                     const tableH = (tableRows.length * 0.4) + 0.2;
-                    // Check overflow ? Tant pis s'il dépasse
-
+                    if (currentY + tableH > maxY && currentY > area.y) {
+                        flushText();
+                        slide = createSlideFn();
+                        currentY = area.y;
+                    }
                     addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
                     currentY += tableH;
                 }
@@ -346,9 +379,7 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
 
             if (line === '') {
                 // Empty line = line break
-                // Optional: add empty run for spacing if needed
-                // textRuns.push({ text: "", options: { breakLine: true } });
-                // textHeightAccumulated += lineHeightBase;
+                textHeightAccumulated += 0.15;
                 continue;
             }
 
@@ -382,6 +413,17 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
                     options: { fontSize: 12, color: theme.text, fontFace: fontBody, breakLine: true }
                 };
                 h = lineHeightBase;
+
+                const wrapFactor = Math.ceil(cleanLine.length / (contentW * 12));
+                if (wrapFactor > 1) {
+                    h *= wrapFactor;
+                }
+            }
+
+            if (currentY + textHeightAccumulated + h > maxY && currentY > area.y) {
+                flushText();
+                slide = createSlideFn();
+                currentY = area.y;
             }
 
             textRuns.push(run);
@@ -393,6 +435,11 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
     if (inTable && tableRows.length > 0) {
         // Table at the very end
         const tableH = (tableRows.length * 0.4) + 0.2;
+        if (currentY + tableH > maxY && currentY > area.y) {
+            flushText();
+            slide = createSlideFn();
+            currentY = area.y;
+        }
         addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
     } else {
         flushText();

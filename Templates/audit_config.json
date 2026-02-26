@@ -4,46 +4,54 @@
       "id": "domaine",
       "label": "Domaine",
       "type": "chapitre",
-      "visible": false
+      "visible": true
     },
     {
-      "id": "typologie",
-      "label": "Typologie",
-      "type": "sous-chapitre",
-      "visible": false
-    },
-    {
-      "id": "reference",
-      "label": "Référence",
+      "id": "ref",
+      "label": "Réf",
       "type": "question",
       "visible": true,
       "size": "S"
     },
     {
-      "id": "exigence_controle",
-      "label": "Exigence/Contrôle",
-      "type": "question",
-      "visible": false,
-      "size": "M"
+      "id": "titre_du_controle",
+      "label": "Titre du contrôle",
+      "type": "sous-chapitre",
+      "visible": true
     },
     {
-      "id": "description",
-      "label": "Description",
+      "id": "description_et_objectifs",
+      "label": "Description et Objectifs",
       "type": "question",
       "visible": true,
       "size": "L"
     },
     {
-      "id": "preuves",
-      "label": "Preuves",
-      "type": "qcm",
+      "id": "preuves_suggerees",
+      "label": "Preuves suggérées",
+      "type": "popup",
       "visible": true
     },
     {
-      "id": "constat",
-      "label": "Constat",
+      "id": "constats_de_l_auditeur",
+      "label": "Constats de l'auditeur",
       "type": "reponse",
       "visible": true
+    },
+    {
+      "id": "niveau_de_maturite",
+      "label": "Niveau de maturité",
+      "type": "combo",
+      "visible": true,
+      "params": {
+        "options": [
+          "très mature",
+          "mature",
+          "assez mature",
+          "peu mature"
+        ],
+        "colorScheme": "alert3"
+      }
     },
     {
       "id": "conformite",
@@ -53,719 +61,96 @@
       "params": {
         "options": [
           "Conforme",
-          "Peu Conforme",
-          "Pas Conforme"
+          "partiellement conforme",
+          "non conforme"
         ],
-        "colorScheme": "red"
+        "colorScheme": "alert3"
       }
     },
     {
-      "id": "recommandation",
-      "label": "Recommandation",
+      "id": "actions_recommandees_ia",
+      "label": "Actions recommandées (IA)",
       "type": "ia",
       "visible": true,
       "params": {
-        "colonnes": [
-          "Description",
-          "Preuves",
-          "Constat"
+        "cibles": [
+          "ref",
+          "titre_du_controle"
         ],
-        "modele": "RedSage",
-        "requete": "Prends en compte la description de l'exigence, les preuves et le constat afin de produire 3 recommandations pour atteindre la conformité : \n- 1 quickwin\n- 1 action prioritaire\n- 1 action à moyens termes"
+        "colonnes": [
+          "Constats de l'auditeur",
+          "Preuves suggérées",
+          "Description et Objectifs"
+        ],
+        "modele": "Mockup"
       }
     }
   ],
   "rows": [
     [
-      "Exigences",
-      "Contexte de l'organisme ",
-      "4.1",
-      "Comprendre l'organisme et son contexte",
-      "L'organisme doit déterminer les enjeux externes et internes pertinents pour sa finalité et qui affectent sa capacité à atteindre les résultats attendus du SMIA . L'organisme doit déterminer ses rôles par rapport aux systèmes d'IA (ex: fournisseur, producteur, client) . L'organisme doit déterminer si le changement climatique est un enjeu pertinent .",
-      [
-        {
-          "label": "Documentation des enjeux externes (ex: exigences légales, contexte concurrentiel)",
-          "checked": true
-        },
-        {
-          "label": "Documentation des enjeux externes (ex: gouvernance, obligations contractuelles)",
-          "checked": true
-        },
-        {
-          "label": "Documentation des rôles de l'organisme vis-à-vis du système d'IA .",
-          "checked": true
-        }
-      ],
-      "",
-      "Conforme",
-      "[La réponse en français]\n\nRecommandations pour atteindre la conformité :\n\n1. Quickwin : \n   Mise à jour immédiate de la documentation sur les enjeux externes et internes. Assurez-vous que tous les documents relatifs aux exigences légales, au contexte concurrentiel, à la gouvernance et aux obligations contractuelles sont complets et mis à jour.\n\n2. Action prioritaire :\n   Définition claire des rôles de l'organisme vis-à-vis du système d'IA. Identifiez précisément les relations avec les fournisseurs, producteurs et clients en termes de responsabilités et de dépendances.\n\n3. Action à moyens termes :\n   Évaluation systématique des impacts du changement climatique sur l'organisation. Intègrez cette évaluation dans le processus de gestion des risques pour s'assurer que les stratégies de mitigation sont alignées avec les objectifs d'entreprise et conformes aux normes environnementales.\n\nCes recommandations visent à renforcer la transparence, l'efficacité et la responsabilité dans la gestion des enjeux liés au système d'intelligence artificielle."
-    ],
-    [
-      "Exigences",
-      "Contexte de l'organisme ",
-      "4.2",
-      "Comprendre les besoins et attentes des parties intéressées",
-      "L'organisme doit déterminer les parties intéressées pertinentes pour le SMIA, leurs exigences pertinentes, et lesquelles seront traitées par le SMIA .",
-      [
-        {
-          "label": "Liste documentée des parties intéressées (y compris celles ayant des exigences liées au changement climatique) et de leurs exigences .",
-          "checked": false
-        }
-      ],
-      "",
-      "Peu Conforme",
-      "[En tant qu'assistant expert en audit, voici trois recommandations pour atteindre la conformité avec l'exigence :\n\n1. **Quickwin :** \n   - Mettre à jour immédiatement la liste des parties intéressées et de leurs exigences pertinentes pour le SMIA, en s'assurant qu'elle est complète et actualisée. Cela peut être réalisé grâce à une revue rapide par l'équipe de gestion du risque.\n\n2. **Action prioritaire :**\n   - Organiser un atelier ou une session de brainstorming avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement. Cela permettra d'obtenir des feedbacks précieux et d'établir un consensus sur la direction à suivre.\n\n3. **Action à moyens termes :**\n   - Développer une stratégie de communication régulière avec les parties intéressées pour maintenir leur engagement et veiller à ce que leurs besoins continuent d'être satisfaits au fil du temps. Cette stratégie devrait inclure des réunions périodiques, des rapports mensuels ou trimestriels, et une plateforme de communication en ligne dédiée.]"
-    ],
-    [
-      "Exigences",
-      "Contexte de l'organisme ",
-      "4.3",
-      "Détermination du domaine d'application du SMIA",
-      "L'organisme doit déterminer les limites et l'applicabilité du SMIA en considérant les enjeux (4.1) et les exigences des parties intéressées (4.2) . Le domaine d'application doit être disponible comme information documentée .",
-      [
-        {
-          "label": "Document définissant le périmètre du SMIA",
-          "checked": false
-        },
-        {
-          "label": "Déclaration d'applicabilité des exigences et des contrôles .",
-          "checked": false
-        }
-      ],
-      "[En tant qu'assistant expert en audit, voici trois recommandations pour atteindre la conformité avec l'exigence :\n\n1. \n**Quickwin :** \n\n  - Mettre à jour immédiatement la liste des parties intéressées et de leurs exigences pertinentes pour le SMIA, en s'assurant qu'elle est complète et actualisée. Cela peut être réalisé grâce à une revue rapide par l'équipe de gestion du risque.\n\n2. \n**Action prioritaire :**\n\n  - Organiser un atelier ou une session de brainstorming avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement. Cela permettra d'obtenir des feedbacks précieux et d'établir un consensus sur la direction à suivre.\n\n3. \n**Action à moyens termes :**\n\n  - Développer une stratégie de communication régulière avec les parties intéressées pour maintenir leur engagement et veiller à ce que leurs besoins continuent d'être satisfaits au fil du temps. Cette stratégie devrait inclure des réunions périodiques, des rapports mensuels ou trimestriels, et une plateforme de communication en ligne dédiée.]\n  -",
-      "Pas Conforme",
-      ""
-    ],
-    [
-      "Exigences",
-      "Contexte de l'organisme ",
-      "4.4",
-      "Système de management de l'IA",
-      "L'organisme doit établir, mettre en œuvre, maintenir, améliorer en continu et documenter un SMIA, y compris les processus nécessaires et leurs interactions .",
-      [
-        {
-          "label": "Documentation du Système de Management de l'IA (structure, processus) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Leadership ",
+      "5. Contrôles organisationnels",
       "5.1",
-      "Leadership et engagement",
-      "La direction doit démontrer son leadership et son engagement, notamment en assurant que la politique IA (5.2) et les objectifs IA (6.2) sont compatibles avec la direction stratégique, que les ressources sont disponibles et en promouvant l'amélioration continue .",
-      [
-        {
-          "label": "Approbation de la politique",
-          "checked": false
-        },
-        {
-          "label": "Rapports de performance",
-          "checked": false
-        },
-        {
-          "label": "Revues de direction (9.3) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
+      "Politiques de sécurité",
+      "Une politique de sécurité de l'information et des politiques spécifiques doivent être définies, approuvées par la direction et communiquées.",
+      "- Politique de sécurité signée\\n- Preuve de diffusion aux employés",
+      "The victim, 31 years old, was killed at her home on Wednesday evening. Police officers, who arrived after a call from a neighbor, found the 30-year-old shouting \"help\" in a disordered apartment, according to the prosecutor's statement.\n\nThe officers ordered the man to lie face down, but he did not comply. They then subdued him on the ground. Armed with a knife, the man wounded one of the municipal police officers and appeared to attempt to strike him again, according to the prosecutor's statement.",
+      "très mature",
+      "Conforme",
+      "[MOCK] Réponse IA générée"
+    ],
+    [
+      "5. Contrôles organisationnels",
+      "5.15",
+      "Contrôle des accès",
+      "Les règles de contrôle d’accès, les droits et les restrictions doivent être définis selon le besoin d'en connaitre.",
+      "- Matrice des flux\\n- Revue des comptes à privilèges",
+      "La victime, âgée de 31 ans, a été tuée à son domicile mercredi soir. Les policiers, intervenus après l’appel d’une voisine, ont trouvé le trentenaire en situation de danger dans un appartement en désordre, selon le communiqué du parquet.\n\nLes flics lui ont alors intimé l’ordre de se mettre au sol. Voyant qu’il ne s’exécutait pas, ils l’ont maîtrisé au sol. Armé d’un couteau, le gars a ensuite blessé à la main l’un des policiers municipaux et a semblé tenter d’asséner d’autres coups, selon le parquet.",
+      "peu mature",
+      "Conforme",
       ""
     ],
     [
-      "Exigences",
-      "Leadership ",
-      "5.2",
-      "Politique IA",
-      "La direction doit établir une politique IA qui est appropriée à la finalité de l'organisme, fournit un cadre pour les objectifs IA, et inclut un engagement à satisfaire aux exigences applicables et à l'amélioration continue du SMIA . La politique doit être disponible comme information documentée, communiquée en interne et disponible aux parties intéressées .",
-      [
-        {
-          "label": "Document de la Politique IA",
-          "checked": false
-        },
-        {
-          "label": "Preuve de la communication (ex: affichage, formation)",
-          "checked": false
-        },
-        {
-          "label": "Preuve de la mise à disposition (si approprié) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Leadership ",
-      "5.3",
-      "Rôles, responsabilités et autorités",
-      "La direction doit s'assurer que les responsabilités et autorités sont assignées et communiquées . La direction doit assigner la responsabilité pour la conformité et le rapport sur la performance du SMIA .",
-      [
-        {
-          "label": "Organigramme ou descriptions de postes formalisant les rôles et responsabilités spécifiques à l'IA .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Planification ",
-      "6.1.1",
-      "Actions pour traiter les risques et opportunités - Général",
-      "L'organisme doit déterminer les risques et opportunités . L'organisme doit établir et maintenir des critères de risque IA (pour distinguer acceptable/non-acceptable, évaluer, traiter) . L'organisme doit planifier les actions pour adresser ces risques/opportunités et conserver les informations documentées sur les actions prises .",
-      [
-        {
-          "label": "Critères de risque IA documentés",
-          "checked": false
-        },
-        {
-          "label": "Planification des actions pour traiter les risques et opportunités",
-          "checked": false
-        },
-        {
-          "label": "Informations documentées conservées sur les actions et leur évaluation d'efficacité .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Planification ",
-      "6.1.2",
-      "Évaluation des risques IA",
-      "L'organisme doit définir et établir un processus d'évaluation des risques IA . Le processus doit analyser (conséquences, vraisemblance, niveaux) et évaluer (comparer aux critères, prioriser) les risques . L'organisme doit conserver des informations documentées sur le processus et les résultats .",
-      [
-        {
-          "label": "Processus d'évaluation des risques IA documenté . Enregistrements des analyses et évaluations des risques (matrice des risques) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Planification ",
-      "6.1.3",
-      "Traitement des risques IA",
-      "L'organisme doit définir un processus pour sélectionner les options de traitement et déterminer tous les contrôles nécessaires (en comparant avec l'Annexe A) . L'organisme doit produire une Déclaration d'Applicabilité (DA) incluant les contrôles nécessaires et la justification des inclusions/exclusions . L'organisme doit formuler un plan de traitement des risques IA .",
-      [
-        {
-          "label": "Déclaration d'Applicabilité (DA) documentée et justifiée",
-          "checked": false
-        },
-        {
-          "label": "Plan de traitement des risques IA documenté",
-          "checked": false
-        },
-        {
-          "label": "Preuve de l'approbation du plan et de l'acceptation des risques résiduels par la direction désignée .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Planification ",
-      "6.1.4",
-      "Évaluation d'impact du système IA",
-      "L'organisme doit définir un processus pour évaluer les conséquences potentielles sur les individus, groupes ou sociétés résultant du développement, fourniture ou utilisation des systèmes IA . Le résultat doit être documenté et considéré dans l'évaluation des risques (6.1.2) .",
-      [
-        {
-          "label": "Processus d'évaluation d'impact du système IA documenté",
-          "checked": false
-        },
-        {
-          "label": "Informations documentées des résultats de l'évaluation d'impact .",
-          "checked": false
-        },
-        {
-          "label": "Preuve de la prise en compte dans l'évaluation des risques .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Planification ",
-      "6.2",
-      "Objectifs IA et planification pour les atteindre",
-      "L'organisme doit établir des objectifs IA qui sont cohérents avec la politique IA, mesurables (si possible), surveillés, communiqués, mis à jour, et disponibles comme information documentée . L'organisme doit planifier comment atteindre ces objectifs (quoi, ressources, responsable, quand, évaluation) .",
-      [
-        {
-          "label": "Informations documentées des objectifs IA . Plans d'action détaillés pour atteindre les objectifs .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Soutien ",
-      "7.2",
-      "Compétences",
-      "L'organisme doit déterminer les compétences nécessaires, s'assurer que le personnel est compétent, prendre des actions pour acquérir les compétences (si nécessaire) et évaluer l'efficacité des actions . Une information documentée appropriée doit être disponible comme preuve de compétence .",
-      [
-        {
-          "label": "Matrice de compétences et enregistrements des formations (éducation, expérience) . Preuves de l'évaluation de l'efficacité des formations .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Soutien ",
-      "7.3",
+      "6. Contrôles des personnes",
+      "6.3",
       "Sensibilisation",
-      "Les personnes travaillant sous le contrôle de l'organisme doivent être conscientes de la politique IA, de leur contribution à l'efficacité du SMIA, et des implications de la non-conformité .",
-      [
-        {
-          "label": "Enregistrements des sessions de sensibilisation et de communication sur la politique IA .",
-          "checked": false
-        }
-      ],
+      "Le personnel et les parties intéressées doivent recevoir une sensibilisation appropriée en matière de sécurité.",
+      "- Planning de formation\\n- Registre des présences\\n- Contenu des modules e-learning",
       "",
-      "",
+      "assez mature",
+      "partiellement conforme",
       ""
     ],
     [
-      "Exigences",
-      "Soutien ",
-      "7.5.3",
-      "Maîtrise des informations documentées",
-      "L'organisme doit maîtriser les informations documentées pour assurer leur disponibilité, leur adéquation à l'utilisation et leur protection (ex: intégrité, confidentialité) . L'organisme doit adresser les activités de distribution, stockage, maîtrise des changements, rétention et disposition .",
-      [
-        {
-          "label": "Procédures de gestion documentaire (contrôle des versions, accès, archivage) .",
-          "checked": false
-        }
-      ],
+      "7. Contrôles physiques",
+      "7.2",
+      "Entrées physiques",
+      "Les zones sécurisées doivent être protégées par des contrôles d'entrée appropriés pour assurer que seul le personnel autorisé a accès.",
+      "- Logs des badges\\n- Cahier des visiteurs\\n- Vidéosurveillance",
       "",
-      "",
+      "très mature",
+      "Conforme",
       ""
     ],
     [
-      "Exigences",
-      "Réalisation ",
-      "8.1",
-      "Planification et maîtrise opérationnelles",
-      "L'organisme doit planifier, mettre en œuvre et maîtriser les processus nécessaires pour satisfaire aux exigences et mettre en œuvre les actions déterminées dans la Clause 6 . L'organisme doit mettre en œuvre les contrôles déterminés (6.1.3) . L'organisme doit maîtriser les changements et les processus fournis par l'extérieur .",
-      [
-        {
-          "label": "Documentation des processus opérationnels et de leurs critères . Preuves de la surveillance des contrôles et des actions correctives prises .",
-          "checked": false
-        }
-      ],
+      "8. Contrôles technologiques",
+      "8.7",
+      "Protection malware",
+      "Une protection contre les logiciels malveillants doit être mise en œuvre et supportée par une sensibilisation appropriée.",
+      "- Console antivirus centralisée\\n- Rapports de scan hebdomadaires",
       "",
-      "",
+      "mature",
+      "Conforme",
       ""
     ],
     [
-      "Exigences",
-      "Évaluation de la performance ",
-      "9.1",
-      "Surveillance, mesure, analyse et évaluation",
-      "L'organisme doit déterminer quoi surveiller/mesurer, les méthodes, et quand l'analyse/évaluation sera réalisée . L'organisme doit évaluer la performance et l'efficacité du SMIA .",
-      [
-        {
-          "label": "Informations documentées des résultats de la surveillance et de l'évaluation . Rapports d'analyse de la performance du SMIA .",
-          "checked": false
-        }
-      ],
+      "8. Contrôles technologiques",
+      "8.10",
+      "Suppression des informations",
+      "Les informations stockées dans les systèmes d'information, les équipements ou les supports doivent être supprimées lorsqu'elles ne sont plus nécessaires.",
+      "- Procédure de suppression\\n- Certificats de destruction de disques durs",
       "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Évaluation de la performance ",
-      "9.2",
-      "Audit interne",
-      "L'organisme doit réaliser des audits internes à intervalles planifiés pour s'assurer que le SMIA est conforme à ses propres exigences et à celles de ce document, et qu'il est efficacement mis en œuvre . L'organisme doit établir un programme d'audit .",
-      [
-        {
-          "label": "Programme(s) d'audit documenté(s) . Rapports d'audit interne (preuves des résultats) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Évaluation de la performance ",
-      "9.3",
-      "Revue de direction",
-      "La direction doit revoir le SMIA à intervalles planifiés (intrantes : statut des actions précédentes, changements, performance) pour assurer sa pertinence, son adéquation et son efficacité . Les résultats doivent être documentés .",
-      [
-        {
-          "label": "Calendrier des revues de direction. Enregistrements (extrants) de la revue de direction (décisions liées à l'amélioration continue et aux changements) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Exigences",
-      "Amélioration ",
-      "10.2",
-      "Non-conformité et action corrective",
-      "L'organisme doit réagir à la non-conformité, évaluer le besoin d'action pour éliminer la cause(s), mettre en œuvre l'action nécessaire et revoir son efficacité . Des informations documentées doivent être disponibles comme preuve de la nature des non-conformités et des actions correctives prises .",
-      [
-        {
-          "label": "Enregistrements des non-conformités, des analyses des causes et des actions correctives . Preuves de la revue de l'efficacité des actions correctives .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Politiques relatives à l'IA ",
-      "A.2.2",
-      "Politique IA (Contrôle)",
-      "L'organisme doit documenter une politique pour le développement ou l'utilisation des systèmes d'IA .",
-      [
-        {
-          "label": "Document de la politique IA, aligné sur la stratégie commerciale et les exigences légales .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Organisation interne ",
-      "A.3.2",
-      "Rôles et responsabilités IA",
-      "Les rôles et responsabilités pour l'IA doivent être définis et alloués selon les besoins de l'organisme .",
-      [
-        {
-          "label": "Documentation définissant clairement les responsabilités (ex: pour la gestion des risques, la sécurité, la confidentialité) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Organisation interne ",
-      "A.3.3",
-      "Signalement des préoccupations",
-      "L'organisme doit définir et mettre en place un processus pour signaler les préoccupations concernant le rôle de l'organisme par rapport à un système d'IA tout au long de son cycle de vie .",
-      [
-        {
-          "label": "Documentation du mécanisme de signalement (assurant confidentialité/anonymat si possible, escalade, protection contre les représailles) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Ressources pour les systèmes IA ",
-      "A.4.2",
-      "Documentation des ressources",
-      "L'organisme doit identifier et documenter les ressources pertinentes requises pour les activités aux étapes du cycle de vie du système d'IA .",
-      [
-        {
-          "label": "Documentation (ex: diagrammes d'architecture) des ressources de l'IA (composants, données, outils, systèmes et humains) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Ressources pour les systèmes IA ",
-      "A.4.3",
-      "Ressources de données",
-      "L'organisme doit documenter des informations sur les ressources de données utilisées, y compris la provenance des données, les catégories, l'usage prévu, la qualité et les biais connus ou potentiels .",
-      [
-        {
-          "label": "Documentation sur les jeux de données (formation, test, validation), y compris les informations sur le processus d'étiquetage et les politiques de rétention .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Évaluation des impacts des systèmes IA ",
-      "A.5.2",
-      "Processus d'évaluation d'impact du système IA",
-      "L'organisme doit établir un processus pour évaluer les conséquences potentielles pour les individus, groupes ou sociétés qui peuvent résulter du système d'IA tout au long de son cycle de vie .",
-      [
-        {
-          "label": "Processus d'évaluation d'impact documenté, détaillant quand l'évaluation doit être réalisée et qui la réalise .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Évaluation des impacts des systèmes IA ",
-      "A.5.4",
-      "Évaluation de l'impact sur les individus ou groupes d'individus",
-      "L'organisme doit évaluer et documenter les impacts potentiels sur les individus ou groupes (ex: équité, sécurité, confidentialité, sûreté, transparence) .",
-      [
-        {
-          "label": "Documentation des évaluations spécifiques aux impacts sur les personnes, y compris les besoins de protection des groupes spécifiques (ex: enfants, personnes handicapées) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.1.2",
-      "Objectifs pour le développement responsable du système IA",
-      "L'organisme doit identifier et documenter des objectifs (ex: équité) pour guider le développement responsable des systèmes d'IA et intégrer des mesures pour les atteindre .",
-      [
-        {
-          "label": "Objectifs de développement responsable documentés . Documentation montrant l'intégration de ces objectifs dans le processus de développement (ex: spécification des exigences, V&V) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.2.2",
-      "Exigences et spécification du système IA",
-      "L'organisme doit spécifier et documenter les exigences pour les nouveaux systèmes d'IA ou les améliorations matérielles .",
-      [
-        {
-          "label": "Document des exigences du système (y compris la justification du développement et les objectifs) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.2.4",
-      "Vérification et validation du système IA",
-      "L'organisme doit définir et documenter les mesures de vérification et de validation (V&V) pour le système d'IA et spécifier les critères pour leur utilisation .",
-      [
-        {
-          "label": "Documentation des méthodologies de test, de la sélection des données de test et des critères d'évaluation (ex: taux d'erreur acceptable, fiabilité, performance) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.2.6",
-      "Fonctionnement et surveillance du système IA",
-      "L'organisme doit définir et documenter les éléments nécessaires au fonctionnement continu, incluant la surveillance du système et de la performance, les réparations, les mises à jour et le support .",
-      [
-        {
-          "label": "Procédures documentées de surveillance (erreurs, performance, dérive du concept/des données), de réparation et de mise à jour .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.2.7",
-      "Documentation technique du système IA",
-      "L'organisme doit déterminer quelle documentation technique est nécessaire pour chaque catégorie pertinente de parties intéressées et la leur fournir .",
-      [
-        {
-          "label": "Documentation technique fournie (description, instructions d'utilisation, limitations techniques, hypothèses, plan de gestion des défaillances) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Cycle de vie du système IA ",
-      "A.6.2.8",
-      "Enregistrement des journaux d'événements du système IA",
-      "L'organisme doit déterminer aux quelles phases du cycle de vie la tenue de journaux d'événements doit être activée, mais au minimum lorsque le système d'IA est en cours d'utilisation .",
-      [
-        {
-          "label": "Procédures de logging et enregistrements des journaux d'événements (logs) pour la traçabilité et la détection des performances indésirables .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Données pour les systèmes IA ",
-      "A.7.4",
-      "Qualité des données pour les systèmes IA",
-      "L'organisme doit définir et documenter les exigences relatives à la qualité des données et s'assurer que les données (formation, validation, test) satisfont à ces exigences .",
-      [
-        {
-          "label": "Documentation des exigences de qualité des données . Preuves de l'évaluation des biais et des ajustements faits pour améliorer la performance et l'équité .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Information pour les parties intéressées ",
-      "A.8.2",
-      "Documentation du système et information pour les utilisateurs",
-      "L'organisme doit déterminer et fournir les informations nécessaires aux utilisateurs du système d'IA .",
-      [
-        {
-          "label": "Instructions d'utilisation, notifications (que l'utilisateur interagit avec une IA), informations sur les limites du système et les exigences de surveillance humaine .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Information pour les parties intéressées ",
-      "A.8.4",
-      "Communication des incidents",
-      "L'organisme doit déterminer et documenter un plan pour communiquer les incidents aux utilisateurs du système d'IA .",
-      [
-        {
-          "label": "Plan de communication des incidents documenté, tenant compte des obligations de notification (ex: en cas de violation de données PII, ou d'impact sur la sûreté) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Utilisation des systèmes IA ",
-      "A.9.3",
-      "Objectifs pour l'utilisation responsable du système IA",
-      "L'organisme doit identifier et documenter des objectifs pour guider l'utilisation responsable des systèmes d'IA (ex: fiabilité, sécurité, transparence, surveillance humaine) .",
-      [
-        {
-          "label": "Objectifs d'utilisation responsable documentés . Preuve de la mise en œuvre de la surveillance humaine significative (vérification des sorties, capacité à annuler les décisions) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Utilisation des systèmes IA ",
-      "A.9.4",
-      "Utilisation prévue du système IA",
-      "L'organisme doit s'assurer que le système d'IA est utilisé conformément aux utilisations prévues du système d'IA et à sa documentation d'accompagnement .",
-      [
-        {
-          "label": "Preuve de la surveillance opérationnelle (B.6.2.6) démontrant l'utilisation conforme aux instructions .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Relations avec les tiers et les clients ",
-      "A.10.2",
-      "Attribution des responsabilités",
-      "L'organisme doit s'assurer que les responsabilités au sein du cycle de vie du système d'IA sont attribuées entre l'organisme, ses partenaires, fournisseurs, clients et tiers .",
-      [
-        {
-          "label": "Documentation formelle de l'attribution des rôles et des responsabilités contractuelles (ex: PII contrôleur/processeur) .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
-      ""
-    ],
-    [
-      "Contrôles",
-      "Relations avec les tiers et les clients ",
-      "A.10.3",
-      "Fournisseurs",
-      "L'organisme doit établir un processus pour s'assurer que son utilisation des services, produits ou matériaux fournis par des fournisseurs s'aligne avec l'approche de l'organisme pour le développement et l'utilisation responsables des systèmes d'IA .",
-      [
-        {
-          "label": "Processus de sélection et d'évaluation des fournisseurs . Exigences contractuelles imposées aux fournisseurs concernant la documentation et l'alignement avec l'approche responsable de l'organisme .",
-          "checked": false
-        }
-      ],
-      "",
-      "",
+      "peu mature",
+      "non conforme",
       ""
     ]
   ],
@@ -775,50 +160,26 @@
     {},
     {},
     {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
     {}
   ],
-  "statics": [],
+  "statics": [
+    {
+      "id": "widget_1771780561918",
+      "title": "Analyse: Domaine",
+      "columnId": "domaine",
+      "crossColumnId": "conformite",
+      "vizType": "cross_stacked",
+      "showLabels": true,
+      "valueFormat": "raw"
+    }
+  ],
   "notes": "",
   "deliveries": [],
   "reports": [
     {
-      "id": "dlv_1771540172028",
-      "name": "Audit Complet ISO 27001 - 19/02/2026",
-      "created": "2026-02-19T22:29:32.033Z",
+      "id": "dlv_1771780570625",
+      "name": "Audit Complet ISO 27001 - 22/02/2026",
+      "created": "2026-02-22T17:16:10.625Z",
       "structure": [
         {
           "sourceId": "mod_intro",
@@ -833,18 +194,18 @@
             },
             "columns": [
               "domaine",
-              "typologie",
-              "reference",
-              "exigence_controle",
-              "description",
-              "preuves",
-              "constat",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
               "conformite",
-              "recommandation"
+              "actions_recommandees_ia"
             ],
-            "collapsed": true
+            "widgets": []
           },
-          "result": "[Le présent rapport d'audit de sécurité a été réalisé dans le contexte de notre organisation, une entreprise technologique spécialisée dans la conception et la mise en œuvre de solutions intelligentes. Notre objectif principal est d'évaluer l'efficacité des mesures de sécurité mises en place pour protéger nos actifs informatiques et les données de nos clients.\n\nL'audit a été mené par une équipe externe de spécialistes, composée d'experts en cybersécurité, en gestion des risques et en conformité. Cette démarche visait à identifier les vulnérabilités potentielles, à évaluer la mise en œuvre actuelle des politiques de sécurité et à proposer des recommandations concrètes pour améliorer notre posture globale.\n\nLes objectifs spécifiques de l'audit incluaient :\n- La vérification du respect des normes internationales et légales pertinentes.\n- L'examen des procédures d'identification, d'autorisation et d'authentification des utilisateurs.\n- L'évaluation des mesures techniques et organisationnelles en place pour protéger les données sensibles.\n- La surveillance de la conformité avec les politiques internes et externes.\n\nCe rapport présente une synthèse détaillée des résultats de l'audit, ainsi que des recommandations prioritaires pour renforcer notre cadre de sécurité.]"
+          "result": "[Le rapport d'audit de sécurité que nous présentons aujourd'hui est le résultat d'une évaluation approfondie des pratiques et procédures en matière de sécurité au sein de notre organisation. Nous avons entrepris cet audit dans un contexte où la protection des actifs, des données et du personnel est devenue une priorité absolue pour assurer la continuité opérationnelle et la conformité réglementaire.\n\nL'organisation que nous évaluons dispose d'un vaste portefeuille d'activités qui nécessite un cadre de sécurité robuste. Notre objectif principal était d'examiner l'efficacité des mesures de sécurité existantes, d'identifier les vulnérabilités potentielles et de recommander des améliorations pour renforcer notre posture globale en matière de cybersécurité.\n\nCe rapport couvre plusieurs domaines clés tels que le contrôle organisationnel, l'accès aux ressources, la formation du personnel, la sécurité physique et technologique. Nous avons examiné les politiques, procédures, contrôles et pratiques actuelles pour évaluer leur conformité avec les normes internationales et nationales en vigueur.\n\nLes résultats de notre audit fournissent un aperçu détaillé des forces et faiblesses de nos systèmes de sécurité, ainsi que des recommandations concrètes pour améliorer la résilience face aux menaces émergentes. Nous espérons que ce rapport servira de guide précieux pour orienter les efforts futurs visant à renforcer notre capacité de défense contre les cybermenaces.]"
         },
         {
           "sourceId": "mod_compliance_iso",
@@ -859,18 +220,18 @@
             },
             "columns": [
               "domaine",
-              "typologie",
-              "reference",
-              "exigence_controle",
-              "description",
-              "preuves",
-              "constat",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
               "conformite",
-              "recommandation"
+              "actions_recommandees_ia"
             ],
-            "collapsed": true
+            "widgets": []
           },
-          "result": "[La réponse en français]\n\nLes points de non-conformité majeurs sont :\n\n1. **Domaine : Exigences - Contexte de l'organisme, Typologie : Évaluation des risques IA**\n   - Constat : Pas Conforme\n   - Recommandation : Développer un processus d'évaluation des risques IA qui analyse les conséquences, la vraisemblance et les niveaux, ainsi que leur évaluation en fonction des critères. Documenter le processus et les résultats.\n\nLes points de non-conformité mineurs sont :\n\n1. **Domaine : Exigences - Contexte de l'organisme, Typologie : Comprendre les besoins et attentes des parties intéressées**\n   - Constat : Peu Conforme\n   - Recommandation : Mener un atelier avec les parties intéressées clés pour clarifier leurs exigences spécifiques liées au changement climatique et déterminer comment le SMIA peut y répondre efficacement.\n\n2. **Domaine : Exigences - Contexte de l'organisme, Typologie : Détermination du domaine d'application du SMIA**\n   - Constat : Pas Conforme\n   - Recommandation : Établir et documenter clairement les limites et l'applicabilité du SMIA en tenant compte des enjeux externes/internes et des exigences des parties intéressées.\n\n3. **Domaine : Exigences - Leadership, Typologie : Rôles, responsabilités et autorités**\n   - Constat : Pas Indiqué\n   - Recommandation : Assurer que les rôles et responsabilités sont clairement définis et communiqués à l'intérieur de l'organisation. Assigner la responsabilité pour la conformité et le rapport sur la performance du SMIA.\n\n4. **Domaine : Exigences - Planification, Typologie : Évaluation d'impact du système IA**\n   - Constat : Pas Indiqué\n   - Recommandation : Définir un processus pour évaluer les conséquences potentielles sur les individus, groupes ou sociétés résultant du développement, fourniture ou utilisation des systèmes IA. Documenter le résultat et l'intégrer dans l'évaluation des risques.\n\n5. **Domaine : Exigences - Planification, Typologie : Traitement des risques IA**\n   - Constat : Pas Indiqué\n   - Recommandation : Établir un processus pour sélectionner les options de traitement et déterminer tous les contrôles nécessaires (en comparant avec l'Annexe A). Produire une Déclaration d'Applicabilité (DA) incluant les contrôles nécessaires et la justification des inclusions/exclusions. Formuler un plan de traitement des risques IA.\n\n6. **Domaine : Exigences - Planification, Typologie : Évaluation des impacts du système IA**\n   - Constat : Pas Indiqué\n   - Recommandation : Définir un processus pour évaluer les conséquences potentielles sur les individus, groupes ou sociétés résultant du développement, fourniture ou utilisation des systèmes IA. Documenter le résultat et l'intégrer dans l'évaluation des risques.\n\n7. **Domaine : Exigences - Soutien, Typologie : Sensibilisation**\n   - Constat : Pas Indiqué\n   - Recommandation : Assurer que les personnes travaillant sous le contrôle de l'organisme sont conscientes de la politique IA, de leur contribution à l'efficacité du SMIA et des implications de la non-conformité. Documenter cette sensibilisation.\n\n8. **Domaine : Exigences - Soutien, Typologie : Maîtrise des informations documentées**\n   - Constat : Pas Indiqué\n   - Recommandation : Assurer que les informations documentées sont disponibles comme preuve de compétence. Documenter la provenance et l'utilisation des données pour les systèmes d'IA.\n\n9. **Domaine : Exigences - Réalisation, Typologie : Planification et maîtrise opérationnelles**\n   - Constat : Pas Indiqué\n   - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n10. **Domaine : Exigences - Évaluation de la performance, Typologie : Revue de direction**\n    - Constat : Pas Indiqué\n    - Recommandation : Assurer que les rôles et responsabilités sont clairement définis et communiqués à l'intérieur de l'organisation. Assigner la responsabilité pour la conformité et le rapport sur la performance du SMIA.\n\n11. **Domaine : Contrôles - Ressources pour les systèmes IA, Typologie : Documentation des ressources**\n    - Constat : Pas Indiqué\n    - Recommandation : Identifier et documenter les ressources pertinentes requises pour les activités aux étapes du cycle de vie du système d'IA. Documenter la provenance et l'utilisation des données pour les systèmes d'IA.\n\n12. **Domaine : Contrôles - Ressources pour les systèmes IA, Typologie : Ressources de données**\n    - Constat : Pas Indiqué\n    - Recommandation : Déterminer aux quelles phases du cycle de vie la tenue de journaux d'événements doit être activée, mais au minimum lorsque le système d'IA est en cours d'utilisation. Documenter cette pratique.\n\n13. **Domaine : Contrôles - Évaluation des impacts des systèmes IA, Typologie : Processus d'évaluation d'impact du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour évaluer les conséquences potentielles sur les individus, groupes ou sociétés qui peuvent résulter du système d'IA tout au long de son cycle de vie. Documenter ce processus et ses résultats.\n\n14. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Objectifs pour le développement responsable du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Identifier et documenter des objectifs (ex: équité) pour guider le développement responsable des systèmes d'IA et intégrer des mesures pour les atteindre.\n\n15. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Exigences et spécification du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir et documenter les exigences relatives à la qualité des données pour chaque catégorie pertinente de parties intéressées. Documenter cette pratique.\n\n16. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Vérification et validation du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n17. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Fonctionnement et surveillance du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n18. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Documentation technique du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n19. **Domaine : Contrôles - Cycle de vie du système IA, Typologie : Enregistrement des journaux d'événements du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n20. **Domaine : Contrôles - Données pour les systèmes IA, Typologie : Qualité des données pour les systèmes IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n21. **Domaine : Contrôles - Information pour les parties intéressées, Typologie : Documentation du système et information pour les utilisateurs**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n22. **Domaine : Contrôles - Information pour les parties intéressées, Typologie : Communication des incidents**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n23. **Domaine : Contrôles - Utilisation des systèmes IA, Typologie : Objectifs pour l'utilisation responsable du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n24. **Domaine : Contrôles - Utilisation des systèmes IA, Typologie : Utilisation prévue du système IA**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n25. **Domaine : Contrôles - Relations avec les tiers et les clients, Typologie : Attribution des responsabilités**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations.\n\n26. **Domaine : Contrôles - Relations avec les tiers et les clients, Typologie : Fournisseurs**\n    - Constat : Pas Indiqué\n    - Recommandation : Définir un processus pour surveiller la conformité avec les exigences de l'Annexe A. Évaluer régulièrement le risque d'inadéquation des contrôles et documenter ces évaluations."
+          "result": "[Les points de non-conformité majeures et mineures selon les données fournies sont les suivants :]\n\n**Points de non-conformité majeure :**\n\n1. **Contrôle des accès (5.15) - Niveau de maturité peu mature, Conformité partielle**\n   - **Non-conformité majeure** : Les règles de contrôle d’accès ne sont pas définies selon le besoin en connaissances, ce qui peut entraîner un risque élevé de violations de sécurité.\n\n2. **Suppression des informations (8.10) - Niveau de maturité peu mature, Conformité non conforme**\n   - **Non-conformité majeure** : Les informations stockées ne sont pas systématiquement supprimées lorsqu'elles ne sont plus nécessaires, ce qui peut entraîner des risques de fuite de données sensibles.\n\n**Points de non-conformité mineure :**\n\n1. **Sensibilisation (6.3) - Niveau de maturité assez mature, Conformité partielle**\n   - **Non-conformité mineure** : Le personnel et les parties intéressées ne reçoivent pas une sensibilisation appropriée en matière de sécurité, ce qui peut entraîner des comportements inadéquats.\n\n[Il est recommandé d'adresser ces points de non-conformité pour améliorer la conformité avec ISO 27001.]"
         },
         {
           "sourceId": "mod_action_plan",
@@ -885,18 +246,18 @@
             },
             "columns": [
               "domaine",
-              "typologie",
-              "reference",
-              "exigence_controle",
-              "description",
-              "preuves",
-              "constat",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
               "conformite",
-              "recommandation"
+              "actions_recommandees_ia"
             ],
-            "collapsed": true
+            "widgets": []
           },
-          "result": "[Le plan d'action priorisé est comme suit :]\n\n1. **Quickwin (0-3 mois)**\n   - Mise à jour immédiate de la documentation sur les enjeux externes et internes.\n   - Définition claire des rôles par rapport aux systèmes IA.\n\n2. **Action Prioritaire (4-6 mois)**\n   - Évaluation systématique des impacts du changement climatique sur l'organisation.\n   - Organisation d'un atelier pour clarifier les exigences spécifiques liées au changement climatique avec les parties intéressées clés.\n\n3. **Action à Moyens Termes (7-12 mois)**\n   - Développement d'une stratégie de communication régulière avec les parties intéressées.\n   - Mise en place du processus d'évaluation des risques IA, y compris l'analyse et la priorisation des risques.\n\n4. **Action à Long Terme (13-24 mois)**\n   - Établissement de contrôles pour le développement responsable des systèmes IA.\n   - Définition des exigences relatives à la qualité des données et assurance que les données satisfont à ces exigences.\n   - Mise en place du processus d'utilisation responsable du système IA, y compris l'identification des objectifs de fiabilité, sécurité, transparence, etc.\n\nCes actions visent à renforcer la conformité avec le cadre NIST AI RMF et réduire les risques identifiés."
+          "result": "[Le plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés est le suivant :]\n\n1. **Contrôles organisationnels - Contrôle des accès (5.15)**\n   - **Action** : Définir clairement les règles de contrôle d'accès, les droits et les restrictions en fonction du besoin.\n   - **Justification** : Cela permettra de s'assurer que seul le personnel autorisé a accès aux zones sensibles.\n\n2. **Contrôles organisationnels - Politiques de sécurité (5.1)**\n   - **Action** : Mettre à jour la politique de sécurité et vérifier son approbation par la direction.\n   - **Justification** : Une politique clairement définie, approuvée et communiquée est essentielle pour garantir une gestion efficace des risques.\n\n3. **Contrôles physiques - Entrées physiques (7.2)**\n   - **Action** : Mettre en place et vérifier les contrôles d'entrée appropriés dans les zones sécurisées.\n   - **Justification** : Cela renforcera la sécurité physique et assurera que seul le personnel autorisé a accès.\n\n4. **Contrôles technologiques - Suppression des informations (8.10)**\n   - **Action** : Élaborer une procédure de suppression des données inutiles stockées dans les systèmes d'information.\n   - **Justification** : Cela aidera à réduire le risque de fuite de données et à assurer la conformité avec les réglementations en matière de protection des données.\n\n5. **Contrôles technologiques - Protection malware (8.7)**\n   - **Action** : Améliorer la sensibilisation du personnel aux menaces liées au logiciel malveillant.\n   - **Justification** : Une meilleure sensibilisation réduira le risque d'infection par des logiciels malveillants.\n\n[Ce plan priorise les actions qui ont un impact immédiat et significatif sur la conformité et la sécurité de l'organisation.]"
         },
         {
           "sourceId": "mod_risks",
@@ -911,44 +272,18 @@
             },
             "columns": [
               "domaine",
-              "typologie",
-              "reference",
-              "exigence_controle",
-              "description",
-              "preuves",
-              "constat",
+              "ref",
+              "titre_du_controle",
+              "description_et_objectifs",
+              "preuves_suggerees",
+              "constats_de_l_auditeur",
+              "niveau_de_maturite",
               "conformite",
-              "recommandation"
+              "actions_recommandees_ia"
             ],
-            "collapsed": true
+            "widgets": []
           },
-          "result": "[Les risques principaux basés sur les vulnérabilités détectées, classés par criticité :]\n\n**Élevé :**\n1. Non-conformité avec la politique IA (A.2.2) - Risque de non-alignment des pratiques internes avec les normes établies.\n2. Rôles et responsabilités indéfinis pour l'IA (A.3.2) - Risque d'ambiguïté dans l'allocation des rôles, entraînant une inefficacité opérationnelle.\n\n**Moyen :**\n1. Processus d'évaluation d'impact du système IA non défini (A.5.2) - Risque de ne pas identifier les impacts potentiels sur les individus et les groupes.\n2. Documentation des ressources pour les systèmes IA insuffisante (A.4.2) - Risque de manque d'informations claires sur les ressources nécessaires, ce qui peut entraîner des problèmes de gestion.\n\n**Faible :**\n1. Communication des incidents non définie (A.8.4) - Risque mineur de retard dans la notification des incidents aux utilisateurs.\n2. Attribution des responsabilités pour l'utilisation du système IA non claire (A.9.3) - Risque faible d'ambiguïté concernant les attentes en matière d'utilisation responsable."
-        },
-        {
-          "sourceId": "mod_risks",
-          "name": "Synthèse des Risques",
-          "config": {
-            "scope": {
-              "type": "global"
-            },
-            "ai": {
-              "model": "redsage-qwen3-8b-ins-i1",
-              "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
-            },
-            "columns": [
-              "domaine",
-              "typologie",
-              "reference",
-              "exigence_controle",
-              "description",
-              "preuves",
-              "constat",
-              "conformite",
-              "recommandation"
-            ],
-            "collapsed": true
-          },
-          "result": "[Les risques principaux basés sur les vulnérabilités détectées, classés par criticité :]\n\n- **Élevé**:\n  - Vulnérabilité dans le processus de développement du système d'IA (A.6.2.2).\n  - Manque de documentation technique pour le système d'IA (A.6.2.7).\n\n- **Moyen**:\n  - Non-conformité aux exigences légales et réglementaires (4.1).\n  - Absence de plan d'action pour adresser les risques identifiés (6.1.3).\n\n- **Faible**:\n  - Manque de sensibilisation à la politique IA (7.3).\n  - Non-maîtrise des informations documentées (7.5.3)."
+          "result": "[Les risques principaux basés sur les vulnérabilités détectées, classés par criticité :]\n\n**Élevé:**\n1. **Contrôle des accès (5.15):** Les règles de contrôle d’accès ne sont pas bien définies et appliquées.\n2. **Suppression des informations (8.10):** L'absence de procédure efficace pour supprimer les données sensibles.\n\n**Moyen:**\n1. **Sensibilisation (6.3):** La formation du personnel en matière de sécurité est incomplète et ne couvre pas tous les aspects nécessaires.\n2. **Protection malware (8.7):** Bien que la protection contre les logiciels malveillants soit mise en œuvre, elle pourrait être améliorée par des mises à jour plus fréquentes.\n\n**Faible:**\n1. **Politiques de sécurité (5.1):** Les politiques sont définies et approuvées, mais la diffusion aux employés pourrait être plus extensive.\n2. **Contrôle physique (7.2):** Les contrôles d'entrée physiques existent, mais leur efficacité peut être renforcée par des améliorations mineures.\n\nCes classifications reflètent l'état actuel des contrôles et les actions recommandées pour améliorer la sécurité globale de l'organisation."
         }
       ]
     }
