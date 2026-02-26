@@ -48,11 +48,14 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
             theme: { primary: "003366", secondary: "c43e1c", text: "333333", background: "FFFFFF", surface: "F7F7F7" },
             fonts: { title: "Arial", body: "Arial" },
             masters: {
-                TITLE_SLIDE: { elements: [{ type: "text", text: "{{TITLE}}", x: 1, y: 1, w: 8, h: 1, fontSize: 24 }] },
-                CONTENT_SLIDE: { elements: [{ type: "text", text: "{{MODULE_TITLE}}", x: 1, y: 0.5, w: 8, h: 0.5 }], contentArea: { x: 1, y: 1.5, w: 8, h: 3 } }
+                TITRE: { elements: [] },
+                CHAPITRE: { elements: [] },
+                SLIDE: { elements: [], contentArea: { x: 0.5, y: 1.0, w: 9.0, h: 4.5 } }
             }
         };
     }
+
+    const tableFormat = template.tableFormat || pptConfig.tableFormat || {};
 
     const pptx = new window.PptxGenJS();
 
@@ -159,13 +162,13 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
                 store.save();
             }
             if (inst.contextTable) {
-                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template);
+                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat);
             }
         }
 
         // Dessin du Résultat (isolé et paginé)
         if (inst.result) {
-            parseMarkdownToSlide(createContentSlide, inst.result, area, template);
+            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat);
         }
     }
 
@@ -324,7 +327,7 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
 /**
  * Parse Markdown et insère dans la zone définie
  */
-function parseMarkdownToSlide(createSlideFn, mdText, area, template) {
+function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
     const lines = mdText.split('\n');
     let currentY = area.y;
     const marginX = area.x;
@@ -388,7 +391,7 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template) {
                         slide = createSlideFn();
                         currentY = area.y;
                     }
-                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
+                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
                     currentY += tableH;
                 }
                 inTable = false;
@@ -457,27 +460,53 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template) {
             slide = createSlideFn();
             currentY = area.y;
         }
-        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
+        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
     } else {
         flushText();
     }
 }
 
-function addPptTable(slide, rows, y, x, w, theme, font) {
+function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
     if (rows.length === 0) return;
     const colCount = rows[0].length;
     const colW = w / colCount;
     const colWidths = Array(colCount).fill(colW);
 
-    slide.addTable(rows, {
+    const format = {
+        headerFill: tableFormat.headerFill || "E0E0E0",
+        headerColor: tableFormat.headerColor || "000000",
+        headerBold: tableFormat.headerBold !== undefined ? tableFormat.headerBold : true,
+        rowFill: tableFormat.rowFill || "FFFFFF",
+        rowAltFill: tableFormat.rowAltFill || "FFFFFF",
+        borderSize: tableFormat.borderSize !== undefined ? tableFormat.borderSize : 1,
+        borderColor: tableFormat.borderColor || "CCCCCC",
+        fontSize: tableFormat.fontSize || 10
+    };
+
+    const formattedRows = rows.map((row, rIdx) => {
+        const isHeader = rIdx === 0;
+        let fill = isHeader ? format.headerFill : (rIdx % 2 === 0 ? format.rowFill : format.rowAltFill);
+        let color = isHeader ? format.headerColor : theme.text;
+        let bold = isHeader ? format.headerBold : false;
+
+        return row.map(cellText => {
+            return {
+                text: cellText,
+                options: {
+                    fill: fill,
+                    color: color,
+                    bold: bold,
+                    fontFace: font,
+                    fontSize: format.fontSize,
+                    border: { pt: format.borderSize, color: format.borderColor }
+                }
+            };
+        });
+    });
+
+    slide.addTable(formattedRows, {
         x: x, y: y, w: w,
         colW: colWidths,
-        rowH: 0.4,
-        fontSize: 10,
-        fontFace: font,
-        border: { pt: 1, color: "CCCCCC" },
-        fill: theme.background, // Cell fill
-        // Header
-        fill: { color: theme.surface }
+        rowH: 0.4
     });
 }

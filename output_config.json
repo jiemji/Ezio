@@ -9,6 +9,16 @@
         {
             "id": "extracted_1772134936046",
             "name": "Slides ISEC",
+            "tableFormat": {
+                "headerFill": "C00000",
+                "headerColor": "FFFFFF",
+                "headerBold": true,
+                "rowFill": "FFFFFF",
+                "rowAltFill": "F9F9F9",
+                "borderColor": "CCCCCC",
+                "borderSize": 1,
+                "fontSize": 10
+            },
             "layout": {
                 "name": "custom",
                 "width": 13.33,

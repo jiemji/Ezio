@@ -114,3 +114,43 @@ Uniquement pour `SLIDE`. Définit la zone vide principale de la diapositive où 
   "contentArea": { "x": 0.7, "y": 1.2, "w": 8.5, "h": 4.0 }
 }
 ```
+
+## 3. Formatage des Tableaux PowerPoint (`tableFormat`)
+
+Vous pouvez personnaliser l'apparence des tableaux exportés en **PowerPoint** en ajoutant un objet `tableFormat` à l'intérieur de chacun de vos objets `templates`. (Les tableaux Word, eux, adoptent nativement le design du modèle Word `docx` fourni).
+
+Vous pouvez aussi le définir à la racine du JSON `output_config.json` pour l'appliquer par défaut à tous les templates PPTX qui n'ont pas leur propre format.
+
+**Exemple de configuration `tableFormat` à l'intérieur d'un template spécifique :**
+
+```json
+{
+  "templates": [
+    {
+      "id": "extracted_1234",
+      "name": "Mon Template Rouge",
+      "tableFormat": {
+        "headerFill": "C00000",
+        "headerColor": "FFFFFF",
+        "headerBold": true,
+        "rowFill": "FFFFFF",
+        "rowAltFill": "F9F9F9",
+        "borderColor": "CCCCCC",
+        "borderSize": 1,
+        "fontSize": 10
+      },
+      "masters": { ... }
+    }
+  ]
+}
+```
+
+### Propriétés de `tableFormat` :
+*   `headerFill` : Couleur de fond de la ligne d'en-tête (en HEX sans le `#`).
+*   `headerColor` : Couleur du texte de l'en-tête (en HEX).
+*   `headerBold` : `true` ou `false` (Définit si l'en-tête est en gras).
+*   `rowFill` : Couleur de fond des lignes standards.
+*   `rowAltFill` : Couleur de fond des lignes paires (pour un effet zébré attrayant).
+*   `borderColor` : Couleur fine des bordures du tableau.
+*   `borderSize` : Epaisseur des bordures en pt.
+*   `fontSize` : Taille de la police dans les cellules.
