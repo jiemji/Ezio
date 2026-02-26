@@ -1,6 +1,8 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { currentForm, store } from '../core/State.js';
+import { buildContext } from './app_deliveries.js';
 
 let pptConfig = null;
 
@@ -46,20 +48,29 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
             theme: { primary: "003366", secondary: "c43e1c", text: "333333", background: "FFFFFF", surface: "F7F7F7" },
             fonts: { title: "Arial", body: "Arial" },
             masters: {
-                TITLE_SLIDE: { elements: [{ type: "text", text: "{{TITLE}}", x: 1, y: 1, w: 8, h: 1, fontSize: 24 }] },
-                CONTENT_SLIDE: { elements: [{ type: "text", text: "{{MODULE_TITLE}}", x: 1, y: 0.5, w: 8, h: 0.5 }], contentArea: { x: 1, y: 1.5, w: 8, h: 3 } }
+                TITRE: { elements: [] },
+                CHAPITRE: { elements: [] },
+                SLIDE: { elements: [], contentArea: { x: 0.5, y: 1.0, w: 9.0, h: 4.5 } }
             }
         };
     }
 
+    const tableFormat = template.tableFormat || pptConfig.tableFormat || {};
+
     const pptx = new window.PptxGenJS();
 
-    // Configuration globale
-    pptx.layout = 'LAYOUT_16x9';
-    pptx.author = 'Ezio Audit';
+    // Configuration de base pptxgenjs
+    pptx.author = 'Ezio IA';
     pptx.company = 'Ezio';
-    pptx.subject = delivery.name;
     pptx.title = delivery.name;
+
+    // Définir la taille personnalisée de la diapositive si présente dans le template
+    if (template.layout) {
+        pptx.defineLayout({ name: template.layout.name || 'customLayout', width: template.layout.width, height: template.layout.height });
+        pptx.layout = template.layout.name || 'customLayout';
+    } else {
+        pptx.layout = 'LAYOUT_16x9'; // Fallback par défaut
+    }
 
     // Helper pour trouver un master
     const findMaster = (keys, searchTerms) => {
@@ -84,52 +95,79 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         }
 
         // Dessiner les éléments statiques du Master Titre
-        drawMasterElements(slideTitle, titleMaster.elements, {
+        drawMasterElements(pptx, slideTitle, titleMaster.elements, {
             TITLE: delivery.name,
-            DATE: new Date().toLocaleDateString()
+            TITRE: delivery.name,
+            title: delivery.name,
+            titre: delivery.name,
+            DATE: new Date().toLocaleDateString(),
+            date: new Date().toLocaleDateString()
         }, template);
     }
 
 
-    // 2. Slides par Module
-    let contentMasterKey = findMaster(masterKeys, ['CONTENT_SLIDE', 'CONTENU', 'CONTENT']);
-    if (!contentMasterKey && masterKeys.length > 1) contentMasterKey = masterKeys[1];
-    if (!contentMasterKey && masterKeys.length > 0) contentMasterKey = masterKeys[0];
+    // 2. Gestion des Masques
+    let chapterMasterKey = findMaster(masterKeys, ['CHAPITRE', 'CHAPTER', 'SECTION']);
+    let slideMasterKey = findMaster(masterKeys, ['SLIDE', 'CONTENT_SLIDE', 'CONTENU', 'CONTENT']);
+    if (!slideMasterKey && masterKeys.length > 1) slideMasterKey = masterKeys[1];
 
-    const contentMaster = template.masters[contentMasterKey];
+    const chapterMaster = chapterMasterKey ? template.masters[chapterMasterKey] : null;
+    const slideMaster = slideMasterKey ? template.masters[slideMasterKey] : null;
 
-    delivery.structure.forEach((inst, idx) => {
+    for (let idx = 0; idx < delivery.structure.length; idx++) {
+        const inst = delivery.structure[idx];
         const modTitle = inst.name || 'Module';
-        let content = inst.result || '';
 
-        if (inst.config?.isTable && inst.contextTable) {
-            content = inst.contextTable + "\n\n" + content;
-        }
-
-        // Nouvelle slide pour le texte Markdown
-        const slide = pptx.addSlide();
-
-        if (contentMaster) {
-            // Fond
-            if (contentMaster.background && contentMaster.background.color) {
-                slide.background = { color: contentMaster.background.color };
+        // Slide "CHAPITRE"
+        if (chapterMaster) {
+            const chapSlide = pptx.addSlide();
+            if (chapterMaster.background && chapterMaster.background.color) {
+                chapSlide.background = { color: chapterMaster.background.color };
             }
-
-            // Éléments Master Contenu
-            drawMasterElements(slide, contentMaster.elements, {
-                MODULE_TITLE: modTitle,
-                SLIDE_NUMBER: (idx + 1).toString()
+            drawMasterElements(pptx, chapSlide, chapterMaster.elements, {
+                chapter: modTitle,
+                chapitre: modTitle,
+                TITLE: modTitle,
+                DATE: new Date().toLocaleDateString(),
+                date: new Date().toLocaleDateString()
             }, template);
-
-            // Parsing Markdown dans la Content Area
-            const area = contentMaster.contentArea || { x: 0.5, y: 1.0, w: 9.0, h: 4.5 };
-            parseMarkdownToSlide(slide, content, area, template);
-        } else {
-            // Fallback minimaliste si aucun master trouvé
-            slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
-            parseMarkdownToSlide(slide, content, { x: 0.5, y: 1.5, w: 9.0, h: 4.0 }, template);
         }
-    });
+
+        // Fonction pour créer une nouvelle slide "SLIDE" au besoin
+        const createContentSlide = () => {
+            const slide = pptx.addSlide();
+            if (slideMaster) {
+                if (slideMaster.background && slideMaster.background.color) {
+                    slide.background = { color: slideMaster.background.color };
+                }
+                drawMasterElements(pptx, slide, slideMaster.elements, {
+                    title: modTitle,
+                    MODULE_TITLE: modTitle,
+                    SLIDE_NUMBER: (idx + 1).toString(),
+                    DATE: new Date().toLocaleDateString(),
+                    date: new Date().toLocaleDateString()
+                }, template);
+            } else {
+                slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
+            }
+            return slide;
+        };
+
+        const area = slideMaster?.contentArea || { x: 0.5, y: 1.0, w: 9.0, h: 4.5 };
+
+        // Dessin du Tableau de Contexte (isolé)
+        if (inst.config?.isTable) {
+            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+            if (inst.contextTable) {
+                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat);
+            }
+        }
+
+        // Dessin du Résultat (isolé et paginé)
+        if (inst.result) {
+            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat);
+        }
+    }
 
     // Télécharger les widgets demandés en images individuelles
     try {
@@ -200,7 +238,7 @@ function consolidateElements(elements) {
     return consolidated;
 }
 
-function drawMasterElements(slide, elements, placeholders, template) {
+function drawMasterElements(pptx, slide, elements, placeholders, template) {
     if (!elements) return;
 
     // Consolidate text blocks on the fly
@@ -240,6 +278,8 @@ function drawMasterElements(slide, elements, placeholders, template) {
             isTextBox: el.isTextBox,
             hyperlink: el.link || el.hyperlink,
             outline: el.outline,
+            // PptxGenJS expecting [Left, Right, Bottom, Top] instead of [Top, Right, Bottom, Left] on this version 
+            margin: el.margin ? [el.margin[3], el.margin[1], el.margin[2], el.margin[0]] : undefined,
 
             // Propriétés de ligne/bordure
             dashType: el.dashType,
@@ -263,11 +303,11 @@ function drawMasterElements(slide, elements, placeholders, template) {
         if (el.type === 'text') {
             slide.addText(text, opts);
         } else if (el.type === 'rect') {
-            slide.addShape(window.PptxGenJS.ShapeType.rect, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.rect : (pptx.shapes ? pptx.shapes.RECTANGLE : 'rect'), opts);
         } else if (el.type === 'ellipse') {
-            slide.addShape(window.PptxGenJS.ShapeType.ellipse, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.ellipse : (pptx.shapes ? pptx.shapes.OVAL : 'ellipse'), opts);
         } else if (el.type === 'line') {
-            slide.addShape(window.PptxGenJS.ShapeType.line, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.line : (pptx.shapes ? pptx.shapes.LINE : 'line'), opts);
         } else if (el.type === 'image') {
             // Si data ou path est présent
             if (opts.path || opts.data) {
@@ -284,11 +324,14 @@ function drawMasterElements(slide, elements, placeholders, template) {
 /**
  * Parse Markdown et insère dans la zone définie
  */
-function parseMarkdownToSlide(slide, mdText, area, template) {
+function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
     const lines = mdText.split('\n');
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
+    const maxH = area.h;
+    const maxY = area.y + maxH;
+
     // Estimation hauteur ligne
     const lineHeightBase = 0.3; // pouces
 
@@ -302,6 +345,8 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
     let textRuns = [];
     let textHeightAccumulated = 0;
 
+    let slide = createSlideFn();
+
     // Helper to flush current text buffer
     const flushText = () => {
         if (textRuns.length > 0) {
@@ -309,7 +354,9 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
                 x: marginX, y: currentY, w: contentW, h: textHeightAccumulated,
                 fontFace: fontBody, // Default font
                 color: theme.text,   // Default color
-                fontSize: 12         // Default size
+                fontSize: 12,        // Default size
+                valign: 'top',
+                margin: 0
             });
             currentY += textHeightAccumulated;
             textRuns = [];
@@ -318,7 +365,8 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
     };
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const originalLine = lines[i];
+        const line = originalLine.trim();
 
         // 1. Tableaux
         if (line.startsWith('|')) {
@@ -336,55 +384,105 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
             if (inTable) {
                 if (tableRows.length > 0) {
                     const tableH = (tableRows.length * 0.4) + 0.2;
-                    // Check overflow ? Tant pis s'il dépasse
-
-                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
+                    if (currentY + tableH > maxY && currentY > area.y) {
+                        flushText();
+                        slide = createSlideFn();
+                        currentY = area.y;
+                    }
+                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
                     currentY += tableH;
                 }
                 inTable = false;
             }
 
             if (line === '') {
-                // Empty line = line break
-                // Optional: add empty run for spacing if needed
-                // textRuns.push({ text: "", options: { breakLine: true } });
-                // textHeightAccumulated += lineHeightBase;
+                // Empty line = empty text run for spacing
+                textRuns.push({ text: '', options: { fontSize: 12, breakLine: true } });
+                textHeightAccumulated += 0.15;
                 continue;
             }
 
-            // 2. Titres et Texte
-            let run = {};
-            let h = lineHeightBase;
+            // Detect Indentation and Bullets
+            const leadingSpacesMatch = originalLine.match(/^(\s*)/);
+            const leadingSpacesCount = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
+            const indentLvl = Math.floor(leadingSpacesCount / 2); // 2 spaces = 1 indent level
 
-            if (line.startsWith('# ')) {
-                run = {
-                    text: line.replace('# ', ''),
-                    options: { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title, breakLine: true }
-                };
-                h = 0.6;
-            } else if (line.startsWith('## ')) {
-                run = {
-                    text: line.replace('## ', ''),
-                    options: { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title, breakLine: true }
-                };
-                h = 0.5;
-            } else if (line.startsWith('### ')) {
-                run = {
-                    text: line.replace('### ', ''),
-                    options: { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title, breakLine: true }
-                };
-                h = 0.5;
-            } else {
-                // Texte normal
-                const cleanLine = line.replace(/\*\*/g, '');
-                run = {
-                    text: cleanLine,
-                    options: { fontSize: 12, color: theme.text, fontFace: fontBody, breakLine: true }
-                };
-                h = lineHeightBase;
+            let isBullet = false;
+            let textContent = line;
+
+            if (textContent.startsWith('- ') || textContent.startsWith('* ')) {
+                isBullet = true;
+                textContent = textContent.substring(2).trim();
             }
 
-            textRuns.push(run);
+            // 2. Titres et Texte
+            let baseOptions = { breakLine: true };
+            let h = lineHeightBase;
+
+            if (textContent.startsWith('# ')) {
+                baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
+                textContent = textContent.replace('# ', '');
+                h = 0.6;
+            } else if (textContent.startsWith('## ')) {
+                baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
+                textContent = textContent.replace('## ', '');
+                h = 0.5;
+            } else if (textContent.startsWith('### ')) {
+                baseOptions = { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace('### ', '');
+                h = 0.5;
+            } else {
+                baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
+                // Wrap height estimation
+                const wrapFactor = Math.ceil(textContent.length / (contentW * 12));
+                if (wrapFactor > 1) {
+                    h *= wrapFactor;
+                }
+            }
+
+            if (isBullet) baseOptions.bullet = true;
+            if (indentLvl > 0) baseOptions.indentLevel = indentLvl;
+
+            if (currentY + textHeightAccumulated + h > maxY && currentY > area.y) {
+                flushText();
+                slide = createSlideFn();
+                currentY = area.y;
+            }
+
+            // Parse Inline Bold (**text**)
+            const parts = textContent.split(/(\*\*.*?\*\*)/g).filter(p => p.length > 0);
+            if (parts.length === 0) parts.push('');
+
+            for (let pIdx = 0; pIdx < parts.length; pIdx++) {
+                let pText = parts[pIdx];
+                let pBold = baseOptions.bold || false;
+
+                if (pText.startsWith('**') && pText.endsWith('**')) {
+                    pText = pText.slice(2, -2);
+                    pBold = true;
+                }
+
+                const isLastInLine = (pIdx === parts.length - 1);
+
+                let runOptions = {
+                    ...baseOptions,
+                    bold: pBold,
+                    breakLine: isLastInLine
+                };
+
+                // Seulement le premier bloc de texte d'une ligne doit porter la propriété bullet/indent
+                // Sinon, PptxGenJS crée une nouvelle puce à chaque sous-bloc formaté
+                if (pIdx > 0) {
+                    delete runOptions.bullet;
+                    delete runOptions.indentLevel;
+                }
+
+                textRuns.push({
+                    text: pText,
+                    options: runOptions
+                });
+            }
+
             textHeightAccumulated += h;
         }
     }
@@ -393,27 +491,91 @@ function parseMarkdownToSlide(slide, mdText, area, template) {
     if (inTable && tableRows.length > 0) {
         // Table at the very end
         const tableH = (tableRows.length * 0.4) + 0.2;
-        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody);
+        if (currentY + tableH > maxY && currentY > area.y) {
+            flushText();
+            slide = createSlideFn();
+            currentY = area.y;
+        }
+        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
     } else {
         flushText();
     }
 }
 
-function addPptTable(slide, rows, y, x, w, theme, font) {
+function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
     if (rows.length === 0) return;
     const colCount = rows[0].length;
     const colW = w / colCount;
     const colWidths = Array(colCount).fill(colW);
 
-    slide.addTable(rows, {
+    const format = {
+        headerFill: tableFormat.headerFill || "E0E0E0",
+        headerColor: tableFormat.headerColor || "000000",
+        headerBold: tableFormat.headerBold !== undefined ? tableFormat.headerBold : true,
+        rowFill: tableFormat.rowFill || "FFFFFF",
+        rowAltFill: tableFormat.rowAltFill || "FFFFFF",
+        borderSize: tableFormat.borderSize !== undefined ? tableFormat.borderSize : 1,
+        borderColor: tableFormat.borderColor || "CCCCCC",
+        fontSize: tableFormat.fontSize || 10
+    };
+
+    const formattedRows = rows.map((row, rIdx) => {
+        const isHeader = rIdx === 0;
+        let fill = isHeader ? format.headerFill : (rIdx % 2 === 0 ? format.rowFill : format.rowAltFill);
+        let color = isHeader ? format.headerColor : theme.text;
+        let bold = isHeader ? format.headerBold : false;
+
+        return row.map(cellText => {
+            let cellFill = fill;
+            let cellColor = color;
+            let rawText = cellText;
+
+            // Simple regex to parse our specific span format: 
+            // <span style="background-color:rgba(x,y,z,a);color:#fff;padding:2px 4px;border-radius:3px;">Value</span>
+            const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
+
+            if (spanMatch) {
+                let extractedBg = spanMatch[1].trim();
+                let extractedColor = spanMatch[2].trim();
+
+                // PptxGenJS hex only format (strip # and handle rgb/rgba)
+                if (extractedBg.startsWith('#')) {
+                    cellFill = extractedBg.replace('#', '');
+                } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
+                    // Try to convert rgb to hex for PPTX, since PptxGenJS prefers hex without #
+                    const rgbVals = extractedBg.match(/\d+/g);
+                    if (rgbVals && rgbVals.length >= 3) {
+                        const r = parseInt(rgbVals[0]).toString(16).padStart(2, '0');
+                        const g = parseInt(rgbVals[1]).toString(16).padStart(2, '0');
+                        const b = parseInt(rgbVals[2]).toString(16).padStart(2, '0');
+                        cellFill = (r + g + b).toUpperCase();
+                    }
+                }
+
+                if (extractedColor.startsWith('#')) {
+                    cellColor = extractedColor.replace('#', '');
+                }
+
+                rawText = spanMatch[3]; // The actual text inside the span
+            }
+
+            return {
+                text: rawText,
+                options: {
+                    fill: cellFill,
+                    color: cellColor,
+                    bold: bold,
+                    fontFace: font,
+                    fontSize: format.fontSize,
+                    border: { pt: format.borderSize, color: format.borderColor }
+                }
+            };
+        });
+    });
+
+    slide.addTable(formattedRows, {
         x: x, y: y, w: w,
         colW: colWidths,
-        rowH: 0.4,
-        fontSize: 10,
-        fontFace: font,
-        border: { pt: 1, color: "CCCCCC" },
-        fill: theme.background, // Cell fill
-        // Header
-        fill: { color: theme.surface }
+        rowH: 0.4
     });
 }

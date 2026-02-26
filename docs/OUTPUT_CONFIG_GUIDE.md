@@ -57,33 +57,40 @@ Définissez ici les couleurs principales (format HEX sans #) et les polices.
 
 ## 2.2. Diapositives Maîtresses (Masters)
 
-Il y a deux types de diapositives obligatoires :
-1.  `TITLE_SLIDE` : La première page (Titre du Livrable).
-2.  `CONTENT_SLIDE` : Les pages suivantes (Une par Module).
+Il y a trois types de diapositives identifiables par Ezio lors de la compilation :
+1.  `TITRE` : La première page de couverture (Titre du Livrable).
+2.  `CHAPITRE` : Les intercalaires de section (Créés dynamiquement avant chaque module, si ce modèle existe).
+3.  `SLIDE` : Les diapositives de contenu pour les résultats.
 
 ### Éléments Statiques (`elements`)
-Vous pouvez placer des formes (`rect`, `ellipse`) ou du texte fixe/dynamique.
+Vous pouvez placer des formes (`rect`, `ellipse`) ou du texte fixe/dynamique. Il est fortement recommandé d'utiliser `extract.html` pour générer automatiquement cette structure depuis vos propres `.pptx`.
 
 **Propriétés disponibles :**
 *   `type`: "text", "rect", "ellipse", "image" (support basique URL)
 *   `x`, `y`, `w`, `h`: Position et taille en **pouces** (inches). (x=0, y=0 est le coin haut-gauche).
-*   `fill`: Couleur de remplissage (HEX).
-*   `color`: Couleur du texte (HEX).
+*   `fill`: Couleur de remplissage de la boîte (HEX ou scheme de thème).
+*   `color`: Couleur du texte ou de la ligne (HEX ou scheme de thème).
 *   `fontSize`: Taille de police.
-*   `bold`: `true` ou `false`.
-*   `align`: "left", "center", "right".
+*   `margin`: Marges internes [Gauche, Droite, Bas, Haut] en **points (pt)** (très utile pour la compatibilité native PPTX).
 
 ### Placeholders (Variables Dynamiques)
-Dans les éléments de texte de type `TITLE_SLIDE`, vous pouvez utiliser :
-*   `{{TITLE}}` : Sera remplacé par le nom du Livrable.
-*   `{{DATE}}` : Sera remplacé par la date du jour.
+Ces tags spéciaux placés dans n'importe quel élément de type `text` de votre masque seront automatiquement traduits par le moteur de rendu Ezio.
 
-Dans `CONTENT_SLIDE` :
-*   `{{MODULE_TITLE}}` : Sera remplacé par le nom du module actuel.
-*   `{{SLIDE_NUMBER}}` : Numéro de page.
+Dans les diapositives de couverture `TITRE` :
+*   `{{titre}}` ou `{{TITLE}}` : Remplacé par le nom global du Livrable.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+
+Dans les intercalaires `CHAPITRE` :
+*   `{{chapitre}}` ou `{{TITLE}}` : Remplacé par le nom du module/section actuel.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+
+Dans les contenus `SLIDE` :
+*   `{{titre}}` ou `{{TITLE}}` : Remplacé par le nom du module/section actuel.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+*   `{{SLIDE_NUMBER}}` : Index automatique de la section (le 3e module aura le numéro 3 sur toutes ses diapositives générées).
 
 ### Zone de Contenu (`contentArea`)
-Uniquement pour `CONTENT_SLIDE`. Définit la zone où le texte et les tableaux générés par l'IA seront insérés.
+Uniquement pour `SLIDE`. Définit la zone vide principale de la diapositive où le texte Markdown long et les Tableaux générés par l'IA seront insérés dynamiquement.
 
 ```json
 "contentArea": {
@@ -91,12 +98,12 @@ Uniquement pour `CONTENT_SLIDE`. Définit la zone où le texte et les tableaux g
   "w": 9.0, "h": 4.0  // Largeur et hauteur disponible
 }
 ```
-Si le contenu dépasse cette zone, il sera tronqué (dans cette version).
+**Pagination Intelligente** : Si le texte généré par l'IA dépasse la surface définie par `h`, le moteur Pptx d'Ezio provoquera **un saut de page** (« overflow »), arrêtera l'écriture sur la diapositive pleine, et injectera la suite du texte sur une toute nouvelle diapositive (`SLIDE`) au même point `y`.
 
 ## Exemple
 
 ```json
-"CONTENT_SLIDE": {
+"SLIDE": {
   "background": { "color": "FFFFFF" },
   "elements": [
     // Une barre latérale rouge
@@ -107,3 +114,43 @@ Si le contenu dépasse cette zone, il sera tronqué (dans cette version).
   "contentArea": { "x": 0.7, "y": 1.2, "w": 8.5, "h": 4.0 }
 }
 ```
+
+## 3. Formatage des Tableaux PowerPoint (`tableFormat`)
+
+Vous pouvez personnaliser l'apparence des tableaux exportés en **PowerPoint** en ajoutant un objet `tableFormat` à l'intérieur de chacun de vos objets `templates`. (Les tableaux Word, eux, adoptent nativement le design du modèle Word `docx` fourni).
+
+Vous pouvez aussi le définir à la racine du JSON `output_config.json` pour l'appliquer par défaut à tous les templates PPTX qui n'ont pas leur propre format.
+
+**Exemple de configuration `tableFormat` à l'intérieur d'un template spécifique :**
+
+```json
+{
+  "templates": [
+    {
+      "id": "extracted_1234",
+      "name": "Mon Template Rouge",
+      "tableFormat": {
+        "headerFill": "C00000",
+        "headerColor": "FFFFFF",
+        "headerBold": true,
+        "rowFill": "FFFFFF",
+        "rowAltFill": "F9F9F9",
+        "borderColor": "CCCCCC",
+        "borderSize": 1,
+        "fontSize": 10
+      },
+      "masters": { ... }
+    }
+  ]
+}
+```
+
+### Propriétés de `tableFormat` :
+*   `headerFill` : Couleur de fond de la ligne d'en-tête (en HEX sans le `#`).
+*   `headerColor` : Couleur du texte de l'en-tête (en HEX).
+*   `headerBold` : `true` ou `false` (Définit si l'en-tête est en gras).
+*   `rowFill` : Couleur de fond des lignes standards.
+*   `rowAltFill` : Couleur de fond des lignes paires (pour un effet zébré attrayant).
+*   `borderColor` : Couleur fine des bordures du tableau.
+*   `borderSize` : Epaisseur des bordures en pt.
+*   `fontSize` : Taille de la police dans les cellules.

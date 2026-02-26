@@ -207,6 +207,25 @@
             </svg>
             <h3>Glissez votre fichier .pptx ici</h3>
             <p style="color: var(--text-secondary); margin-bottom: 1rem;">ou cliquez pour sélectionner un fichier</p>
+
+            <div
+                style="display: flex; gap: 1rem; width: 100%; max-width: 400px; margin-bottom: 1rem; text-align: left;">
+                <div style="flex: 1;">
+                    <label
+                        style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Police
+                        Titres</label>
+                    <input type="text" id="fontTitleInput" value="Arial"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;">
+                </div>
+                <div style="flex: 1;">
+                    <label
+                        style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Police
+                        Corps</label>
+                    <input type="text" id="fontBodyInput" value="Arial"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;">
+                </div>
+            </div>
+
             <button onclick="document.getElementById('fileInput').click()">Sélectionner un fichier</button>
             <input type="file" id="fileInput" accept=".pptx" onchange="handleFile(this.files[0])">
             <div id="status" class="status-msg"></div>
@@ -267,6 +286,10 @@
                 const sldSz = presentationDoc.getElementsByTagName("p:sldSz")[0];
                 const slideWidthEmu = parseInt(sldSz.getAttribute("cx"));
                 const slideHeightEmu = parseInt(sldSz.getAttribute("cy"));
+
+                // Calculer la taille en pouces
+                const layoutW = parseFloat((slideWidthEmu / EMU_PER_INCH).toFixed(2));
+                const layoutH = parseFloat((slideHeightEmu / EMU_PER_INCH).toFixed(2));
 
                 // 2. Identify Slide Layouts
                 const layouts = [];
@@ -332,11 +355,20 @@
                     });
                 }
 
+                // Get fonts from UI
+                const fontTitle = document.getElementById('fontTitleInput').value || "Arial";
+                const fontBody = document.getElementById('fontBodyInput').value || "Arial";
+
                 const output = {
                     templates: [
                         {
                             id: "extracted_" + Date.now(),
                             name: file.name.replace('.pptx', ''),
+                            layout: {
+                                name: "custom",
+                                width: layoutW,
+                                height: layoutH
+                            },
                             theme: {
                                 primary: "000000",
                                 secondary: "666666",
@@ -345,8 +377,8 @@
                                 surface: "F7F7F7"
                             },
                             fonts: {
-                                title: "Arial",
-                                body: "Arial"
+                                title: fontTitle,
+                                body: fontBody
                             },
                             masters: {}
                         }
@@ -473,6 +505,7 @@
                 let bold = false;
                 let align = "left";
                 let valign = "top";
+                let fontFace = null;
                 let fill = null;
                 let transparency = 0;
                 let shadow = null;
@@ -550,17 +583,37 @@
                 }
 
                 // Text Body Properties
+                // Text margins
+                let margin = null;
                 const bodyPr = txBody?.getElementsByTagName("a:bodyPr")[0];
                 if (bodyPr) {
                     const anchor = bodyPr.getAttribute("anchor");
                     if (anchor === "ctr") valign = "middle";
                     else if (anchor === "b") valign = "bottom";
+
+                    // margins in PptxGenJS are in Points (pt). 1 pt = 12700 EMU
+                    // lIns, tIns, rIns, bIns
+                    const toPt = (emu) => parseFloat((parseInt(emu || 0) / 12700).toFixed(1));
+                    const lIns = bodyPr.getAttribute("lIns");
+                    const tIns = bodyPr.getAttribute("tIns");
+                    const rIns = bodyPr.getAttribute("rIns");
+                    const bIns = bodyPr.getAttribute("bIns");
+
+                    if (lIns !== null || tIns !== null || rIns !== null || bIns !== null) {
+                        margin = [
+                            tIns !== null ? toPt(tIns) : 3.6, // Top default: 3.6 pt (0.05")
+                            rIns !== null ? toPt(rIns) : 7.2, // Right default: 7.2 pt (0.1")
+                            bIns !== null ? toPt(bIns) : 3.6, // Bottom default: 3.6 pt (0.05")
+                            lIns !== null ? toPt(lIns) : 7.2  // Left default: 7.2 pt (0.1")
+                        ];
+                    }
                 }
 
                 // Text Run Properties
                 if (txBody) {
-                    const p = txBody.getElementsByTagName("a:p")[0];
-                    if (p) {
+                    const paragraphs = txBody.getElementsByTagName("a:p");
+                    for (let p of paragraphs) {
+
                         const pPr = p.getElementsByTagName("a:pPr")[0];
                         if (pPr) {
                             const algn = pPr.getAttribute("algn");
@@ -581,11 +634,13 @@
                                 const solidFillText = rPr.getElementsByTagName("a:solidFill")[0];
                                 if (solidFillText) {
                                     const srgb = solidFillText.getElementsByTagName("a:srgbClr")[0];
-                                    if (srgb) color = srgb.getAttribute("val");
+                                    const scheme = solidFillText.getElementsByTagName("a:schemeClr")[0];
+                                    const fillNodeText = srgb || scheme;
+                                    if (fillNodeText) color = fillNodeText.getAttribute("val");
                                 }
                             }
                         }
-                    }
+                    } // End of paragraph loop
                 }
 
                 const element = {
@@ -609,7 +664,10 @@
                     if (bold) element.bold = true;
                     if (align !== "left") element.align = align;
                     if (valign !== "top") element.valign = valign;
+                    if (fontFace) element.fontFace = fontFace;
                     if (border) element.border = border;
+                    if (margin) element.margin = margin;
+                    if (fill) element.fill = fill;
                 } else if (type === "image" && imageData) {
                     element.src = imageData;
                     if (border) element.border = border;

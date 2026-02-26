@@ -429,8 +429,17 @@ function renderMainView() {
     // Name change handled by delegation in setupDelegation
 
 
-    document.getElementById('btnDownloadReport').addEventListener('click', () => {
-        downloadDeliveryReport(delivery);
+    document.getElementById('btnDownloadReport').addEventListener('click', async () => {
+        const btn = document.getElementById('btnDownloadReport');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = `<span class="rpt-loading">↻</span> Export...`;
+        btn.disabled = true;
+        try {
+            await downloadDeliveryReport(delivery);
+        } finally {
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
     });
 
     document.getElementById('btnImpression').addEventListener('click', () => {
@@ -595,7 +604,7 @@ async function generateModule(delivery, index) {
     }
 }
 
-async function buildContext(scope, columnsIds, data) {
+export async function buildContext(scope, columnsIds, data) {
     if (!data || !data.rows || !data.columns) return "";
 
     // 1. Filtrer les colonnes à inclure
@@ -633,7 +642,22 @@ async function buildContext(scope, columnsIds, data) {
     rows.forEach(row => {
         const cells = colsToInclude.map(c => {
             let val = row[c.index];
+            const colDef = data.columns[c.index];
+
             if (val === null || val === undefined) val = "";
+
+            // Handle Combo colors
+            if (colDef && colDef.type === 'combo' && colDef.params?.colorScheme && val) {
+                const options = colDef.params.options || [];
+                // Use the built-in function to get the color, or default to a safe value
+                const bg = Utils.getComboColor(colDef.params.colorScheme, val, options);
+                if (bg) {
+                    // Use a recognizable HTML span that the PPTX/Word parsers can potentially read later
+                    // But for strict MD, we just inject the background color string.
+                    val = `<span style="background-color:${bg};color:#fff;padding:2px 4px;border-radius:3px;">${val}</span>`;
+                }
+            }
+
             // Nettoyage basique pour ne pas casser le tableau MD
             val = String(val).replace(/\n/g, "<br>").replace(/\|/g, "\\|");
             return val;
@@ -719,22 +743,33 @@ function createDeliveryFromTemplate(tplId) {
     renderMainView();
 }
 
-function downloadDeliveryReport(delivery) {
+export async function downloadDeliveryReport(delivery) {
     if (!delivery || !delivery.structure) return;
 
     let mdContent = `# ${delivery.name}\n\n`;
 
-    delivery.structure.forEach(inst => {
+    for (let i = 0; i < delivery.structure.length; i++) {
+        const inst = delivery.structure[i];
         const title = inst.name || 'Module';
         const content = inst.result || '(Aucun contenu)';
 
         mdContent += `## ${title}\n\n`;
-        if (inst.config?.isTable && inst.contextTable) {
-            mdContent += `${inst.contextTable}\n\n---\n\n`;
+
+        if (inst.config?.isTable) {
+            // Toujours régénérer le tableau à la volée pour avoir les dernières données et couleurs
+            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+
+            if (inst.contextTable) {
+                mdContent += `${inst.contextTable}\n\n---\n\n`;
+            }
         }
+
         mdContent += `${content}\n\n`;
         mdContent += `---\n\n`;
-    });
+    }
+
+    // Save one last time in case contextTables were updated
+    store.save();
 
     const filename = `${Utils.toSlug(delivery.name)}.md`;
     Utils.downloadFile(mdContent, filename, 'text/markdown');

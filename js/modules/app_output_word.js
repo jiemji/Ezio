@@ -1,6 +1,8 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { currentForm, store } from '../core/State.js';
+import { buildContext } from './app_deliveries.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -17,36 +19,41 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
 
     // 1. Générer le contenu du rapport (Document temporaire)
     // On génère juste le "cœur" du rapport avec docx
+    const allBlocks = [
+        new window.docx.Paragraph({
+            text: delivery.name,
+            heading: window.docx.HeadingLevel.TITLE,
+            spacing: { after: 200 }
+        })
+    ];
+
+    for (let i = 0; i < delivery.structure.length; i++) {
+        const inst = delivery.structure[i];
+        const title = inst.name || 'Module';
+        const content = inst.result || '(Aucun contenu)';
+
+        allBlocks.push(
+            new window.docx.Paragraph({
+                text: title,
+                heading: window.docx.HeadingLevel.HEADING_1,
+                spacing: { before: 400, after: 200 }
+            })
+        );
+
+        if (inst.config?.isTable) {
+            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+            if (inst.contextTable) {
+                allBlocks.push(...parseMarkdownToDocx(inst.contextTable));
+            }
+        }
+
+        allBlocks.push(...parseMarkdownToDocx(content));
+    }
+
     const tempDoc = new window.docx.Document({
         sections: [{
             properties: {},
-            children: [
-                new window.docx.Paragraph({
-                    text: delivery.name,
-                    heading: window.docx.HeadingLevel.TITLE,
-                    spacing: { after: 200 }
-                }),
-                ...delivery.structure.flatMap(inst => {
-                    const title = inst.name || 'Module';
-                    const content = inst.result || '(Aucun contenu)';
-
-                    let blocks = [
-                        new window.docx.Paragraph({
-                            text: title,
-                            heading: window.docx.HeadingLevel.HEADING_1,
-                            spacing: { before: 400, after: 200 }
-                        })
-                    ];
-
-                    if (inst.config?.isTable && inst.contextTable) {
-                        blocks.push(...parseMarkdownToDocx(inst.contextTable));
-                    }
-
-                    blocks.push(...parseMarkdownToDocx(content));
-
-                    return blocks;
-                })
-            ]
+            children: allBlocks
         }]
     });
 
@@ -225,21 +232,57 @@ function createDocxTable(rowsData) {
             size: 100,
             type: window.docx.WidthType.PERCENTAGE,
         },
-        rows: rowsData.map((row, rIdx) =>
-            new window.docx.TableRow({
-                children: row.map(cellText =>
-                    new window.docx.TableCell({
-                        children: [new window.docx.Paragraph({ text: cellText.replace(/<br>/g, '\n') })],
-                        shading: {
-                            fill: rIdx === 0 ? "E0E0E0" : "FFFFFF" // Header row gray
-                        },
-                        font: {
-                            bold: rIdx === 0
+        rows: rowsData.map((row, rIdx) => {
+            const isHeader = rIdx === 0;
+
+            return new window.docx.TableRow({
+                children: row.map(cellText => {
+                    let cellFill = isHeader ? "E0E0E0" : "FFFFFF";
+                    let cellColor = isHeader ? "000000" : "000000";
+                    let rawText = cellText;
+
+                    const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
+                    if (spanMatch) {
+                        let extractedBg = spanMatch[1].trim();
+                        let extractedColor = spanMatch[2].trim();
+
+                        if (extractedBg.startsWith('#')) {
+                            cellFill = extractedBg.replace('#', '');
+                        } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
+                            const rgbVals = extractedBg.match(/\d+/g);
+                            if (rgbVals && rgbVals.length >= 3) {
+                                const r = parseInt(rgbVals[0]).toString(16).padStart(2, '0');
+                                const g = parseInt(rgbVals[1]).toString(16).padStart(2, '0');
+                                const b = parseInt(rgbVals[2]).toString(16).padStart(2, '0');
+                                cellFill = (r + g + b).toUpperCase();
+                            }
                         }
-                    })
-                )
-            })
-        )
+
+                        if (extractedColor.startsWith('#')) {
+                            cellColor = extractedColor.replace('#', '');
+                        }
+                        rawText = spanMatch[3];
+                    }
+
+                    return new window.docx.TableCell({
+                        children: [
+                            new window.docx.Paragraph({
+                                children: [
+                                    new window.docx.TextRun({
+                                        text: rawText.replace(/<br>/g, '\n'),
+                                        color: cellColor,
+                                        bold: isHeader
+                                    })
+                                ]
+                            })
+                        ],
+                        shading: {
+                            fill: cellFill
+                        }
+                    });
+                })
+            });
+        })
     });
 }
 

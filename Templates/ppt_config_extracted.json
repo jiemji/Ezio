@@ -1,29 +1,8 @@
 {
-    "documents": [
-        {
-            "name": "Rapport Isec",
-            "path": "Modele_word.docx"
-        }
-    ],
     "templates": [
         {
-            "id": "extracted_1772134936046",
-            "name": "Slides ISEC",
-            "tableFormat": {
-                "headerFill": "C00000",
-                "headerColor": "FFFFFF",
-                "headerBold": true,
-                "rowFill": "FFFFFF",
-                "rowAltFill": "F9F9F9",
-                "borderColor": "CCCCCC",
-                "borderSize": 1,
-                "fontSize": 10
-            },
-            "layout": {
-                "name": "custom",
-                "width": 13.33,
-                "height": 7.5
-            },
+            "id": "extracted_1772126674797",
+            "name": "Test",
             "theme": {
                 "primary": "000000",
                 "secondary": "666666",
@@ -32,8 +11,8 @@
                 "surface": "F7F7F7"
             },
             "fonts": {
-                "title": "Calibri",
-                "body": "Calibri"
+                "title": "Arial",
+                "body": "Arial"
             },
             "masters": {
                 "TITRE": {
@@ -57,16 +36,16 @@
                             "h": 0.84,
                             "text": "INTRINSEC CONSEIL",
                             "fontSize": 44,
-                            "color": "bg1",
+                            "color": "000000",
                             "bold": true
                         },
                         {
                             "type": "text",
-                            "x": 1.36,
+                            "x": 1.49,
                             "y": 3.27,
-                            "w": 11.32,
+                            "w": 5.92,
                             "h": 1.11,
-                            "text": "{{title}}",
+                            "text": "{{titre}}",
                             "fontSize": 60,
                             "color": "000000"
                         }
@@ -89,10 +68,10 @@
                         },
                         {
                             "type": "text",
-                            "x": 1.37,
-                            "y": 2.79,
-                            "w": 4.89,
-                            "h": 1.92,
+                            "x": 1.53,
+                            "y": 3.25,
+                            "w": 3.52,
+                            "h": 1.01,
                             "text": "{{chapter}}",
                             "fontSize": 54,
                             "color": "000000"
@@ -106,64 +85,75 @@
                     },
                     "elements": [
                         {
-                            "type": "text",
+                            "type": "rect",
                             "x": 0,
                             "y": 0,
                             "w": 13.33,
-                            "h": 1.07,
+                            "h": 1.46,
+                            "fill": "C00000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.31,
+                            "y": 0.31,
+                            "w": 12.72,
+                            "h": 0.84,
                             "text": "{{title}}",
-                            "fontSize": 40,
-                            "color": "bg1",
+                            "fontSize": 44,
+                            "color": "000000",
                             "bold": true,
-                            "align": "right",
-                            "margin": [
-                                14.2,
-                                42.5,
-                                14.2,
-                                42.5
-                            ],
-                            "fill": "C00000"
+                            "align": "right"
                         },
                         {
                             "type": "text",
-                            "x": 0.15,
-                            "y": 7.03,
-                            "w": 1.18,
-                            "h": 0.29,
-                            "text": "Intrinsec - 2026",
-                            "fontSize": 11,
-                            "color": "000000"
-                        },
-                        {
-                            "type": "text",
-                            "x": 12.55,
-                            "y": 7.03,
-                            "w": 0.64,
-                            "h": 0.29,
-                            "text": "{{SLIDE_NUMBER}}",
-                            "fontSize": 11,
-                            "color": "bg1",
-                            "bold": true,
-                            "align": "center",
-                            "fill": "C00000"
-                        },
-                        {
-                            "type": "text",
-                            "x": 5.32,
-                            "y": 7.03,
-                            "w": 0.73,
-                            "h": 0.29,
-                            "text": "{{DATE}}",
-                            "fontSize": 11,
+                            "x": 0.6,
+                            "y": 1.89,
+                            "w": 12.24,
+                            "h": 0.4,
+                            "text": "{{content}}",
+                            "fontSize": 12,
                             "color": "000000"
                         }
                     ],
-                    "contentArea": {
-                        "x": 0.45,
-                        "y": 1.47,
-                        "w": 12.6,
-                        "h": 5.37
-                    }
+                    "contentArea": null
+                },
+                "IMAGES": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "rect",
+                            "x": 0,
+                            "y": 0,
+                            "w": 13.33,
+                            "h": 1.46,
+                            "fill": "C00000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.31,
+                            "y": 0.31,
+                            "w": 12.72,
+                            "h": 0.84,
+                            "text": "{{title}}",
+                            "fontSize": 44,
+                            "color": "000000",
+                            "bold": true,
+                            "align": "right"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.6,
+                            "y": 1.89,
+                            "w": 12.24,
+                            "h": 0.4,
+                            "text": "{{content}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": null
                 }
             }
         }
