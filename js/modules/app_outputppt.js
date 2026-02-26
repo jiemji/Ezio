@@ -84,7 +84,7 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         }
 
         // Dessiner les éléments statiques du Master Titre
-        drawMasterElements(slideTitle, titleMaster.elements, {
+        drawMasterElements(pptx, slideTitle, titleMaster.elements, {
             TITLE: delivery.name,
             DATE: new Date().toLocaleDateString()
         }, template);
@@ -116,7 +116,7 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
             }
 
             // Éléments Master Contenu
-            drawMasterElements(slide, contentMaster.elements, {
+            drawMasterElements(pptx, slide, contentMaster.elements, {
                 MODULE_TITLE: modTitle,
                 SLIDE_NUMBER: (idx + 1).toString()
             }, template);
@@ -200,7 +200,7 @@ function consolidateElements(elements) {
     return consolidated;
 }
 
-function drawMasterElements(slide, elements, placeholders, template) {
+function drawMasterElements(pptx, slide, elements, placeholders, template) {
     if (!elements) return;
 
     // Consolidate text blocks on the fly
@@ -263,11 +263,11 @@ function drawMasterElements(slide, elements, placeholders, template) {
         if (el.type === 'text') {
             slide.addText(text, opts);
         } else if (el.type === 'rect') {
-            slide.addShape(window.PptxGenJS.ShapeType.rect, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.rect : (pptx.shapes ? pptx.shapes.RECTANGLE : 'rect'), opts);
         } else if (el.type === 'ellipse') {
-            slide.addShape(window.PptxGenJS.ShapeType.ellipse, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.ellipse : (pptx.shapes ? pptx.shapes.OVAL : 'ellipse'), opts);
         } else if (el.type === 'line') {
-            slide.addShape(window.PptxGenJS.ShapeType.line, opts);
+            slide.addShape(pptx.ShapeType ? pptx.ShapeType.line : (pptx.shapes ? pptx.shapes.LINE : 'line'), opts);
         } else if (el.type === 'image') {
             // Si data ou path est présent
             if (opts.path || opts.data) {

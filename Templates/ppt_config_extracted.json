@@ -1,14 +1,8 @@
 {
-    "documents": [
-        {
-            "name": "Rapport Isec",
-            "path": "Modele_word.docx"
-        }
-    ],
     "templates": [
         {
-            "id": "extracted_1771110192358",
-            "name": "Support ISEC",
+            "id": "extracted_1772126674797",
+            "name": "Test",
             "theme": {
                 "primary": "000000",
                 "secondary": "666666",
@@ -17,8 +11,8 @@
                 "surface": "F7F7F7"
             },
             "fonts": {
-                "title": "Calibri",
-                "body": "Calibri"
+                "title": "Arial",
+                "body": "Arial"
             },
             "masters": {
                 "TITRE": {
@@ -112,21 +106,54 @@
                         },
                         {
                             "type": "text",
-                            "x": 0.43,
-                            "y": 1.76,
-                            "w": 12.6,
-                            "h": 5.32,
-                            "text": "{{CONTENT_PLACEHOLDER}}",
+                            "x": 0.6,
+                            "y": 1.89,
+                            "w": 12.24,
+                            "h": 0.4,
+                            "text": "{{content}}",
                             "fontSize": 12,
                             "color": "000000"
                         }
                     ],
-                    "contentArea": {
-                        "x": 0.43,
-                        "y": 1.76,
-                        "w": 12.6,
-                        "h": 5.32
-                    }
+                    "contentArea": null
+                },
+                "IMAGES": {
+                    "background": {
+                        "color": "FFFFFF"
+                    },
+                    "elements": [
+                        {
+                            "type": "rect",
+                            "x": 0,
+                            "y": 0,
+                            "w": 13.33,
+                            "h": 1.46,
+                            "fill": "C00000"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.31,
+                            "y": 0.31,
+                            "w": 12.72,
+                            "h": 0.84,
+                            "text": "{{title}}",
+                            "fontSize": 44,
+                            "color": "000000",
+                            "bold": true,
+                            "align": "right"
+                        },
+                        {
+                            "type": "text",
+                            "x": 0.6,
+                            "y": 1.89,
+                            "w": 12.24,
+                            "h": 0.4,
+                            "text": "{{content}}",
+                            "fontSize": 12,
+                            "color": "000000"
+                        }
+                    ],
+                    "contentArea": null
                 }
             }
         }
