@@ -1,6 +1,8 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { currentForm, store } from '../core/State.js';
+import { buildContext } from './app_deliveries.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -17,36 +19,44 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
 
     // 1. Générer le contenu du rapport (Document temporaire)
     // On génère juste le "cœur" du rapport avec docx
+    const allBlocks = [
+        new window.docx.Paragraph({
+            text: delivery.name,
+            heading: window.docx.HeadingLevel.TITLE,
+            spacing: { after: 200 }
+        })
+    ];
+
+    for (let i = 0; i < delivery.structure.length; i++) {
+        const inst = delivery.structure[i];
+        const title = inst.name || 'Module';
+        const content = inst.result || '(Aucun contenu)';
+
+        allBlocks.push(
+            new window.docx.Paragraph({
+                text: title,
+                heading: window.docx.HeadingLevel.HEADING_1,
+                spacing: { before: 400, after: 200 }
+            })
+        );
+
+        if (inst.config?.isTable) {
+            if (!inst.contextTable) {
+                inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+                store.save();
+            }
+            if (inst.contextTable) {
+                allBlocks.push(...parseMarkdownToDocx(inst.contextTable));
+            }
+        }
+
+        allBlocks.push(...parseMarkdownToDocx(content));
+    }
+
     const tempDoc = new window.docx.Document({
         sections: [{
             properties: {},
-            children: [
-                new window.docx.Paragraph({
-                    text: delivery.name,
-                    heading: window.docx.HeadingLevel.TITLE,
-                    spacing: { after: 200 }
-                }),
-                ...delivery.structure.flatMap(inst => {
-                    const title = inst.name || 'Module';
-                    const content = inst.result || '(Aucun contenu)';
-
-                    let blocks = [
-                        new window.docx.Paragraph({
-                            text: title,
-                            heading: window.docx.HeadingLevel.HEADING_1,
-                            spacing: { before: 400, after: 200 }
-                        })
-                    ];
-
-                    if (inst.config?.isTable && inst.contextTable) {
-                        blocks.push(...parseMarkdownToDocx(inst.contextTable));
-                    }
-
-                    blocks.push(...parseMarkdownToDocx(content));
-
-                    return blocks;
-                })
-            ]
+            children: allBlocks
         }]
     });
 

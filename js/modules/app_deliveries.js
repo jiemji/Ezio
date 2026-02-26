@@ -429,8 +429,17 @@ function renderMainView() {
     // Name change handled by delegation in setupDelegation
 
 
-    document.getElementById('btnDownloadReport').addEventListener('click', () => {
-        downloadDeliveryReport(delivery);
+    document.getElementById('btnDownloadReport').addEventListener('click', async () => {
+        const btn = document.getElementById('btnDownloadReport');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = `<span class="rpt-loading">↻</span> Export...`;
+        btn.disabled = true;
+        try {
+            await downloadDeliveryReport(delivery);
+        } finally {
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
     });
 
     document.getElementById('btnImpression').addEventListener('click', () => {
@@ -595,7 +604,7 @@ async function generateModule(delivery, index) {
     }
 }
 
-async function buildContext(scope, columnsIds, data) {
+export async function buildContext(scope, columnsIds, data) {
     if (!data || !data.rows || !data.columns) return "";
 
     // 1. Filtrer les colonnes à inclure
@@ -719,22 +728,33 @@ function createDeliveryFromTemplate(tplId) {
     renderMainView();
 }
 
-function downloadDeliveryReport(delivery) {
+export async function downloadDeliveryReport(delivery) {
     if (!delivery || !delivery.structure) return;
 
     let mdContent = `# ${delivery.name}\n\n`;
 
-    delivery.structure.forEach(inst => {
+    for (let i = 0; i < delivery.structure.length; i++) {
+        const inst = delivery.structure[i];
         const title = inst.name || 'Module';
         const content = inst.result || '(Aucun contenu)';
 
         mdContent += `## ${title}\n\n`;
-        if (inst.config?.isTable && inst.contextTable) {
-            mdContent += `${inst.contextTable}\n\n---\n\n`;
+
+        if (inst.config?.isTable) {
+            if (!inst.contextTable) {
+                // Régénérer le tableau Markdown à la volée s'il est manquant 
+                // (cas d'une ancienne sauvegarde ou si l'utilisateur n'a pas régénéré)
+                inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+                store.save(); // Met à jour l'instance pour la prochaine fois
+            }
+            if (inst.contextTable) {
+                mdContent += `${inst.contextTable}\n\n---\n\n`;
+            }
         }
+
         mdContent += `${content}\n\n`;
         mdContent += `---\n\n`;
-    });
+    }
 
     const filename = `${Utils.toSlug(delivery.name)}.md`;
     Utils.downloadFile(mdContent, filename, 'text/markdown');

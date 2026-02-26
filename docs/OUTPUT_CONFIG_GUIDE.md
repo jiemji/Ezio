@@ -74,12 +74,20 @@ Vous pouvez placer des formes (`rect`, `ellipse`) ou du texte fixe/dynamique. Il
 *   `margin`: Marges internes [Gauche, Droite, Bas, Haut] en **points (pt)** (très utile pour la compatibilité native PPTX).
 
 ### Placeholders (Variables Dynamiques)
-Dans les éléments de texte de type `TITRE`, vous pouvez utiliser :
-*   `{{titre}}` ou `{{TITLE}}` : Sera remplacé par le nom du Livrable.
-*   `{{DATE}}` : Sera remplacé par la date du jour.
+Ces tags spéciaux placés dans n'importe quel élément de type `text` de votre masque seront automatiquement traduits par le moteur de rendu Ezio.
 
-Dans `CHAPITRE` :
-*   `{{chapitre}}` : Sera remplacé par le titre de la section/module actuel.
+Dans les diapositives de couverture `TITRE` :
+*   `{{titre}}` ou `{{TITLE}}` : Remplacé par le nom global du Livrable.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+
+Dans les intercalaires `CHAPITRE` :
+*   `{{chapitre}}` ou `{{TITLE}}` : Remplacé par le nom du module/section actuel.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+
+Dans les contenus `SLIDE` :
+*   `{{titre}}` ou `{{TITLE}}` : Remplacé par le nom du module/section actuel.
+*   `{{date}}` ou `{{DATE}}` : Remplacé par la date du jour d'export.
+*   `{{SLIDE_NUMBER}}` : Index automatique de la section (le 3e module aura le numéro 3 sur toutes ses diapositives générées).
 
 ### Zone de Contenu (`contentArea`)
 Uniquement pour `SLIDE`. Définit la zone vide principale de la diapositive où le texte Markdown long et les Tableaux générés par l'IA seront insérés dynamiquement.

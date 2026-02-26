@@ -1,6 +1,8 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { currentForm, store } from '../core/State.js';
+import { buildContext } from './app_deliveries.js';
 
 let pptConfig = null;
 
@@ -92,7 +94,11 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         // Dessiner les éléments statiques du Master Titre
         drawMasterElements(pptx, slideTitle, titleMaster.elements, {
             TITLE: delivery.name,
-            DATE: new Date().toLocaleDateString()
+            TITRE: delivery.name,
+            title: delivery.name,
+            titre: delivery.name,
+            DATE: new Date().toLocaleDateString(),
+            date: new Date().toLocaleDateString()
         }, template);
     }
 
@@ -105,7 +111,8 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
     const chapterMaster = chapterMasterKey ? template.masters[chapterMasterKey] : null;
     const slideMaster = slideMasterKey ? template.masters[slideMasterKey] : null;
 
-    delivery.structure.forEach((inst, idx) => {
+    for (let idx = 0; idx < delivery.structure.length; idx++) {
+        const inst = delivery.structure[idx];
         const modTitle = inst.name || 'Module';
 
         // Slide "CHAPITRE"
@@ -117,7 +124,9 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
             drawMasterElements(pptx, chapSlide, chapterMaster.elements, {
                 chapter: modTitle,
                 chapitre: modTitle,
-                TITLE: modTitle
+                TITLE: modTitle,
+                DATE: new Date().toLocaleDateString(),
+                date: new Date().toLocaleDateString()
             }, template);
         }
 
@@ -131,7 +140,9 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
                 drawMasterElements(pptx, slide, slideMaster.elements, {
                     title: modTitle,
                     MODULE_TITLE: modTitle,
-                    SLIDE_NUMBER: (idx + 1).toString()
+                    SLIDE_NUMBER: (idx + 1).toString(),
+                    DATE: new Date().toLocaleDateString(),
+                    date: new Date().toLocaleDateString()
                 }, template);
             } else {
                 slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
@@ -142,15 +153,21 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         const area = slideMaster?.contentArea || { x: 0.5, y: 1.0, w: 9.0, h: 4.5 };
 
         // Dessin du Tableau de Contexte (isolé)
-        if (inst.config?.isTable && inst.contextTable) {
-            parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template);
+        if (inst.config?.isTable) {
+            if (!inst.contextTable) {
+                inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+                store.save();
+            }
+            if (inst.contextTable) {
+                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template);
+            }
         }
 
         // Dessin du Résultat (isolé et paginé)
         if (inst.result) {
             parseMarkdownToSlide(createContentSlide, inst.result, area, template);
         }
-    });
+    }
 
     // Télécharger les widgets demandés en images individuelles
     try {

@@ -62,18 +62,30 @@ export async function showImpressionPopup(delivery) {
 
         // Bind Events
         container.querySelectorAll('.btn-doc-word').forEach(btn => {
-            btn.onclick = () => {
+            btn.onclick = async () => {
                 const path = btn.getAttribute('data-path');
-                downloadWordWithTemplate(delivery, path);
-                modal.close();
+                const oldText = btn.innerHTML;
+                btn.innerHTML = `<span class="rpt-loading">↻</span> Génération...`;
+                btn.disabled = true;
+                try {
+                    await downloadWordWithTemplate(delivery, path);
+                } finally {
+                    modal.close();
+                }
             };
         });
 
         container.querySelectorAll('.btn-tpl-ppt').forEach(btn => {
-            btn.onclick = () => {
+            btn.onclick = async () => {
                 const tplId = btn.getAttribute('data-id');
-                downloadDeliveryPpt(delivery, tplId);
-                modal.close();
+                const oldText = btn.innerHTML;
+                btn.innerHTML = `<span class="rpt-loading">↻</span> Génération...`;
+                btn.disabled = true;
+                try {
+                    await downloadDeliveryPpt(delivery, tplId);
+                } finally {
+                    modal.close();
+                }
             };
         });
 
@@ -90,7 +102,7 @@ export async function showImpressionPopup(delivery) {
 async function downloadWordWithTemplate(delivery, templatePath) {
     if (!templatePath) {
         // Fallback sans template
-        downloadDeliveryWord(delivery, null);
+        await downloadDeliveryWord(delivery, null);
         return;
     }
 
@@ -98,7 +110,7 @@ async function downloadWordWithTemplate(delivery, templatePath) {
         const res = await fetch(templatePath);
         if (!res.ok) throw new Error("Impossible de télécharger le modèle");
         const buffer = await res.arrayBuffer();
-        downloadDeliveryWord(delivery, buffer);
+        await downloadDeliveryWord(delivery, buffer);
     } catch (err) {
         console.error(err);
         UI.showToast("Erreur chargement modèle Word : " + err.message, "danger");
