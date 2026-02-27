@@ -47,10 +47,15 @@ Permet de lier le balisage généré par Ezio (Markdown) aux véritables **ID in
   "h2": "Titre3",             // Titre Markdown ##
   "h3": "Titre4",             // Titre Markdown ###
   "p": "Normal",              // Paragraphe standard
-  "ul": "Listepuce",          // Liste à puces (Markdown * ou -)
-  "ol": "Listenumero"         // Liste numérotée (Markdown 1.)
+  "ul": "Listepuce",          // Liste à puces (Niveau 1 et +)
+  "ol": ["Listenumero", "Listenumero2"] // Listes multi-niveaux (via un tableau de styles)
 }
 ```
+
+> **Astuce pour les listes imbriquées (Niveaux multiples)** :
+> Si vous utilisez la touche <kbd>Tab</kbd> (ou 2 espaces) dans votre texte Markdown pour indenter vos puces ou vos numéros (Sous-liste), l'export Word s'adaptera :
+> * **Si vous fournissez un simple texte** (ex: `"ul": "Listepuce"`) : Tous les niveaux utiliseront le même style Word "Listepuce", mais le système forcera automatiquement une *Indentation Gauche* supplémentaire native (0.5 pouces par niveau) pour décaler visuellement le texte.
+> * **Si vous fournissez un tableau de textes** (ex: `"ul": ["Listepuce", "Listepuce2", "Listepuce3"]`) : Le premier niveau (sans espace) utilisera strictement `Listepuce`, le deuxième niveau (1 Tabulation) utilisera strictement `Listepuce2`, etc. C'est la méthode idéale et la plus robuste pour maîtriser parfaitement l'apparence des puces de chaque sous-niveau !
 
 ### Variables Dynamiques (Placeholders)
 Dans votre fichier `.docx` (Modèle), vous pouvez placer ces balises n'importe où (Même dans les en-têtes et pieds de page) :

@@ -27,7 +27,7 @@ export const MarkdownEditor = {
             parsedContent = window.marked.parse(content);
         }
 
-        const btnStyle = compact ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;' : '';
+        const btnStyle = compact ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;' : 'padding: 4px 6px; font-size: 0.85rem; border-radius: 3px;';
         const iconStyle = compact ? 'font-size: 0.85em;' : '';
         const toolbarMargin = compact ? '5px' : '15px';
 
@@ -36,12 +36,15 @@ export const MarkdownEditor = {
                  ${extraToolbarHtml}
                  <button class="btn-secondary small btn-md-ai-tool" data-idx="${index}" title="Outils IA" style="${btnStyle} color: var(--primary); border-color: var(--primary);"><i class="fas fa-magic" style="${iconStyle}"></i></button>
                  <div class="separator-vertical" style="height: 18px; margin: 0 2px;"></div>
-                 <button class="btn-secondary small btn-md-format" data-action="h-up" data-idx="${index}" title="Niveau de titre +" style="${btnStyle}"><i class="fas fa-heading" style="${iconStyle}"></i> <i class="fas fa-plus" style="font-size:0.7em;"></i></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h-down" data-idx="${index}" title="Niveau de titre -" style="${btnStyle}"><i class="fas fa-heading" style="${iconStyle}"></i> <i class="fas fa-minus" style="font-size:0.7em;"></i></button>
+                 <button class="btn-secondary small btn-md-format" data-action="p" data-idx="${index}" title="Paragraphe normal" style="${btnStyle}"><b>p</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h3" data-idx="${index}" title="Titre 3" style="${btnStyle}"><b>H3</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h4" data-idx="${index}" title="Titre 4" style="${btnStyle}"><b>H4</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h5" data-idx="${index}" title="Titre 5" style="${btnStyle}"><b>H5</b></button>
                  <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${index}" title="Désindenter" style="${btnStyle}"><i class="fas fa-outdent" style="${iconStyle}"></i></button>
                  <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${index}" title="Indenter" style="${btnStyle}"><i class="fas fa-indent" style="${iconStyle}"></i></button>
                  <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${index}" title="Liste numérotée" style="${btnStyle}"><i class="fas fa-list-ol" style="${iconStyle}"></i></button>
-                 <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${index}" title="Gras" style="${btnStyle}"><i class="fas fa-bold" style="${iconStyle}"></i></button>
+                 <button class="btn-secondary small btn-md-format" data-action="bold" data-idx="${index}" title="Gras" style="${btnStyle}"><b>G</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="underline" data-idx="${index}" title="Souligné" style="${btnStyle}"><u>S</u></button>
             </div>
             <div class="dlv-card-result form-control markdown-editor-content" id="${editorId}" contenteditable="true" 
                  style="width: 100%; min-height: ${minHeight}; height: ${minHeight}; box-sizing: border-box; overflow-y: auto; overflow-x: auto; margin-top: 5px; text-align: left; resize: vertical; outline: none; border: 1px solid var(--border); border-radius: 4px; padding: 10px;">${parsedContent}</div>
@@ -60,36 +63,10 @@ export const MarkdownEditor = {
 
         if (action === 'bold') {
             document.execCommand('bold', false, null);
-        } else if (action === 'h-up' || action === 'h-down') {
-            const selection = window.getSelection();
-            if (!selection.rangeCount) return;
-
-            let node = selection.focusNode;
-            if (!node) return;
-
-            // Find closest block element
-            const blockNode = node.nodeType === 3 ? node.parentNode : node;
-            const blockWrapper = blockNode.closest('h1, h2, h3, h4, h5, h6, p, div');
-            let currentTag = blockWrapper ? blockWrapper.tagName.toLowerCase() : 'p';
-            if (currentTag === 'div' || currentTag === 'li') currentTag = 'p';
-
-            let newTag = currentTag;
-
-            if (action === 'h-up') { // [+] Level 2 -> Level 3 -> Level 4 -> Level 4 (Max Level)
-                if (currentTag === 'p') newTag = 'h2';
-                else if (currentTag === 'h2') newTag = 'h3';
-                else if (currentTag === 'h3') newTag = 'h4';
-                else if (currentTag === 'h4') newTag = 'h4';
-            } else if (action === 'h-down') { // [-] Level 4 -> Level 3 -> Level 2 -> Normal Text 
-                if (currentTag === 'h4') newTag = 'h3';
-                else if (currentTag === 'h3') newTag = 'h2';
-                else if (currentTag === 'h2') newTag = 'p';
-                else if (currentTag === 'p') newTag = 'p';
-            }
-
-            if (newTag !== currentTag) {
-                document.execCommand('formatBlock', false, '<' + newTag.toUpperCase() + '>');
-            }
+        } else if (['p', 'h3', 'h4', 'h5'].includes(action)) {
+            document.execCommand('formatBlock', false, '<' + action.toUpperCase() + '>');
+        } else if (action === 'underline') {
+            document.execCommand('underline', false, null);
         } else if (action === 'indent-up') {
             const isList = document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList');
             if (isList) {

@@ -184,7 +184,8 @@ function parseMarkdownToDocx(mdText, docConfig) {
     let tableRows = [];
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const rawLine = lines[i];
+        const line = rawLine.trim();
 
         if (line.startsWith('|')) {
             if (!inTable) {
@@ -233,22 +234,59 @@ function parseMarkdownToDocx(mdText, docConfig) {
                     heading: typeof styleH3 === 'string' ? undefined : styleH3,
                     spacing: { before: 200, after: 100 }
                 }));
-            } else if (line.match(/^[-*]\s+/)) {
+            } else if (rawLine.match(/^(\s*)[-*]\s+(.*)/)) {
+                const match = rawLine.match(/^(\s*)([-*])\s+(.*)/);
+                const spaces = match[1].replace(/\t/g, '    ').length;
+                const level = Math.floor(spaces / 2); // 2 spaces = 1 indent level
+
                 const styleUl = docConfig?.styles?.ul;
-                const isCustom = typeof styleUl === 'string';
-                const text = isCustom ? line.replace(/^[-*]\s+/, '') : line;
+                let appliedStyle = undefined;
+                let appliedIndent = undefined;
+
+                if (Array.isArray(styleUl)) {
+                    appliedStyle = styleUl[Math.min(level, styleUl.length - 1)];
+                } else if (typeof styleUl === 'string') {
+                    appliedStyle = styleUl;
+                    if (level > 0) {
+                        // 720 twips = 0.5 inches native indent
+                        appliedIndent = { left: 720 * level };
+                    }
+                }
+
+                const isCustom = !!appliedStyle;
+                const text = isCustom ? match[3] : line;
+
                 children.push(new window.docx.Paragraph({
                     children: parseTextFormatting(text),
-                    style: isCustom ? styleUl : undefined,
+                    style: appliedStyle,
+                    indent: appliedIndent,
                     spacing: { after: 100 }
                 }));
-            } else if (line.match(/^\d+\.\s+/)) {
+            } else if (rawLine.match(/^(\s*)\d+\.\s+(.*)/)) {
+                const match = rawLine.match(/^(\s*)(\d+\.)\s+(.*)/);
+                const spaces = match[1].replace(/\t/g, '    ').length;
+                const level = Math.floor(spaces / 2);
+
                 const styleOl = docConfig?.styles?.ol;
-                const isCustom = typeof styleOl === 'string';
-                const text = isCustom ? line.replace(/^\d+\.\s+/, '') : line;
+                let appliedStyle = undefined;
+                let appliedIndent = undefined;
+
+                if (Array.isArray(styleOl)) {
+                    appliedStyle = styleOl[Math.min(level, styleOl.length - 1)];
+                } else if (typeof styleOl === 'string') {
+                    appliedStyle = styleOl;
+                    if (level > 0) {
+                        appliedIndent = { left: 720 * level };
+                    }
+                }
+
+                const isCustom = !!appliedStyle;
+                const text = isCustom ? match[3] : line;
+
                 children.push(new window.docx.Paragraph({
                     children: parseTextFormatting(text),
-                    style: isCustom ? styleOl : undefined,
+                    style: appliedStyle,
+                    indent: appliedIndent,
                     spacing: { after: 100 }
                 }));
             } else {
