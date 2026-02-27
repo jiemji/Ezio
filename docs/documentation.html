@@ -423,10 +423,15 @@ function renderTable() {
                 <li><strong>Scope</strong> : Sélectionne les chapitres à analyser.</li>
                 <li><strong>Context Build</strong> : Construit un tableau Markdown des données filtrées.</li>
                 <li><strong>IA Call</strong> : Envoie le contexte + prompt au LLM (via <code>api_ia.js</code>).</li>
-                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi (Titres,
-                    Listes, Tableaux redimensionnés) avec barre d'outils. L'éditeur s'étire dynamiquement jusqu'au bas
-                    de la fenêtre après génération pour maximiser la zone de lecture (tout en restant redimensionnable).
-                    La conversion bidirectionnelle du HTML visuel en Markdown garantit une persistance parfaite. Le
+                <li><strong>Éditeur WYSIWYG</strong> : Le résultat est éditable dans une zone de texte enrichi.
+                    La barre d'outils est ciblée (Titres stricts <code>[N] [T3] [T4] [T5]</code>, Gras <code>[G]</code>,
+                    Souligné <code>[S]</code>, Listes, Outils IA) pour s'adapter précisément aux niveaux des modèles de
+                    livrables finaux.
+                    L'éditeur s'étire dynamiquement jusqu'au bas de la fenêtre après génération pour maximiser la zone
+                    de lecture (tout en restant redimensionnable).
+                    La conversion bidirectionnelle du HTML visuel en Markdown garantit une persistance parfaite
+                    (conservation des sauts de ligne naturels, effacement de la graisse Markdown dans les titres, etc).
+                    Le
                     module "Triche" visuellement en omettant d'afficher le tableau complet de l'audit pour éviter de
                     polluer l'éditeur, et greffera proprement ce dernier au document complet exclusivement lors de
                     l'Impression ou de la Sauvegarde MD.

@@ -25,8 +25,8 @@ export const MarkdownUtils = {
                 const child = node.childNodes[i];
 
                 if (child.nodeType === 3) { // Text node
-                    // Éliminer les sauts de ligne HTML bruts (beautify) qui n'ont pas de sens
-                    md += child.textContent.replace(/\n/g, '');
+                    // On préserve le texte brut. Le nettoyage de la structure HTML se fait en amont (MarkdownEditor.js)
+                    md += child.textContent;
                 } else if (child.nodeType === 1) { // Element node
                     const tag = child.tagName.toLowerCase();
 
@@ -55,7 +55,7 @@ export const MarkdownUtils = {
                             md += '\n' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '\n';
                             break;
                         case 'br':
-                            md += '\n';
+                            md += '<br>\n';
                             break;
                         case 'table':
                             const tRows = child.querySelectorAll('tr');
