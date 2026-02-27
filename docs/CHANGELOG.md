@@ -9,6 +9,8 @@ Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités,
 - **Variables de Template** : Le moteur Word scanne désormais le document entier (y compris les en-têtes et pieds de page) pour remplacer dynamiquement `{{TITRE}}` et `{{DATE}}`. Le point de greffe du contenu principal devient `{{CONTENU}}`.
 - **Fix Export Word/PPTX** : Résolution du plantage "Invalid hex value" lors de la génération de tableaux comportant des couleurs HEX à 3 caractères.
 - **Fix Corruption Word** : Contournement d'une corruption de document `.docx` générée par la bibliothèque lors de l'export de listes à puces. La puce est désormais gérée à 100% par le style natif du modèle Word.
+- **Refonte UI Éditeur Markdown** : La barre d'outils de formatage a été épurée : sélection de titres explicite (`N`, `T3`, `T4`, `T5`) remplaçant l'incrémentation floue (`H+`/`H-`). Ajout du bouton de support natif pour le texte "Souligné" (`S`). Remplacement de l'icône anglaise "B" (Bold) par "G" (Gras).
+- **Optimisation Parseur Markdown (htmlToMarkdown)** : Refonte du parseur réversible pour garantir un export propre : suppression totale de l'espacement visuel (verrues de retours à la ligne injectés par `marked.js` ou l'éditeur WYSIWYG `contenteditable`), préservation absolue des vrais sauts de ligne utilisateurs (`<br>\n`), effacement dynamique de la graisse Markdown (`**`) quand un texte est mis en forme de Titre, et annulation des retours à la ligne parasites autour des sous-listes imbriquées.
 - **Nettoyage** : Suppression du support désuet de l'ancien format d'export PPTX brut.
 
 ## [2.4.4] - 2026-02-26

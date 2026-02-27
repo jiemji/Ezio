@@ -119,7 +119,8 @@ graph TD
 7.  **Module Livrables (`app_deliveries.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
-    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`MarkdownEditor.js`) avec barre d'outils visuelle (Titres, Listes, Gras, Outils IA) convertissant le HTML en Markdown. Comprend une fenêtre modale d'**Outils IA** permettant des traitements contextuels rapides (ex: traduction, correction) via les modèles configurés comme "outils".
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`MarkdownEditor.js`) avec barre d'outils visuelle ciblée (Niveaux de Titres `N`/`T3`/`T4`/`T5`, Gras `G`, Souligné `S`, Listes, Outils IA) convertissant le HTML en Markdown. Comprend une fenêtre modale d'**Outils IA** permettant des traitements contextuels rapides (ex: traduction, correction) via les modèles configurés comme "outils".
+    *   **Robustesse Markdown** : Le convertisseur interne (`MarkdownUtils.htmlToMarkdown`) est finement optimisé pour ignorer les sauts de ligne "esthétiques" du HTML tout en préservant les sauts de ligne manuels de l'utilisateur (`<br>`). Il permet également l'annulation dynamique des balises Markdown en ligne (`**`, `*`) lors de la conversion d'un texte en Titre pour déléguer le contrôle visuel aux modèles Word/PPT finaux.
     *   **Performance** : Sauvegarde des entrées texte temporisée (**Debounce**).
     *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, Widgets à exporter, et option Tableau furtive (greffée à l'export).
     *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.

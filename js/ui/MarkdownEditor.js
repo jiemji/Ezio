@@ -25,6 +25,12 @@ export const MarkdownEditor = {
         let parsedContent = content;
         if (content && window.marked) {
             parsedContent = window.marked.parse(content);
+            // Nettoyage des sauts de ligne de formatage HTML générés par marked.js.
+            // Le "white-space: pre-wrap" de la balise editable affiche littéralement ces \n.
+            // Ce regex supprime uniquement ces espaces/retours entre les balises HTML de structure (<p>, <ul>...)
+            parsedContent = parsedContent.replace(/>\n\s*</g, '><').trim();
+            // Si jamais marked a inséré un \n juste après un simple texte pour faire joli à la fin du block :
+            parsedContent = parsedContent.replace(/\n<\/p>/g, '</p>').replace(/<br>\n/g, '<br>');
         }
 
         const btnStyle = compact ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;' : 'padding: 4px 6px; font-size: 0.85rem; border-radius: 3px;';
@@ -36,10 +42,10 @@ export const MarkdownEditor = {
                  ${extraToolbarHtml}
                  <button class="btn-secondary small btn-md-ai-tool" data-idx="${index}" title="Outils IA" style="${btnStyle} color: var(--primary); border-color: var(--primary);"><i class="fas fa-magic" style="${iconStyle}"></i></button>
                  <div class="separator-vertical" style="height: 18px; margin: 0 2px;"></div>
-                 <button class="btn-secondary small btn-md-format" data-action="p" data-idx="${index}" title="Paragraphe normal" style="${btnStyle}"><b>p</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h3" data-idx="${index}" title="Titre 3" style="${btnStyle}"><b>H3</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h4" data-idx="${index}" title="Titre 4" style="${btnStyle}"><b>H4</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h5" data-idx="${index}" title="Titre 5" style="${btnStyle}"><b>H5</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="p" data-idx="${index}" title="Paragraphe normal" style="${btnStyle}"><b>N</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h3" data-idx="${index}" title="Titre 3" style="${btnStyle}"><b>T3</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h4" data-idx="${index}" title="Titre 4" style="${btnStyle}"><b>T4</b></button>
+                 <button class="btn-secondary small btn-md-format" data-action="h5" data-idx="${index}" title="Titre 5" style="${btnStyle}"><b>T5</b></button>
                  <button class="btn-secondary small btn-md-format" data-action="indent-down" data-idx="${index}" title="Désindenter" style="${btnStyle}"><i class="fas fa-outdent" style="${iconStyle}"></i></button>
                  <button class="btn-secondary small btn-md-format" data-action="indent-up" data-idx="${index}" title="Indenter" style="${btnStyle}"><i class="fas fa-indent" style="${iconStyle}"></i></button>
                  <button class="btn-secondary small btn-md-format" data-action="list-num" data-idx="${index}" title="Liste numérotée" style="${btnStyle}"><i class="fas fa-list-ol" style="${iconStyle}"></i></button>
