@@ -27,8 +27,8 @@ async function openExportModal() {
     modal.render();
 
     try {
-        const response = await fetch('formats.json');
-        if (!response.ok) throw new Error("Impossible de charger formats.json");
+        const response = await fetch('config/formats.json');
+        if (!response.ok) throw new Error("Impossible de charger config/formats.json");
         const formats = await response.json();
 
         const listContainer = document.getElementById('exportFormatList');

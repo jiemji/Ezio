@@ -2,7 +2,7 @@
     "documents": [
         {
             "name": "Rapport Isec",
-            "path": "Modele_word.docx",
+            "path": "templates/Modele_word.docx",
             "styles": {
                 "globalTitle": "Titre",
                 "deliveryTitle": "Titre1",

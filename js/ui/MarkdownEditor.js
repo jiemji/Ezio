@@ -96,7 +96,7 @@ export const MarkdownEditor = {
         // Fetch models
         let modelsData = [];
         try {
-            const res = await fetch('models.json');
+            const res = await fetch('config/models.json');
             if (res.ok) modelsData = await res.json();
         } catch (e) { }
 

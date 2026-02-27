@@ -355,7 +355,7 @@ async function loadTemplates() {
         } catch (e) { }
     }
 
-    const data = await Utils.safeFetch('reports.json');
+    const data = await Utils.safeFetch('config/reports.json');
     if (data) {
         availableTemplates = data.reports || [];
         availableModules = data.modules || [];
@@ -363,7 +363,7 @@ async function loadTemplates() {
 }
 
 async function loadModelsList() {
-    const data = await Utils.safeFetch('models.json');
+    const data = await Utils.safeFetch('config/models.json');
     if (data && Array.isArray(data)) {
         availableModels = data;
     }

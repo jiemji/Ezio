@@ -90,7 +90,7 @@ function setupSidebar() {
 async function loadData() {
     // Data is already loaded by State.js constructor, but we might want to check for defaults if empty
     if (reportsData.reports.length === 0 && reportsData.modules.length === 0) {
-        const json = await Utils.safeFetch('reports.json', {}, Schemas.REPORTS_DATA);
+        const json = await Utils.safeFetch('config/reports.json', {}, Schemas.REPORTS_DATA);
         if (json) {
             reportsStore.set({
                 reports: json.reports || [],
@@ -132,7 +132,7 @@ function migrateReportsStructure() {
 }
 
 async function loadModelsList() {
-    const data = await Utils.safeFetch('models.json');
+    const data = await Utils.safeFetch('config/models.json');
     if (data && Array.isArray(data)) {
         availableModels = data;
     }
