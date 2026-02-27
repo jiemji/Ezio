@@ -2,6 +2,15 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.4.5] - 2026-02-27
+### Impression Word Avancée & Corrections
+- **Styles Dynamiques Word** : Les éléments Markdown (Titres, Paragraphes, Listes à puces `ul`/`ol`) peuvent désormais être mappés directement sur les IDs de styles internes MS Word via la propriété `styles` dans `output_config.json`.
+- **Tableaux Word** : Ajout du support de la propriété `tableFormat` pour les documents Word, permettant un contrôle des couleurs d'en-tête, des bordures et du zébrage des lignes.
+- **Variables de Template** : Le moteur Word scanne désormais le document entier (y compris les en-têtes et pieds de page) pour remplacer dynamiquement `{{TITRE}}` et `{{DATE}}`. Le point de greffe du contenu principal devient `{{CONTENU}}`.
+- **Fix Export Word/PPTX** : Résolution du plantage "Invalid hex value" lors de la génération de tableaux comportant des couleurs HEX à 3 caractères.
+- **Fix Corruption Word** : Contournement d'une corruption de document `.docx` générée par la bibliothèque lors de l'export de listes à puces. La puce est désormais gérée à 100% par le style natif du modèle Word.
+- **Nettoyage** : Suppression du support désuet de l'ancien format d'export PPTX brut.
+
 ## [2.4.4] - 2026-02-26
 ### Impression Tableaux Dynamiques (PPTX, Word, MD)
 - **Couleurs de Cellules Combo** : Le moteur de génération intercepte désormais les codes couleurs (`colorScheme`) définis sur les colonnes de type "Combo" (listes déroulantes) dans l'Audit. Ces couleurs sont converties à la volée en balises HTML furtives dans le code Markdown du Tableau de Contexte.

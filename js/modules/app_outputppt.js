@@ -541,6 +541,9 @@ function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
                 // PptxGenJS hex only format (strip # and handle rgb/rgba)
                 if (extractedBg.startsWith('#')) {
                     cellFill = extractedBg.replace('#', '');
+                    if (cellFill.length === 3) {
+                        cellFill = cellFill.split('').map(c => c + c).join('');
+                    }
                 } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
                     // Try to convert rgb to hex for PPTX, since PptxGenJS prefers hex without #
                     const rgbVals = extractedBg.match(/\d+/g);
@@ -554,6 +557,9 @@ function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
 
                 if (extractedColor.startsWith('#')) {
                     cellColor = extractedColor.replace('#', '');
+                    if (cellColor.length === 3) {
+                        cellColor = cellColor.split('').map(c => c + c).join('');
+                    }
                 }
 
                 rawText = spanMatch[3]; // The actual text inside the span

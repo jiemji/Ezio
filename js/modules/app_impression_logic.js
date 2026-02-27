@@ -36,7 +36,7 @@ export async function showImpressionPopup(delivery) {
 
         if (config.documents && config.documents.length > 0) {
             config.documents.forEach((doc, idx) => {
-                html += `<button class="list-group-item btn-doc-word" data-path="${doc.path}" data-name="${doc.name}">${doc.name}</button>`;
+                html += `<button class="list-group-item btn-doc-word" data-idx="${idx}" data-path="${doc.path}" data-name="${doc.name}">${doc.name}</button>`;
             });
         } else {
             html += `<div style="font-style:italic; color:#666;">Aucun modèle Word</div>`;
@@ -63,12 +63,14 @@ export async function showImpressionPopup(delivery) {
         // Bind Events
         container.querySelectorAll('.btn-doc-word').forEach(btn => {
             btn.onclick = async () => {
+                const idx = btn.getAttribute('data-idx');
                 const path = btn.getAttribute('data-path');
+                const docConfig = config.documents[idx];
                 const oldText = btn.innerHTML;
                 btn.innerHTML = `<span class="rpt-loading">↻</span> Génération...`;
                 btn.disabled = true;
                 try {
-                    await downloadWordWithTemplate(delivery, path);
+                    await downloadWordWithTemplate(delivery, path, docConfig);
                 } finally {
                     modal.close();
                 }
@@ -99,10 +101,10 @@ export async function showImpressionPopup(delivery) {
 /**
  * Télécharge le modèle Word depuis le serveur puis lance la génération
  */
-async function downloadWordWithTemplate(delivery, templatePath) {
+async function downloadWordWithTemplate(delivery, templatePath, docConfig) {
     if (!templatePath) {
         // Fallback sans template
-        await downloadDeliveryWord(delivery, null);
+        await downloadDeliveryWord(delivery, null, docConfig);
         return;
     }
 
@@ -110,7 +112,7 @@ async function downloadWordWithTemplate(delivery, templatePath) {
         const res = await fetch(templatePath);
         if (!res.ok) throw new Error("Impossible de télécharger le modèle");
         const buffer = await res.arrayBuffer();
-        await downloadDeliveryWord(delivery, buffer);
+        await downloadDeliveryWord(delivery, buffer, docConfig);
     } catch (err) {
         console.error(err);
         UI.showToast("Erreur chargement modèle Word : " + err.message, "danger");

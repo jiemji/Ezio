@@ -11,31 +11,28 @@ import { buildContext } from './app_deliveries.js';
  * @param {Object} delivery - L'objet livrable
  * @param {ArrayBuffer} [templateBuffer] - Le buffer du fichier modèle (optionnel)
  */
-export async function downloadDeliveryWord(delivery, templateBuffer) {
+export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) {
     if (!delivery || !delivery.structure || !window.docx) {
         if (!window.docx) UI.showToast("La librairie docx n'est pas chargée.", "danger");
         return;
     }
 
     // 1. Générer le contenu du rapport (Document temporaire)
-    // On génère juste le "cœur" du rapport avec docx
-    const allBlocks = [
-        new window.docx.Paragraph({
-            text: delivery.name,
-            heading: window.docx.HeadingLevel.TITLE,
-            spacing: { after: 200 }
-        })
-    ];
+    // On génère juste le "cœur" du rapport avec docx sans le grand titre global
+    const allBlocks = [];
 
     for (let i = 0; i < delivery.structure.length; i++) {
         const inst = delivery.structure[i];
         const title = inst.name || 'Module';
         const content = inst.result || '(Aucun contenu)';
 
+        const titleStyle = docConfig?.styles?.deliveryTitle || window.docx.HeadingLevel.TITLE;
+
         allBlocks.push(
             new window.docx.Paragraph({
                 text: title,
-                heading: window.docx.HeadingLevel.HEADING_1,
+                style: typeof titleStyle === 'string' ? titleStyle : undefined,
+                heading: typeof titleStyle === 'string' ? undefined : titleStyle,
                 spacing: { before: 400, after: 200 }
             })
         );
@@ -43,11 +40,11 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
         if (inst.config?.isTable) {
             inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
-                allBlocks.push(...parseMarkdownToDocx(inst.contextTable));
+                allBlocks.push(...parseMarkdownToDocx(inst.contextTable, docConfig));
             }
         }
 
-        allBlocks.push(...parseMarkdownToDocx(content));
+        allBlocks.push(...parseMarkdownToDocx(content, docConfig));
     }
 
     const tempDoc = new window.docx.Document({
@@ -93,18 +90,40 @@ export async function downloadDeliveryWord(delivery, templateBuffer) {
 
         // b. Charger le modèle (Cible)
         const templateZip = await window.JSZip.loadAsync(templateBuffer);
-        const templateXmlStr = await templateZip.file("word/document.xml").async("string");
+
+        // Variables de remplacement
+        const safeTitle = (delivery.name || "").replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' }[c]));
+        const safeDate = new Date().toLocaleDateString('fr-FR');
+
+        const replaceVarsInXml = (xmlStr) => {
+            let res = xmlStr.replace(/\{\{TITRE\}\}/g, safeTitle);
+            res = res.replace(/\{\{DATE\}\}/g, safeDate);
+            return res;
+        };
+
+        // Remplacer {{TITRE}} et {{DATE}} dans les en-têtes et pieds de page
+        for (let filename of Object.keys(templateZip.files)) {
+            if (filename.startsWith("word/header") || filename.startsWith("word/footer")) {
+                let hfXml = await templateZip.file(filename).async("string");
+                templateZip.file(filename, replaceVarsInXml(hfXml));
+            }
+        }
+
+        // Remplacer dans le document principal
+        let templateXmlStr = await templateZip.file("word/document.xml").async("string");
+        templateXmlStr = replaceVarsInXml(templateXmlStr);
+
         const templateXmlDoc = parser.parseFromString(templateXmlStr, "text/xml");
         const templateBody = templateXmlDoc.getElementsByTagName("w:body")[0];
 
-        // c. Trouver le placeholder {{CONTENT}}
+        // c. Trouver le placeholder {{CONTENU}}
         // Note: Word découpe souvent le texte en plusieurs <w:t>. C'est une recherche simplifiée.
-        // On cherche un <w:p> qui contient le texte {{CONTENT}}
+        // On cherche un <w:p> qui contient le texte {{CONTENU}}
         let placeholderPara = null;
         const paras = templateBody.getElementsByTagName("w:p");
 
         for (let i = 0; i < paras.length; i++) {
-            if (paras[i].textContent.includes("{{CONTENT}}")) {
+            if (paras[i].textContent.includes("{{CONTENU}}")) {
                 placeholderPara = paras[i];
                 break;
             }
@@ -158,7 +177,7 @@ function downloadBlob(blob, filename) {
     document.body.removeChild(a);
 }
 
-function parseMarkdownToDocx(mdText) {
+function parseMarkdownToDocx(mdText, docConfig) {
     const lines = mdText.split('\n');
     const children = [];
     let inTable = false;
@@ -183,7 +202,7 @@ function parseMarkdownToDocx(mdText) {
             if (inTable) {
                 // End of table, generate docx table
                 if (tableRows.length > 0) {
-                    children.push(createDocxTable(tableRows));
+                    children.push(createDocxTable(tableRows, docConfig));
                 }
                 inTable = false;
             }
@@ -191,27 +210,53 @@ function parseMarkdownToDocx(mdText) {
             if (line === '') continue;
 
             if (line.startsWith('# ')) {
+                const styleH1 = docConfig?.styles?.h1 || window.docx.HeadingLevel.TITLE;
                 children.push(new window.docx.Paragraph({
                     text: line.replace('# ', ''),
-                    heading: window.docx.HeadingLevel.TITLE, // MD Level 1 -> Word Title
+                    style: typeof styleH1 === 'string' ? styleH1 : undefined,
+                    heading: typeof styleH1 === 'string' ? undefined : styleH1,
                     spacing: { before: 400, after: 200 }
                 }));
             } else if (line.startsWith('## ')) {
+                const styleH2 = docConfig?.styles?.h2 || window.docx.HeadingLevel.HEADING_1;
                 children.push(new window.docx.Paragraph({
                     text: line.replace('## ', ''),
-                    heading: window.docx.HeadingLevel.HEADING_1, // MD Level 2 -> Word Heading 1
+                    style: typeof styleH2 === 'string' ? styleH2 : undefined,
+                    heading: typeof styleH2 === 'string' ? undefined : styleH2,
                     spacing: { before: 300, after: 150 }
                 }));
             } else if (line.startsWith('### ')) {
+                const styleH3 = docConfig?.styles?.h3 || window.docx.HeadingLevel.HEADING_2;
                 children.push(new window.docx.Paragraph({
                     text: line.replace('### ', ''),
-                    heading: window.docx.HeadingLevel.HEADING_2,
+                    style: typeof styleH3 === 'string' ? styleH3 : undefined,
+                    heading: typeof styleH3 === 'string' ? undefined : styleH3,
                     spacing: { before: 200, after: 100 }
                 }));
+            } else if (line.match(/^[-*]\s+/)) {
+                const styleUl = docConfig?.styles?.ul;
+                const isCustom = typeof styleUl === 'string';
+                const text = isCustom ? line.replace(/^[-*]\s+/, '') : line;
+                children.push(new window.docx.Paragraph({
+                    children: parseTextFormatting(text),
+                    style: isCustom ? styleUl : undefined,
+                    spacing: { after: 100 }
+                }));
+            } else if (line.match(/^\d+\.\s+/)) {
+                const styleOl = docConfig?.styles?.ol;
+                const isCustom = typeof styleOl === 'string';
+                const text = isCustom ? line.replace(/^\d+\.\s+/, '') : line;
+                children.push(new window.docx.Paragraph({
+                    children: parseTextFormatting(text),
+                    style: isCustom ? styleOl : undefined,
+                    spacing: { after: 100 }
+                }));
             } else {
+                const styleP = docConfig?.styles?.p;
                 // Standard paragraph with bold parsing
                 children.push(new window.docx.Paragraph({
                     children: parseTextFormatting(line),
+                    style: typeof styleP === 'string' ? styleP : undefined,
                     spacing: { after: 100 }
                 }));
             }
@@ -220,25 +265,43 @@ function parseMarkdownToDocx(mdText) {
 
     // Handle table at very end of content
     if (inTable && tableRows.length > 0) {
-        children.push(createDocxTable(tableRows));
+        children.push(createDocxTable(tableRows, docConfig));
     }
 
     return children;
 }
 
-function createDocxTable(rowsData) {
+function createDocxTable(rowsData, docConfig) {
+    const tFmt = (docConfig && docConfig.tableFormat) ? docConfig.tableFormat : {};
+    const headerFill = tFmt.headerFill || "E0E0E0";
+    const headerColor = tFmt.headerColor || "000000";
+    const rowFill = tFmt.rowFill || "FFFFFF";
+    const rowAltFill = tFmt.rowAltFill || "FFFFFF";
+    const borderColor = tFmt.borderColor || "CCCCCC";
+    const borderSize = tFmt.borderSize !== undefined ? tFmt.borderSize : 4; // Word size is 1/8 pt
+
+    const borderDef = {
+        style: window.docx.BorderStyle.SINGLE,
+        size: borderSize,
+        color: borderColor
+    };
+    const tableBorders = {
+        top: borderDef, bottom: borderDef, left: borderDef, right: borderDef, insideHorizontal: borderDef, insideVertical: borderDef
+    };
+
     return new window.docx.Table({
         width: {
             size: 100,
             type: window.docx.WidthType.PERCENTAGE,
         },
+        borders: tableBorders,
         rows: rowsData.map((row, rIdx) => {
             const isHeader = rIdx === 0;
 
             return new window.docx.TableRow({
                 children: row.map(cellText => {
-                    let cellFill = isHeader ? "E0E0E0" : "FFFFFF";
-                    let cellColor = isHeader ? "000000" : "000000";
+                    let cellFill = isHeader ? headerFill : (rIdx % 2 === 0 ? rowFill : rowAltFill);
+                    let cellColor = isHeader ? headerColor : "000000";
                     let rawText = cellText;
 
                     const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
@@ -248,6 +311,9 @@ function createDocxTable(rowsData) {
 
                         if (extractedBg.startsWith('#')) {
                             cellFill = extractedBg.replace('#', '');
+                            if (cellFill.length === 3) {
+                                cellFill = cellFill.split('').map(c => c + c).join('');
+                            }
                         } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
                             const rgbVals = extractedBg.match(/\d+/g);
                             if (rgbVals && rgbVals.length >= 3) {
@@ -260,6 +326,9 @@ function createDocxTable(rowsData) {
 
                         if (extractedColor.startsWith('#')) {
                             cellColor = extractedColor.replace('#', '');
+                            if (cellColor.length === 3) {
+                                cellColor = cellColor.split('').map(c => c + c).join('');
+                            }
                         }
                         rawText = spanMatch[3];
                     }

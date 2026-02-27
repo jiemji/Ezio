@@ -10,11 +10,5 @@
     "label": "Excel - Par Chapitre",
     "type": "excel",
     "mode": "chapters"
-  },
-  {
-    "id": "standard_ppt_slides",
-    "label": "PowerPoint - Présentation",
-    "type": "ppt",
-    "mode": "slides"
   }
 ]
