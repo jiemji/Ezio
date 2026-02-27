@@ -35,6 +35,33 @@ Cette section liste les fichiers Word disponibles pour l'impression.
 *   `name` : Le nom affiché dans la popup d'impression.
 *   `path` : Le chemin relatif vers le fichier `.docx` ou `.dotx` (ex: `Modele_word.docx`).
 
+### Correspondance des Styles (`styles`)
+Permet de lier le balisage généré par Ezio (Markdown) aux véritables **ID internes des styles** de votre document Word. 
+> **Attention** : Il s'agit de l'ID technique du style (souvent sans espace, ex: `Heading1`), et non de son nom d'affichage apparent dans Word (ex: `Titre 1`).
+
+```json
+"styles": {
+  "globalTitle": "Titre",     // Titre global du document
+  "deliveryTitle": "Titre1",  // Titre de chaque module/section
+  "h1": "Titre2",             // Titre Markdown #
+  "h2": "Titre3",             // Titre Markdown ##
+  "h3": "Titre4",             // Titre Markdown ###
+  "p": "Normal",              // Paragraphe standard
+  "ul": "Listepuce",          // Liste à puces (Markdown * ou -)
+  "ol": "Listenumero"         // Liste numérotée (Markdown 1.)
+}
+```
+
+### Variables Dynamiques (Placeholders)
+Dans votre fichier `.docx` (Modèle), vous pouvez placer ces balises n'importe où (Même dans les en-têtes et pieds de page) :
+*   `{{TITRE}}` : Nom du livrable (remplacé automatiquement).
+*   `{{DATE}}` : Date d'export du jour (remplacé automatiquement).
+*   `{{CONTENU}}` : Point d'injection **obligatoire** où Ezio insèrera tous les modules et tableaux générés.
+
+### Formatage des Tableaux Word (`tableFormat`)
+Vous pouvez personnaliser l'apparence des tableaux générés dans ce modèle Word précis (En-tête, zébrage, bordures).
+*Les propriétés sont identiques à l'export PowerPoint (`headerFill`, `headerColor`, `rowFill`, `rowAltFill`, `borderColor`, `borderSize`, `fontSize`). Consultez la section PPTX ci-dessous pour les détails.*
+
 ## 2. Modèles PowerPoint (`templates`)
 
 ## 2.1. Thème et Polices

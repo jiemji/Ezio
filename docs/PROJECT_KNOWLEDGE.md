@@ -141,8 +141,8 @@ graph TD
     *   **Formatage des Tableaux (PPTX & Word)** :
         *   Les cellules de type "Combo" (listes déroulantes) de l'Audit injectent automatiquement leur schéma de couleur (`colorScheme`) dans le code HTML Markdown.
         *   Les moteurs Word et PPTX interceptent ces couleurs HTML à la volée, colorisant nativement l'arrière-plan des cellules exportées et adaptant la couleur de police pour un contraste optimal.
-        *   `output_config.json` permet de structurer un objet `tableFormat` par template PPTX (en-tête, bordures, zébrage).
-    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) existants en préservant la mise en page. Intègre et formate automatiquement les Tableaux furtifs.
+        *   `output_config.json` permet de structurer un objet `tableFormat` par template (en-tête, bordures, zébrage).
+    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) à l'emplacement exact de la balise `{{CONTENU}}`. Remplace dynamiquement les variables `{{TITRE}}` et `{{DATE}}` y compris dans les en-têtes/pieds de page. Supporte le mapping complet des styles Markdown (titres, paragraphes, listes `ul`/`ol`) vers les IDs de styles natifs Word via la configuration `styles`.
     *   **Export Widgets** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
 
 11. **Outil d'Extraction PowerPoint (`extract.html`)** :

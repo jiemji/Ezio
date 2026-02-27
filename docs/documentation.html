@@ -267,7 +267,9 @@
             <p>Le centre de compilation physique des données.</p>
             <ul>
                 <li><strong>Injection Word (.docx)</strong> : Utilise des fichiers locaux Word comme gabarits et y coule
-                    les textes générés et graphiques du Dashboard à l'emplacement de <code>{{CONTENT}}</code>.</li>
+                    les textes générés et graphiques du Dashboard à l'emplacement précis de <code>{{CONTENU}}</code>,
+                    tout en remplaçant dynamiquement les variables <code>{{TITRE}}</code> et <code>{{DATE}}</code> sur
+                    l'intégralité du document.</li>
                 <li><strong>Export PowerPoint (.pptx)</strong> : Génère des présentations complètes avec une couverture
                     (<code>TITRE</code>), des intercalaires (<code>CHAPITRE</code>) et pagine automatiquement le
                     résultat texte de l'Intelligence Artificielle de slide en slide (<code>SLIDE</code>) sans aucune
@@ -451,10 +453,10 @@ async function generateModule(delivery) {
             <p>Le système d'impression remplace les anciens exports individuels.</p>
             <ul>
                 <li><strong>Configuration</strong> : Le fichier <code>output_config.json</code> définit les modèles
-                    disponibles (Word et PPTX).</li>
+                    disponibles (Word et PPTX) ainsi que toutes les correspondances de styles personnalisés.</li>
                 <li><strong>Word (.docx)</strong> : Utilise <code>docx</code> et <code>JSZip</code> pour injecter le
-                    contenu formaté Markdown (et les tableaux de données cachés lors de la prévisualisation) dans des
-                    modèles existants.</li>
+                    contenu formaté Markdown (Titres, Puces, Paragraphes dynamiquement liés à vos styles Word) dans des
+                    modèles existants au niveau de la balise <code>{{CONTENU}}</code>.</li>
                 <li><strong>PowerPoint (.pptx)</strong> : Utilise <code>PptxGenJS</code> pour créer des présentations
                     natives selon les matrices définies dans <code>output_config.json</code>. Prise en charge experte de
                     **l'Overflow** : le moteur divise automatiquement votre texte Markdown généré par l'IA sur autant de
