@@ -19,34 +19,40 @@ export const MarkdownUtils = {
         // Clean up empty tags and weird spaces
         temp.innerHTML = temp.innerHTML.replace(/\u200B/g, '');
 
-        function parseNodeToMd(node, listLevel = 0, isOrdered = false, counter = { val: 1 }) {
+        function parseNodeToMd(node, listLevel = 0, isOrdered = false, counter = { val: 1 }, inHeading = false) {
             let md = '';
             for (let i = 0; i < node.childNodes.length; i++) {
                 const child = node.childNodes[i];
 
                 if (child.nodeType === 3) { // Text node
-                    md += child.textContent;
+                    // Éliminer les sauts de ligne HTML bruts (beautify) qui n'ont pas de sens
+                    md += child.textContent.replace(/\n/g, '');
                 } else if (child.nodeType === 1) { // Element node
                     const tag = child.tagName.toLowerCase();
 
                     switch (tag) {
                         case 'b':
                         case 'strong':
-                            md += '**' + parseNodeToMd(child) + '**';
+                            if (inHeading) md += parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
+                            else md += '**' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '**';
                             break;
                         case 'i':
                         case 'em':
-                            md += '*' + parseNodeToMd(child) + '*';
+                            if (inHeading) md += parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
+                            else md += '*' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '*';
                             break;
-                        case 'h1': md += '\n# ' + parseNodeToMd(child) + '\n\n'; break;
-                        case 'h2': md += '\n## ' + parseNodeToMd(child) + '\n\n'; break;
-                        case 'h3': md += '\n### ' + parseNodeToMd(child) + '\n\n'; break;
-                        case 'h4': md += '\n#### ' + parseNodeToMd(child) + '\n\n'; break;
-                        case 'h5': md += '\n##### ' + parseNodeToMd(child) + '\n\n'; break;
-                        case 'h6': md += '\n###### ' + parseNodeToMd(child) + '\n\n'; break;
+                        case 'u':
+                            md += '<u>' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '</u>';
+                            break;
+                        case 'h1': md += '\n# ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
+                        case 'h2': md += '\n## ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
+                        case 'h3': md += '\n### ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
+                        case 'h4': md += '\n#### ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
+                        case 'h5': md += '\n##### ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
+                        case 'h6': md += '\n###### ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
                         case 'p':
                         case 'div':
-                            md += '\n' + parseNodeToMd(child) + '\n';
+                            md += '\n' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '\n';
                             break;
                         case 'br':
                             md += '\n';
@@ -69,18 +75,22 @@ export const MarkdownUtils = {
                             md += tableMd + '\n';
                             break;
                         case 'ul':
-                            md += '\n' + parseNodeToMd(child, listLevel + 1, false) + '\n';
+                            const ulPre = listLevel === 0 ? '\n' : '';
+                            const ulSuf = listLevel === 0 ? '\n' : '';
+                            md += ulPre + parseNodeToMd(child, listLevel + 1, false, counter, inHeading) + ulSuf;
                             break;
                         case 'ol':
-                            md += '\n' + parseNodeToMd(child, listLevel + 1, true, { val: 1 }) + '\n';
+                            const olPre = listLevel === 0 ? '\n' : '';
+                            const olSuf = listLevel === 0 ? '\n' : '';
+                            md += olPre + parseNodeToMd(child, listLevel + 1, true, { val: 1 }, inHeading) + olSuf;
                             break;
                         case 'li':
                             const indent = '  '.repeat(Math.max(0, listLevel - 1));
                             const bullet = isOrdered ? `${counter.val++}. ` : '- ';
-                            md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter);
+                            md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
                             break;
                         default:
-                            md += parseNodeToMd(child, listLevel, isOrdered, counter);
+                            md += parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
                     }
                 }
             }
@@ -90,6 +100,7 @@ export const MarkdownUtils = {
         let markdown = parseNodeToMd(temp).trim();
         // Normalize multiple newlines
         markdown = markdown.replace(/\n{3,}/g, '\n\n');
+
         return markdown;
     }
 };

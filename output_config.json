@@ -6,12 +6,22 @@
             "styles": {
                 "globalTitle": "Titre",
                 "deliveryTitle": "Titre1",
-                "h1": "Titre2",
-                "h2": "Titre3",
-                "h3": "Titre4",
+                "h1": "Titre",
+                "h2": "Titre1",
+                "h3": "Titre2",
+                "h4": "Titre3",
+                "h5": "Titre4",
                 "p": "Normal",
-                "ul": "Listepuce",
-                "ol": "Listenumero"
+                "ul": [
+                    "Listepuce",
+                    "Listepuce2",
+                    "Listepuce3"
+                ],
+                "ol": [
+                    "Listenumero",
+                    "Listenumero2",
+                    "Listenumero3"
+                ]
             },
             "tableFormat": {
                 "headerFill": "003366",
