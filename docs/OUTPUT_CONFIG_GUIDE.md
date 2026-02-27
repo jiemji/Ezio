@@ -14,7 +14,7 @@ Le fichier contient deux collections principales :
   "documents": [
     { 
        "name": "Rapport Isec", 
-       "path": "Modele_word.docx" 
+       "path": "templates/Modele_word.docx" 
     }
   ],
   "templates": [
@@ -33,7 +33,7 @@ Le fichier contient deux collections principales :
 
 Cette section liste les fichiers Word disponibles pour l'impression.
 *   `name` : Le nom affiché dans la popup d'impression.
-*   `path` : Le chemin relatif vers le fichier `.docx` ou `.dotx` (ex: `Modele_word.docx`).
+*   `path` : Le chemin relatif vers le fichier `.docx` ou `.dotx` (ex: `templates/Modele_word.docx`).
 
 ### Correspondance des Styles (`styles`)
 Permet de lier le balisage généré par Ezio (Markdown) aux véritables **ID internes des styles** de votre document Word. 

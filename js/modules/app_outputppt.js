@@ -10,15 +10,15 @@ let pptConfig = null;
 async function loadPptConfig() {
     if (pptConfig) return pptConfig;
     try {
-        const res = await fetch('output_config.json');
+        const res = await fetch('config/output_config.json');
         if (res.ok) {
             pptConfig = await res.json();
         } else {
-            console.warn("Impossible de charger output_config.json, utilisation défaut.");
+            console.warn("Impossible de charger config/output_config.json, utilisation défaut.");
             pptConfig = { templates: [] }; // Fallback
         }
     } catch (e) {
-        console.error("Erreur chargement output_config.json", e);
+        console.error("Erreur chargement config/output_config.json", e);
         pptConfig = { templates: [] };
     }
     return pptConfig;

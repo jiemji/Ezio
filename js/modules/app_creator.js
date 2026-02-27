@@ -349,13 +349,13 @@ function renderParamsCell(colIdx) {
 
 async function loadModels() {
     try {
-        const response = await fetch('models.json');
+        const response = await fetch('config/models.json');
         if (response.ok) {
             creatorAvailableModels = await response.json();
             if (!Array.isArray(creatorAvailableModels)) creatorAvailableModels = [];
         }
     } catch (e) {
-        console.warn("Impossible de charger models.json", e);
+        console.warn("Impossible de charger config/models.json", e);
     }
 }
 

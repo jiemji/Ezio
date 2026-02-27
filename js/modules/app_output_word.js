@@ -372,17 +372,7 @@ function createDocxTable(rowsData, docConfig) {
                     }
 
                     return new window.docx.TableCell({
-                        children: [
-                            new window.docx.Paragraph({
-                                children: [
-                                    new window.docx.TextRun({
-                                        text: rawText.replace(/<br>/g, '\n'),
-                                        color: cellColor,
-                                        bold: isHeader
-                                    })
-                                ]
-                            })
-                        ],
+                        children: parseMarkdownCell(rawText, docConfig, cellColor, isHeader),
                         shading: {
                             fill: cellFill
                         }
@@ -393,17 +383,102 @@ function createDocxTable(rowsData, docConfig) {
     });
 }
 
-function parseTextFormatting(text) {
-    // Simple parser for **bold**
-    // Splits text by **
-    const parts = text.split(/(\*\*.*?\*\*)/g);
-    return parts.map(part => {
+function parseTextFormatting(text, baseColor, baseBold) {
+    // Parser for **bold**, _italic_, *italic*, <u>underline</u>, <s>strikethrough</s>
+    const parts = text.split(/(<u\b[^>]*>.*?<\/u>|<b>.*?<\/b>|<i>.*?<\/i>|\*\*.*?\*\*|\_.*?\_|\*.*?\*|<s\b[^>]*>.*?<\/s>|~~.*?~~)/ig);
+
+    return parts.filter(p => p.length > 0).map(part => {
+        let isBold = baseBold;
+        let isItalic = false;
+        let isUnderline = false;
+        let isStrikethrough = false;
+        let innerText = part;
+
         if (part.startsWith('**') && part.endsWith('**')) {
-            return new window.docx.TextRun({
-                text: part.slice(2, -2),
-                bold: true
-            });
+            innerText = part.slice(2, -2);
+            isBold = true;
+        } else if ((part.startsWith('_') && part.endsWith('_')) || (part.startsWith('*') && part.endsWith('*'))) {
+            innerText = part.slice(1, -1);
+            isItalic = true;
+        } else if (part.toLowerCase().startsWith('<u>') && part.toLowerCase().endsWith('</u>')) {
+            innerText = part.slice(3, -4);
+            isUnderline = true;
+        } else if (part.toLowerCase().startsWith('<b>') && part.toLowerCase().endsWith('</b>')) {
+            innerText = part.slice(3, -4);
+            isBold = true;
+        } else if (part.toLowerCase().startsWith('<i>') && part.toLowerCase().endsWith('</i>')) {
+            innerText = part.slice(3, -4);
+            isItalic = true;
+        } else if (part.startsWith('~~') && part.endsWith('~~') || (part.toLowerCase().startsWith('<s>') && part.toLowerCase().endsWith('</s>'))) {
+            innerText = part.startsWith('<') ? part.slice(3, -4) : part.slice(2, -2);
+            isStrikethrough = true;
         }
-        return new window.docx.TextRun({ text: part });
+
+        return new window.docx.TextRun({
+            text: innerText,
+            color: baseColor,
+            bold: isBold,
+            italics: isItalic,
+            strike: isStrikethrough,
+            underline: isUnderline ? { type: window.docx.UnderlineType.SINGLE } : undefined
+        });
     });
+}
+
+function parseMarkdownCell(rawText, docConfig, cellColor, isHeader) {
+    const lines = rawText.split(/<br\s*\/?>|\n/i);
+    const paragraphs = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line && i === lines.length - 1) continue; // Skip trailing empty line
+
+        let appliedStyle = undefined;
+        let bulletActive = false;
+        let textToParse = line;
+
+        // Check for bullet points
+        const matchUl = line.match(/^[-*]\s+(.*)/);
+        if (matchUl) {
+            bulletActive = true;
+            textToParse = matchUl[1];
+            const styleUl = docConfig?.styles?.ul;
+            if (Array.isArray(styleUl)) {
+                appliedStyle = styleUl[0];
+            } else if (typeof styleUl === 'string') {
+                appliedStyle = styleUl;
+            }
+        } else {
+            // Check for numbered lists
+            const matchOl = line.match(/^(\d+\.)\s+(.*)/);
+            if (matchOl) {
+                bulletActive = true; // Use simple bullet fallback
+                textToParse = matchOl[2];
+                const styleOl = docConfig?.styles?.ol;
+                if (Array.isArray(styleOl)) {
+                    appliedStyle = styleOl[0];
+                } else if (typeof styleOl === 'string') {
+                    appliedStyle = styleOl;
+                }
+            }
+        }
+
+        const pConfig = {
+            children: parseTextFormatting(textToParse, cellColor, isHeader)
+        };
+
+        if (appliedStyle) {
+            pConfig.style = appliedStyle;
+        } else if (bulletActive) {
+            pConfig.bullet = { level: 0 };
+        }
+
+        paragraphs.push(new window.docx.Paragraph(pConfig));
+    }
+
+    if (paragraphs.length === 0) {
+        paragraphs.push(new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: "", color: cellColor })] }));
+    }
+
+    return paragraphs;
 }

@@ -21,7 +21,7 @@ export async function showImpressionPopup(delivery) {
 
     // Charger la config
     try {
-        const res = await fetch('output_config.json');
+        const res = await fetch('config/output_config.json');
         const config = await res.json();
 
         const container = document.getElementById('impressionContent');

@@ -108,7 +108,7 @@ function openLoadModal() {
 
     // Fetch Templates (Async/Await)
     (async () => {
-        const templates = await Utils.safeFetch('./templates/templates.json');
+        const templates = await Utils.safeFetch('config/templates.json');
         const list = document.getElementById('templateList');
         if (list) {
             if (!templates || templates.length === 0) {
@@ -359,11 +359,11 @@ async function runIA(r, c, col, btn, editorDiv) {
 }
 
 async function loadModels() {
-    const data = await Utils.safeFetch('models.json');
+    const data = await Utils.safeFetch('config/models.json');
     if (data && Array.isArray(data)) {
         auditAvailableModels = data;
     } else {
-        console.warn("Impossible de charger models.json ou format invalide");
+        console.warn("Impossible de charger config/models.json ou format invalide");
     }
 }
 
