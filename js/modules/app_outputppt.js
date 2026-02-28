@@ -325,7 +325,9 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
  * Parse Markdown et insère dans la zone définie
  */
 function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
-    const lines = mdText.split('\n');
+    // Nettoyage des balises <br> résiduelles du markdown
+    const cleanedMdText = mdText.replace(/<br\s*\/?>/gi, '\n');
+    const lines = cleanedMdText.split('\n');
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
