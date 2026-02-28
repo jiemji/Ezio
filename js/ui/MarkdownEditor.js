@@ -35,9 +35,12 @@ export const MarkdownEditor = {
 
         const btnStyle = compact ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;' : 'padding: 4px 6px; font-size: 0.85rem; border-radius: 3px;';
         const iconStyle = compact ? 'font-size: 0.85em;' : '';
-        const toolbarMargin = compact ? '5px' : '15px';
-
         return `
+            <style>
+                #${editorId} h3 { font-weight: bold; text-decoration: underline; }
+                #${editorId} h4 { font-weight: bold; }
+                #${editorId} h5 { font-size: inherit; font-weight: normal; text-decoration: underline; }
+            </style>
             <div class="dlv-md-toolbar" style="margin-top: ${toolbarMargin}; display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
                  ${extraToolbarHtml}
                  <button class="btn-secondary small btn-md-ai-tool" data-idx="${index}" title="Outils IA" style="${btnStyle} color: var(--primary); border-color: var(--primary);"><i class="fas fa-magic" style="${iconStyle}"></i></button>
