@@ -35,6 +35,8 @@ export const MarkdownEditor = {
 
         const btnStyle = compact ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;' : 'padding: 4px 6px; font-size: 0.85rem; border-radius: 3px;';
         const iconStyle = compact ? 'font-size: 0.85em;' : '';
+        const toolbarMargin = compact ? '5px' : '15px';
+
         return `
             <style>
                 #${editorId} h3 { font-weight: bold; text-decoration: underline; }
