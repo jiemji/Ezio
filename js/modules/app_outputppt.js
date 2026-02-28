@@ -325,9 +325,7 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
  * Parse Markdown et insère dans la zone définie
  */
 function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
-    // Nettoyage des balises <br> résiduelles du markdown
-    const cleanedMdText = mdText.replace(/<br\s*\/?>/gi, '\n');
-    const lines = cleanedMdText.split('\n');
+    const lines = mdText.split('\n');
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
@@ -378,7 +376,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 inTable = true;
                 tableRows = [];
             }
-            const cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+            const splitCells = line.split('|');
+            if (splitCells.length > 0 && splitCells[0].trim() === '') splitCells.shift();
+            if (splitCells.length > 0 && splitCells[splitCells.length - 1].trim() === '') splitCells.pop();
+            const cells = splitCells.map(c => c.trim().replace(/<br\s*\/?>/gi, '\n'));
             if (cells.some(c => c.match(/^[-:]+$/))) continue;
             tableRows.push(cells);
         } else {
@@ -410,7 +411,8 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
             const indentLvl = Math.floor(leadingSpacesCount / 2); // 2 spaces = 1 indent level
 
             let isBullet = false;
-            let textContent = line;
+            let textContent = line.replace(/<br\s*\/?>/gi, '\n');
+            const explicitNewlines = (textContent.match(/\n/g) || []).length;
 
             if (textContent.startsWith('- ') || textContent.startsWith('* ')) {
                 isBullet = true;
@@ -437,9 +439,7 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
                 // Wrap height estimation
                 const wrapFactor = Math.ceil(textContent.length / (contentW * 12));
-                if (wrapFactor > 1) {
-                    h *= wrapFactor;
-                }
+                h *= Math.max(wrapFactor, explicitNewlines + 1);
             }
 
             if (isBullet) baseOptions.bullet = true;
