@@ -431,11 +431,11 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
 
             if (textContent.startsWith('# ')) {
                 baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
-                textContent = textContent.replace('# ', '');
+                textContent = textContent.replace(/^#\s*/, '');
                 h = 0.6;
             } else if (textContent.startsWith('## ')) {
                 baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
-                textContent = textContent.replace('## ', '');
+                textContent = textContent.replace(/^##\s*/, '');
                 h = 0.5;
             } else if (textContent.startsWith('### ')) {
                 flushText();
@@ -445,6 +445,14 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                     currentY = area.y;
                 }
                 continue;
+            } else if (textContent.startsWith('#### ')) {
+                baseOptions = { fontSize: 12 * 1.33, bold: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace(/^####\s*/, '');
+                h = 0.4;
+            } else if (textContent.startsWith('##### ')) {
+                baseOptions = { fontSize: 12 * 1.15, underline: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace(/^#####\s*/, '');
+                h = 0.35;
             } else {
                 baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
                 // Wrap height estimation
@@ -461,36 +469,58 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 currentY = area.y;
             }
 
-            // Parse Inline Bold (**text**)
-            const parts = textContent.split(/(\*\*.*?\*\*)/g).filter(p => p.length > 0);
-            if (parts.length === 0) parts.push('');
+            // Parse Inline formatting (**bold**, *italic*, _underline_, <u>underline</u>)
+            // Replace generic HTML tags for simplicity with markdown alternatives before split
+            textContent = textContent.replace(/<u>(.*?)<\/u>/g, '_$1_');
 
-            for (let pIdx = 0; pIdx < parts.length; pIdx++) {
-                let pText = parts[pIdx];
-                let pBold = baseOptions.bold || false;
+            // To handle multiple formats simultaneously, we split recursively or sequentially.
+            // PptxGenJS accepts an array of {text, options}.
+            // Instead of nested regexes, a simple tokenizer approach is safer.
+            const tokens = [];
+            let currentStr = "";
+            let b = false, i = false, u = false;
 
-                if (pText.startsWith('**') && pText.endsWith('**')) {
-                    pText = pText.slice(2, -2);
-                    pBold = true;
+            for (let c = 0; c < textContent.length; c++) {
+                if (textContent.startsWith('**', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    b = !b; c++;
+                } else if (textContent.startsWith('__', c) || textContent.startsWith(' _', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    u = !u; c += textContent.startsWith('__', c) ? 1 : 0;
+                } else if (textContent.startsWith('*', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    i = !i;
+                } else if (textContent.startsWith('_', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    u = !u;
+                } else {
+                    currentStr += textContent[c];
                 }
+            }
+            if (currentStr) tokens.push({ text: currentStr, b, i, u });
 
-                const isLastInLine = (pIdx === parts.length - 1);
+            if (tokens.length === 0) tokens.push({ text: '', b: false, i: false, u: false });
+
+            for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+                const token = tokens[tIdx];
+                const isLastInLine = (tIdx === tokens.length - 1);
 
                 let runOptions = {
                     ...baseOptions,
-                    bold: pBold,
+                    bold: baseOptions.bold || token.b,
+                    italic: baseOptions.italic || token.i,
+                    underline: baseOptions.underline || token.u,
                     breakLine: isLastInLine
                 };
 
                 // Seulement le premier bloc de texte d'une ligne doit porter la propriété bullet/indent
-                // Sinon, PptxGenJS crée une nouvelle puce à chaque sous-bloc formaté
-                if (pIdx > 0) {
+                if (tIdx > 0) {
                     delete runOptions.bullet;
                     delete runOptions.indentLevel;
                 }
 
                 textRuns.push({
-                    text: pText,
+                    text: token.text,
                     options: runOptions
                 });
             }
