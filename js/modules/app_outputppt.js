@@ -443,7 +443,7 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
             if (isBullet) baseOptions.bullet = true;
             if (indentLvl > 0) baseOptions.indentLevel = indentLvl;
 
-            if (currentY + textHeightAccumulated + h > maxY && currentY > area.y) {
+            if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
                 flushText();
                 slide = createSlideFn();
                 currentY = area.y;
