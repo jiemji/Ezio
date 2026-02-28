@@ -134,21 +134,22 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         }
 
         // Fonction pour créer une nouvelle slide "SLIDE" au besoin
-        const createContentSlide = () => {
+        const createContentSlide = (customTitle) => {
+            const slideTitle = customTitle || modTitle;
             const slide = pptx.addSlide();
             if (slideMaster) {
                 if (slideMaster.background && slideMaster.background.color) {
                     slide.background = { color: slideMaster.background.color };
                 }
                 drawMasterElements(pptx, slide, slideMaster.elements, {
-                    title: modTitle,
+                    title: slideTitle,
                     MODULE_TITLE: modTitle,
                     SLIDE_NUMBER: (idx + 1).toString(),
                     DATE: new Date().toLocaleDateString(),
                     date: new Date().toLocaleDateString()
                 }, template);
             } else {
-                slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
+                slide.addText(slideTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
             }
             return slide;
         };
@@ -159,13 +160,13 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         if (inst.config?.isTable) {
             inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
-                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat);
+                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat, modTitle);
             }
         }
 
         // Dessin du Résultat (isolé et paginé)
         if (inst.result) {
-            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat);
+            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat, modTitle);
         }
     }
 
@@ -324,13 +325,20 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
 /**
  * Parse Markdown et insère dans la zone définie
  */
-function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
+function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}, initialTitle = null) {
     const lines = mdText.split('\n');
+    let activeTitle = initialTitle;
+    let slide = null;
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
     const maxH = area.h;
     const maxY = area.y + maxH;
+
+    const getSlide = () => {
+        if (!slide) slide = createSlideFn(activeTitle);
+        return slide;
+    };
 
     // Estimation hauteur ligne
     const lineHeightBase = 0.3; // pouces
@@ -345,12 +353,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
     let textRuns = [];
     let textHeightAccumulated = 0;
 
-    let slide = createSlideFn();
-
     // Helper to flush current text buffer
     const flushText = () => {
         if (textRuns.length > 0) {
-            slide.addText(textRuns, {
+            getSlide().addText(textRuns, {
                 x: marginX, y: currentY, w: contentW, h: textHeightAccumulated,
                 fontFace: fontBody, // Default font
                 color: theme.text,   // Default color
@@ -376,7 +382,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 inTable = true;
                 tableRows = [];
             }
-            const cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+            const splitCells = line.split('|');
+            if (splitCells.length > 0 && splitCells[0].trim() === '') splitCells.shift();
+            if (splitCells.length > 0 && splitCells[splitCells.length - 1].trim() === '') splitCells.pop();
+            const cells = splitCells.map(c => c.trim().replace(/<br\s*\/?>/gi, '\n'));
             if (cells.some(c => c.match(/^[-:]+$/))) continue;
             tableRows.push(cells);
         } else {
@@ -386,10 +395,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                     const tableH = (tableRows.length * 0.4) + 0.2;
                     if (currentY + tableH > maxY && currentY > area.y) {
                         flushText();
-                        slide = createSlideFn();
+                        slide = null;
                         currentY = area.y;
                     }
-                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
+                    addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
                     currentY += tableH;
                 }
                 inTable = false;
@@ -408,7 +417,8 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
             const indentLvl = Math.floor(leadingSpacesCount / 2); // 2 spaces = 1 indent level
 
             let isBullet = false;
-            let textContent = line;
+            let textContent = line.replace(/<br\s*\/?>/gi, '\n');
+            const explicitNewlines = (textContent.match(/\n/g) || []).length;
 
             if (textContent.startsWith('- ') || textContent.startsWith('* ')) {
                 isBullet = true;
@@ -421,64 +431,96 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
 
             if (textContent.startsWith('# ')) {
                 baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
-                textContent = textContent.replace('# ', '');
+                textContent = textContent.replace(/^#\s*/, '');
                 h = 0.6;
             } else if (textContent.startsWith('## ')) {
                 baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
-                textContent = textContent.replace('## ', '');
+                textContent = textContent.replace(/^##\s*/, '');
                 h = 0.5;
             } else if (textContent.startsWith('### ')) {
-                baseOptions = { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title };
-                textContent = textContent.replace('### ', '');
-                h = 0.5;
+                flushText();
+                activeTitle = textContent.replace(/^###\s*/, '').trim();
+                if (slide !== null || currentY > area.y) {
+                    slide = null;
+                    currentY = area.y;
+                }
+                continue;
+            } else if (textContent.startsWith('#### ')) {
+                baseOptions = { fontSize: 12 * 1.33, bold: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace(/^####\s*/, '');
+                h = 0.4;
+            } else if (textContent.startsWith('##### ')) {
+                baseOptions = { fontSize: 12 * 1.15, underline: true, color: theme.text, fontFace: template.fonts.title };
+                textContent = textContent.replace(/^#####\s*/, '');
+                h = 0.35;
             } else {
                 baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
                 // Wrap height estimation
                 const wrapFactor = Math.ceil(textContent.length / (contentW * 12));
-                if (wrapFactor > 1) {
-                    h *= wrapFactor;
-                }
+                h *= Math.max(wrapFactor, explicitNewlines + 1);
             }
 
             if (isBullet) baseOptions.bullet = true;
             if (indentLvl > 0) baseOptions.indentLevel = indentLvl;
 
-            if (currentY + textHeightAccumulated + h > maxY && currentY > area.y) {
+            if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
                 flushText();
-                slide = createSlideFn();
+                slide = null;
                 currentY = area.y;
             }
 
-            // Parse Inline Bold (**text**)
-            const parts = textContent.split(/(\*\*.*?\*\*)/g).filter(p => p.length > 0);
-            if (parts.length === 0) parts.push('');
+            // Parse Inline formatting (**bold**, *italic*, _underline_, <u>underline</u>)
+            // Replace generic HTML tags for simplicity with markdown alternatives before split
+            textContent = textContent.replace(/<u>(.*?)<\/u>/g, '_$1_');
 
-            for (let pIdx = 0; pIdx < parts.length; pIdx++) {
-                let pText = parts[pIdx];
-                let pBold = baseOptions.bold || false;
+            // To handle multiple formats simultaneously, we split recursively or sequentially.
+            // PptxGenJS accepts an array of {text, options}.
+            // Instead of nested regexes, a simple tokenizer approach is safer.
+            const tokens = [];
+            let currentStr = "";
+            let b = false, i = false, u = false;
 
-                if (pText.startsWith('**') && pText.endsWith('**')) {
-                    pText = pText.slice(2, -2);
-                    pBold = true;
+            for (let c = 0; c < textContent.length; c++) {
+                if (textContent.startsWith('**', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    b = !b; c++;
+                } else if (textContent.startsWith('__', c) || textContent.startsWith(' _', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    u = !u; c += textContent.startsWith('__', c) ? 1 : 0;
+                } else if (textContent.startsWith('*', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    i = !i;
+                } else if (textContent.startsWith('_', c)) {
+                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
+                    u = !u;
+                } else {
+                    currentStr += textContent[c];
                 }
+            }
+            if (currentStr) tokens.push({ text: currentStr, b, i, u });
 
-                const isLastInLine = (pIdx === parts.length - 1);
+            if (tokens.length === 0) tokens.push({ text: '', b: false, i: false, u: false });
+
+            for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+                const token = tokens[tIdx];
+                const isLastInLine = (tIdx === tokens.length - 1);
 
                 let runOptions = {
                     ...baseOptions,
-                    bold: pBold,
+                    bold: baseOptions.bold || token.b,
+                    italic: baseOptions.italic || token.i,
+                    underline: baseOptions.underline || token.u,
                     breakLine: isLastInLine
                 };
 
                 // Seulement le premier bloc de texte d'une ligne doit porter la propriété bullet/indent
-                // Sinon, PptxGenJS crée une nouvelle puce à chaque sous-bloc formaté
-                if (pIdx > 0) {
+                if (tIdx > 0) {
                     delete runOptions.bullet;
                     delete runOptions.indentLevel;
                 }
 
                 textRuns.push({
-                    text: pText,
+                    text: token.text,
                     options: runOptions
                 });
             }
@@ -493,10 +535,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
         const tableH = (tableRows.length * 0.4) + 0.2;
         if (currentY + tableH > maxY && currentY > area.y) {
             flushText();
-            slide = createSlideFn();
+            slide = null;
             currentY = area.y;
         }
-        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
+        addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
     } else {
         flushText();
     }
