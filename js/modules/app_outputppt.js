@@ -134,21 +134,22 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         }
 
         // Fonction pour créer une nouvelle slide "SLIDE" au besoin
-        const createContentSlide = () => {
+        const createContentSlide = (customTitle) => {
+            const slideTitle = customTitle || modTitle;
             const slide = pptx.addSlide();
             if (slideMaster) {
                 if (slideMaster.background && slideMaster.background.color) {
                     slide.background = { color: slideMaster.background.color };
                 }
                 drawMasterElements(pptx, slide, slideMaster.elements, {
-                    title: modTitle,
+                    title: slideTitle,
                     MODULE_TITLE: modTitle,
                     SLIDE_NUMBER: (idx + 1).toString(),
                     DATE: new Date().toLocaleDateString(),
                     date: new Date().toLocaleDateString()
                 }, template);
             } else {
-                slide.addText(modTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
+                slide.addText(slideTitle, { x: 0.5, y: 0.5, fontSize: 18, bold: true, color: '363636' });
             }
             return slide;
         };
@@ -159,13 +160,13 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
         if (inst.config?.isTable) {
             inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
-                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat);
+                parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat, modTitle);
             }
         }
 
         // Dessin du Résultat (isolé et paginé)
         if (inst.result) {
-            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat);
+            parseMarkdownToSlide(createContentSlide, inst.result, area, template, tableFormat, modTitle);
         }
     }
 
@@ -324,13 +325,20 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
 /**
  * Parse Markdown et insère dans la zone définie
  */
-function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}) {
+function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}, initialTitle = null) {
     const lines = mdText.split('\n');
+    let activeTitle = initialTitle;
+    let slide = null;
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
     const maxH = area.h;
     const maxY = area.y + maxH;
+
+    const getSlide = () => {
+        if (!slide) slide = createSlideFn(activeTitle);
+        return slide;
+    };
 
     // Estimation hauteur ligne
     const lineHeightBase = 0.3; // pouces
@@ -345,12 +353,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
     let textRuns = [];
     let textHeightAccumulated = 0;
 
-    let slide = createSlideFn();
-
     // Helper to flush current text buffer
     const flushText = () => {
         if (textRuns.length > 0) {
-            slide.addText(textRuns, {
+            getSlide().addText(textRuns, {
                 x: marginX, y: currentY, w: contentW, h: textHeightAccumulated,
                 fontFace: fontBody, // Default font
                 color: theme.text,   // Default color
@@ -389,10 +395,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                     const tableH = (tableRows.length * 0.4) + 0.2;
                     if (currentY + tableH > maxY && currentY > area.y) {
                         flushText();
-                        slide = createSlideFn();
+                        slide = null;
                         currentY = area.y;
                     }
-                    addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
+                    addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
                     currentY += tableH;
                 }
                 inTable = false;
@@ -432,9 +438,13 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 textContent = textContent.replace('## ', '');
                 h = 0.5;
             } else if (textContent.startsWith('### ')) {
-                baseOptions = { fontSize: 14, bold: true, underline: true, color: theme.text, fontFace: template.fonts.title };
-                textContent = textContent.replace('### ', '');
-                h = 0.5;
+                flushText();
+                activeTitle = textContent.replace(/^###\s*/, '').trim();
+                if (slide !== null || currentY > area.y) {
+                    slide = null;
+                    currentY = area.y;
+                }
+                continue;
             } else {
                 baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
                 // Wrap height estimation
@@ -447,7 +457,7 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
 
             if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
                 flushText();
-                slide = createSlideFn();
+                slide = null;
                 currentY = area.y;
             }
 
@@ -495,10 +505,10 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
         const tableH = (tableRows.length * 0.4) + 0.2;
         if (currentY + tableH > maxY && currentY > area.y) {
             flushText();
-            slide = createSlideFn();
+            slide = null;
             currentY = area.y;
         }
-        addPptTable(slide, tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
+        addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
     } else {
         flushText();
     }
