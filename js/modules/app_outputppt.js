@@ -481,11 +481,6 @@ function formatAndPushRuns(runs, baseOptions, textRuns) {
             runOptions.color = run.format.color;
         }
 
-        // PptxGenJS uses "fill" or "highlight" for background
-        if (run.format.background) {
-            runOptions.highlight = run.format.background;
-        }
-
         // Bullets apply only to the first run in a paragraph/line
         if (rIdx > 0) {
             delete runOptions.bullet;
@@ -525,31 +520,24 @@ function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
         return row.map(cellText => {
             let cellFill = fill;
             let cellColor = color;
-            let rawText = cellText;
+            let fixedText = cellText.replace(/<br\s*\/?>/gi, '\n');
 
-            let runs = MarkdownUtils.extractInlineStyles(rawText);
+            let runs = MarkdownUtils.extractInlineStyles(fixedText);
 
             const bgRun = runs.find(r => r.format.background);
             if (bgRun) cellFill = bgRun.format.background;
 
-            // Combine text visually for PPT cell since they don't support textruns inside cells as granularly as general shapes without specific objects
-            // Actually, PPTXGenJS DOES support text arrays in table cells now!
-            const cellRuns = runs.map(r => {
-                let rFormat = {
-                    fontFace: font,
-                    fontSize: format.fontSize,
-                    bold: bold || r.format.bold,
-                    italic: r.format.italic,
-                    underline: r.format.underline,
-                    color: r.format.color || color
-                };
-                return { text: r.text, options: rFormat };
-            });
+            // Revert to plain string for table cell text to avoid unsupported shape arrays generating XML corruption
+            const finalRawText = runs.map(r => r.text).join('');
 
             return {
-                text: cellRuns,
+                text: finalRawText,
                 options: {
                     fill: cellFill,
+                    color: cellColor,
+                    bold: bold,
+                    fontFace: font,
+                    fontSize: format.fontSize,
                     border: { pt: format.borderSize, color: format.borderColor }
                 }
             };
