@@ -2,6 +2,12 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.5.0] - 2026-03-03
+### Refactorisation et Architecture (Zero Régression)
+- **Découplage analytique (`WidgetDataTransformer.js` & `WidgetRenderer.js`)** : Le cœur du Dashboard a été scindé. La logique métier d'extraction des métriques d'audit est dorénavant isolée de la logique de dessin sur le canevas (Chart.js), allégeant considérablement `app_dashboard.js`.
+- **Routage d'Actions (Deliveries)** : Remplacement de l'immense bloc de conditions liés à la délégation d'événements dans `app_deliveries.js` par un dictionnaire d'actions (`ActionRouter`), offrant une lecture directe et une extensibilité instantanée. La génération du tableau de contexte (Markdown) a été extraite vers `DataUtils.js`.
+- **Analyse Syntaxique Abstraite (AST) pour le Markdown** : Les moteurs d'export Word et PowerPoint reposent dorénavant sur un socle commun robuste (`MarkdownUtils.parseToAST`). La détection des balises complexes (couleurs injectées dans les span, niveaux de titres, styles inline) n'est plus dupliquée et interprétée à la volée par chaque exportateur, mais unifiée au sein d'un utilitaire générant un arbre syntaxique propre, garantissant une cohérence parfaite du rendu final entre tous les formats de sortie.
+
 ## [2.4.5] - 2026-02-27
 ### Impression Word Avancée & Corrections
 - **Styles Dynamiques Word** : Les éléments Markdown (Titres, Paragraphes, Listes à puces `ul`/`ol`) peuvent désormais être mappés directement sur les IDs de styles internes MS Word via la propriété `styles` dans `output_config.json`.
