@@ -160,16 +160,27 @@ export const MarkdownUtils = {
     /**
      * Converts rgb/rgba/hex# into a clean hex string without `#` for Word/PPT
      * @param {string} colorString 
-     * @returns {string} Hexadecimal color value without '#'
+     * @returns {string|undefined} Hexadecimal color value without '#' or undefined if invalid
      */
     normalizeColor(colorString) {
-        if (!colorString) return "000000";
-        if (colorString.startsWith('#')) {
-            let hex = colorString.replace('#', '');
+        if (!colorString) return undefined;
+        let color = colorString.trim().toLowerCase();
+
+        if (color === 'transparent' || color === 'none') return undefined;
+
+        const namedColors = {
+            "white": "FFFFFF", "black": "000000", "red": "FF0000",
+            "green": "00FF00", "blue": "0000FF", "yellow": "FFFF00",
+            "gray": "808080", "grey": "808080"
+        };
+        if (namedColors[color]) return namedColors[color];
+
+        if (color.startsWith('#')) {
+            let hex = color.replace('#', '');
             if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-            return hex.toUpperCase();
-        } else if (colorString.startsWith('rgb')) {
-            const vals = colorString.match(/\d+/g);
+            if (/^[0-9a-f]{6}$/.test(hex)) return hex.toUpperCase();
+        } else if (color.startsWith('rgb')) {
+            const vals = color.match(/\d+/g);
             if (vals && vals.length >= 3) {
                 const r = parseInt(vals[0]).toString(16).padStart(2, '0');
                 const g = parseInt(vals[1]).toString(16).padStart(2, '0');
@@ -177,7 +188,11 @@ export const MarkdownUtils = {
                 return (r + g + b).toUpperCase();
             }
         }
-        return colorString.toUpperCase();
+
+        if (/^[0-9a-f]{6}$/.test(color)) return color.toUpperCase();
+        if (/^[0-9a-f]{3}$/.test(color)) return color.split('').map(c => c + c).join('').toUpperCase();
+
+        return undefined;
     },
 
     /**
