@@ -234,6 +234,22 @@ function parseMarkdownToDocx(mdText, docConfig) {
                     heading: typeof styleH3 === 'string' ? undefined : styleH3,
                     spacing: { before: 200, after: 100 }
                 }));
+            } else if (line.startsWith('#### ')) {
+                const styleH4 = docConfig?.styles?.h4 || window.docx.HeadingLevel.HEADING_3;
+                children.push(new window.docx.Paragraph({
+                    text: line.replace('#### ', ''),
+                    style: typeof styleH4 === 'string' ? styleH4 : undefined,
+                    heading: typeof styleH4 === 'string' ? undefined : styleH4,
+                    spacing: { before: 200, after: 100 }
+                }));
+            } else if (line.startsWith('##### ')) {
+                const styleH5 = docConfig?.styles?.h5 || window.docx.HeadingLevel.HEADING_4;
+                children.push(new window.docx.Paragraph({
+                    text: line.replace('##### ', ''),
+                    style: typeof styleH5 === 'string' ? styleH5 : undefined,
+                    heading: typeof styleH5 === 'string' ? undefined : styleH5,
+                    spacing: { before: 200, after: 100 }
+                }));
             } else if (rawLine.match(/^(\s*)[-*]\s+(.*)/)) {
                 const match = rawLine.match(/^(\s*)([-*])\s+(.*)/);
                 const spaces = match[1].replace(/\t/g, '    ').length;
@@ -384,8 +400,13 @@ function createDocxTable(rowsData, docConfig) {
 }
 
 function parseTextFormatting(text, baseColor, baseBold) {
+    // Nettoyer les balises <br> injectées par MarkdownUtils pour la persistance des sauts de ligne.
+    // Etant donné que l'export Word (.docx) gère déjà chaque `\n` comme un vrai Paragraphe distinct, 
+    // la balise est purement visuelle/markdown et doit être ignorée en texte brut.
+    const cleanText = text.replace(/<br\s*\/?>/ig, '');
+
     // Parser for **bold**, _italic_, *italic*, <u>underline</u>, <s>strikethrough</s>
-    const parts = text.split(/(<u\b[^>]*>.*?<\/u>|<b>.*?<\/b>|<i>.*?<\/i>|\*\*.*?\*\*|\_.*?\_|\*.*?\*|<s\b[^>]*>.*?<\/s>|~~.*?~~)/ig);
+    const parts = cleanText.split(/(<u\b[^>]*>.*?<\/u>|<b>.*?<\/b>|<i>.*?<\/i>|\*\*.*?\*\*|\_.*?\_|\*.*?\*|<s\b[^>]*>.*?<\/s>|~~.*?~~)/ig);
 
     return parts.filter(p => p.length > 0).map(part => {
         let isBold = baseBold;
