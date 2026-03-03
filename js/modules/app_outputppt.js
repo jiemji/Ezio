@@ -2,7 +2,8 @@ import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
 import { currentForm, store } from '../core/State.js';
-import { buildContext } from './app_deliveries.js';
+import { DataUtils } from '../core/DataUtils.js';
+import { MarkdownUtils } from '../core/MarkdownUtils.js';
 
 let pptConfig = null;
 
@@ -158,7 +159,7 @@ export async function downloadDeliveryPpt(delivery, templateId = 'default') {
 
         // Dessin du Tableau de Contexte (isolé)
         if (inst.config?.isTable) {
-            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+            inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
                 parseMarkdownToSlide(createContentSlide, inst.contextTable, area, template, tableFormat, modTitle);
             }
@@ -326,41 +327,32 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
  * Parse Markdown et insère dans la zone définie
  */
 function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat = {}, initialTitle = null) {
-    const lines = mdText.split('\n');
+    const ast = MarkdownUtils.parseToAST(mdText);
     let activeTitle = initialTitle;
     let slide = null;
     let currentY = area.y;
     const marginX = area.x;
     const contentW = area.w;
-    const maxH = area.h;
-    const maxY = area.y + maxH;
+    const maxY = area.y + area.h;
 
     const getSlide = () => {
         if (!slide) slide = createSlideFn(activeTitle);
         return slide;
     };
 
-    // Estimation hauteur ligne
-    const lineHeightBase = 0.3; // pouces
-
     const theme = template.theme;
     const fontBody = template.fonts.body;
 
-    let inTable = false;
-    let tableRows = [];
-
-    // Buffer for text runs to consolidate
     let textRuns = [];
     let textHeightAccumulated = 0;
 
-    // Helper to flush current text buffer
     const flushText = () => {
         if (textRuns.length > 0) {
             getSlide().addText(textRuns, {
                 x: marginX, y: currentY, w: contentW, h: textHeightAccumulated,
-                fontFace: fontBody, // Default font
-                color: theme.text,   // Default color
-                fontSize: 12,        // Default size
+                fontFace: fontBody,
+                color: theme.text,
+                fontSize: 12,
                 valign: 'top',
                 margin: 0
             });
@@ -370,98 +362,43 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
         }
     };
 
-    for (let i = 0; i < lines.length; i++) {
-        const originalLine = lines[i];
-        const line = originalLine.trim();
-
-        // 1. Tableaux
-        if (line.startsWith('|')) {
-            // Fin de bloc texte avant tableau
-            if (!inTable) {
+    for (const block of ast) {
+        if (block.type === 'table') {
+            flushText();
+            const tableH = (block.rows.length * 0.4) + 0.2;
+            if (currentY + tableH > maxY && currentY > area.y) {
+                slide = null;
+                currentY = area.y;
+            }
+            addPptTable(getSlide(), block.rows, currentY, marginX, contentW, theme, fontBody, tableFormat);
+            currentY += tableH;
+        } else if (block.type === 'header') {
+            if (block.level === 3) {
                 flushText();
-                inTable = true;
-                tableRows = [];
-            }
-            const splitCells = line.split('|');
-            if (splitCells.length > 0 && splitCells[0].trim() === '') splitCells.shift();
-            if (splitCells.length > 0 && splitCells[splitCells.length - 1].trim() === '') splitCells.pop();
-            const cells = splitCells.map(c => c.trim().replace(/<br\s*\/?>/gi, '\n'));
-            if (cells.some(c => c.match(/^[-:]+$/))) continue;
-            tableRows.push(cells);
-        } else {
-            // Fin de tableau
-            if (inTable) {
-                if (tableRows.length > 0) {
-                    const tableH = (tableRows.length * 0.4) + 0.2;
-                    if (currentY + tableH > maxY && currentY > area.y) {
-                        flushText();
-                        slide = null;
-                        currentY = area.y;
-                    }
-                    addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
-                    currentY += tableH;
-                }
-                inTable = false;
-            }
-
-            if (line === '') {
-                // Empty line = empty text run for spacing
-                textRuns.push({ text: '', options: { fontSize: 12, breakLine: true } });
-                textHeightAccumulated += 0.15;
-                continue;
-            }
-
-            // Detect Indentation and Bullets
-            const leadingSpacesMatch = originalLine.match(/^(\s*)/);
-            const leadingSpacesCount = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
-            const indentLvl = Math.floor(leadingSpacesCount / 2); // 2 spaces = 1 indent level
-
-            let isBullet = false;
-            let textContent = line.replace(/<br\s*\/?>/gi, '\n');
-            const explicitNewlines = (textContent.match(/\n/g) || []).length;
-
-            if (textContent.startsWith('- ') || textContent.startsWith('* ')) {
-                isBullet = true;
-                textContent = textContent.substring(2).trim();
-            }
-
-            // 2. Titres et Texte
-            let baseOptions = { breakLine: true };
-            let h = lineHeightBase;
-
-            if (textContent.startsWith('# ')) {
-                baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
-                textContent = textContent.replace(/^#\s*/, '');
-                h = 0.6;
-            } else if (textContent.startsWith('## ')) {
-                baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
-                textContent = textContent.replace(/^##\s*/, '');
-                h = 0.5;
-            } else if (textContent.startsWith('### ')) {
-                flushText();
-                activeTitle = textContent.replace(/^###\s*/, '').trim();
+                activeTitle = block.text;
                 if (slide !== null || currentY > area.y) {
                     slide = null;
                     currentY = area.y;
                 }
                 continue;
-            } else if (textContent.startsWith('#### ')) {
-                baseOptions = { fontSize: 12 * 1.33, bold: true, color: theme.text, fontFace: template.fonts.title };
-                textContent = textContent.replace(/^####\s*/, '');
-                h = 0.4;
-            } else if (textContent.startsWith('##### ')) {
-                baseOptions = { fontSize: 12 * 1.15, underline: true, color: theme.text, fontFace: template.fonts.title };
-                textContent = textContent.replace(/^#####\s*/, '');
-                h = 0.35;
-            } else {
-                baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody };
-                // Wrap height estimation
-                const wrapFactor = Math.ceil(textContent.length / (contentW * 12));
-                h *= Math.max(wrapFactor, explicitNewlines + 1);
             }
 
-            if (isBullet) baseOptions.bullet = true;
-            if (indentLvl > 0) baseOptions.indentLevel = indentLvl;
+            let baseOptions = { breakLine: true };
+            let h = 0.3;
+
+            if (block.level === 1) {
+                baseOptions = { fontSize: 18, bold: true, color: theme.primary, fontFace: template.fonts.title };
+                h = 0.6;
+            } else if (block.level === 2) {
+                baseOptions = { fontSize: 16, bold: true, color: theme.secondary, fontFace: template.fonts.title };
+                h = 0.5;
+            } else if (block.level === 4) {
+                baseOptions = { fontSize: 12 * 1.33, bold: true, color: theme.text, fontFace: template.fonts.title };
+                h = 0.4;
+            } else if (block.level >= 5) {
+                baseOptions = { fontSize: 12 * 1.15, underline: true, color: theme.text, fontFace: template.fonts.title };
+                h = 0.35;
+            }
 
             if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
                 flushText();
@@ -469,78 +406,96 @@ function parseMarkdownToSlide(createSlideFn, mdText, area, template, tableFormat
                 currentY = area.y;
             }
 
-            // Parse Inline formatting (**bold**, *italic*, _underline_, <u>underline</u>)
-            // Replace generic HTML tags for simplicity with markdown alternatives before split
-            textContent = textContent.replace(/<u>(.*?)<\/u>/g, '_$1_');
+            formatAndPushRuns(block.runs, baseOptions, textRuns);
+            textHeightAccumulated += h;
 
-            // To handle multiple formats simultaneously, we split recursively or sequentially.
-            // PptxGenJS accepts an array of {text, options}.
-            // Instead of nested regexes, a simple tokenizer approach is safer.
-            const tokens = [];
-            let currentStr = "";
-            let b = false, i = false, u = false;
+        } else if (block.type === 'list_item') {
+            let baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody, breakLine: true };
 
-            for (let c = 0; c < textContent.length; c++) {
-                if (textContent.startsWith('**', c)) {
-                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
-                    b = !b; c++;
-                } else if (textContent.startsWith('__', c) || textContent.startsWith(' _', c)) {
-                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
-                    u = !u; c += textContent.startsWith('__', c) ? 1 : 0;
-                } else if (textContent.startsWith('*', c)) {
-                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
-                    i = !i;
-                } else if (textContent.startsWith('_', c)) {
-                    if (currentStr) { tokens.push({ text: currentStr, b, i, u }); currentStr = ""; }
-                    u = !u;
-                } else {
-                    currentStr += textContent[c];
-                }
+            // Note: AST level is 0-indexed for no indent, 1 for first indent
+            if (block.listType === 'unordered') {
+                baseOptions.bullet = true;
             }
-            if (currentStr) tokens.push({ text: currentStr, b, i, u });
+            if (block.level > 0) {
+                baseOptions.indentLevel = block.level;
+            }
 
-            if (tokens.length === 0) tokens.push({ text: '', b: false, i: false, u: false });
+            const explicitNewlines = block.runs.reduce((acc, r) => acc + (r.text.match(/\n/g) || []).length, 0);
+            const totalLength = block.runs.reduce((acc, r) => acc + r.text.length, 0);
+            const wrapFactor = Math.ceil(totalLength / (contentW * 12));
+            const h = 0.3 * Math.max(wrapFactor, explicitNewlines + 1);
 
-            for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
-                const token = tokens[tIdx];
-                const isLastInLine = (tIdx === tokens.length - 1);
+            if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
+                flushText();
+                slide = null;
+                currentY = area.y;
+            }
 
-                let runOptions = {
-                    ...baseOptions,
-                    bold: baseOptions.bold || token.b,
-                    italic: baseOptions.italic || token.i,
-                    underline: baseOptions.underline || token.u,
-                    breakLine: isLastInLine
-                };
+            formatAndPushRuns(block.runs, baseOptions, textRuns);
+            textHeightAccumulated += h;
 
-                // Seulement le premier bloc de texte d'une ligne doit porter la propriété bullet/indent
-                if (tIdx > 0) {
-                    delete runOptions.bullet;
-                    delete runOptions.indentLevel;
-                }
+        } else if (block.type === 'paragraph') {
+            let baseOptions = { fontSize: 12, color: theme.text, fontFace: fontBody, breakLine: true };
 
-                textRuns.push({
-                    text: token.text,
-                    options: runOptions
-                });
+            const explicitNewlines = block.runs.reduce((acc, r) => acc + (r.text.match(/\n/g) || []).length, 0);
+            const totalLength = block.runs.reduce((acc, r) => acc + r.text.length, 0);
+            const wrapFactor = Math.ceil(totalLength / (contentW * 12));
+            const h = 0.3 * Math.max(wrapFactor, explicitNewlines + 1);
+
+            if (currentY + textHeightAccumulated + h > maxY && (currentY > area.y || textHeightAccumulated > 0)) {
+                flushText();
+                slide = null;
+                currentY = area.y;
+            }
+
+            if (block.runs.length === 0) {
+                textRuns.push({ text: '', options: baseOptions });
+            } else {
+                formatAndPushRuns(block.runs, baseOptions, textRuns);
             }
 
             textHeightAccumulated += h;
         }
     }
 
-    // Flush restant
-    if (inTable && tableRows.length > 0) {
-        // Table at the very end
-        const tableH = (tableRows.length * 0.4) + 0.2;
-        if (currentY + tableH > maxY && currentY > area.y) {
-            flushText();
-            slide = null;
-            currentY = area.y;
+    flushText();
+}
+
+function formatAndPushRuns(runs, baseOptions, textRuns) {
+    if (!runs || runs.length === 0) return;
+
+    for (let rIdx = 0; rIdx < runs.length; rIdx++) {
+        const run = runs[rIdx];
+        const isLastInLine = (rIdx === runs.length - 1);
+
+        let runOptions = {
+            ...baseOptions,
+            bold: baseOptions.bold || run.format.bold,
+            italic: baseOptions.italic || run.format.italic,
+            underline: baseOptions.underline || run.format.underline,
+            breakLine: isLastInLine
+        };
+
+        // PptxGenJS handles color specially, apply if defined
+        if (run.format.color) {
+            runOptions.color = run.format.color;
         }
-        addPptTable(getSlide(), tableRows, currentY, marginX, contentW, theme, fontBody, tableFormat);
-    } else {
-        flushText();
+
+        // PptxGenJS uses "fill" or "highlight" for background
+        if (run.format.background) {
+            runOptions.highlight = run.format.background;
+        }
+
+        // Bullets apply only to the first run in a paragraph/line
+        if (rIdx > 0) {
+            delete runOptions.bullet;
+            delete runOptions.indentLevel;
+        }
+
+        textRuns.push({
+            text: run.text,
+            options: runOptions
+        });
     }
 }
 
@@ -572,49 +527,29 @@ function addPptTable(slide, rows, y, x, w, theme, font, tableFormat = {}) {
             let cellColor = color;
             let rawText = cellText;
 
-            // Simple regex to parse our specific span format: 
-            // <span style="background-color:rgba(x,y,z,a);color:#fff;padding:2px 4px;border-radius:3px;">Value</span>
-            const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
+            let runs = MarkdownUtils.extractInlineStyles(rawText);
 
-            if (spanMatch) {
-                let extractedBg = spanMatch[1].trim();
-                let extractedColor = spanMatch[2].trim();
+            const bgRun = runs.find(r => r.format.background);
+            if (bgRun) cellFill = bgRun.format.background;
 
-                // PptxGenJS hex only format (strip # and handle rgb/rgba)
-                if (extractedBg.startsWith('#')) {
-                    cellFill = extractedBg.replace('#', '');
-                    if (cellFill.length === 3) {
-                        cellFill = cellFill.split('').map(c => c + c).join('');
-                    }
-                } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
-                    // Try to convert rgb to hex for PPTX, since PptxGenJS prefers hex without #
-                    const rgbVals = extractedBg.match(/\d+/g);
-                    if (rgbVals && rgbVals.length >= 3) {
-                        const r = parseInt(rgbVals[0]).toString(16).padStart(2, '0');
-                        const g = parseInt(rgbVals[1]).toString(16).padStart(2, '0');
-                        const b = parseInt(rgbVals[2]).toString(16).padStart(2, '0');
-                        cellFill = (r + g + b).toUpperCase();
-                    }
-                }
-
-                if (extractedColor.startsWith('#')) {
-                    cellColor = extractedColor.replace('#', '');
-                    if (cellColor.length === 3) {
-                        cellColor = cellColor.split('').map(c => c + c).join('');
-                    }
-                }
-
-                rawText = spanMatch[3]; // The actual text inside the span
-            }
-
-            return {
-                text: rawText,
-                options: {
-                    fill: cellFill,
-                    color: cellColor,
-                    bold: bold,
+            // Combine text visually for PPT cell since they don't support textruns inside cells as granularly as general shapes without specific objects
+            // Actually, PPTXGenJS DOES support text arrays in table cells now!
+            const cellRuns = runs.map(r => {
+                let rFormat = {
                     fontFace: font,
                     fontSize: format.fontSize,
+                    bold: bold || r.format.bold,
+                    italic: r.format.italic,
+                    underline: r.format.underline,
+                    color: r.format.color || color
+                };
+                return { text: r.text, options: rFormat };
+            });
+
+            return {
+                text: cellRuns,
+                options: {
+                    fill: cellFill,
                     border: { pt: format.borderSize, color: format.borderColor }
                 }
             };

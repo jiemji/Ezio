@@ -4,8 +4,7 @@ import { Utils } from '../core/Utils.js';
 import { Config } from '../core/Config.js';
 import { UI } from '../core/UIFactory.js';
 import { Modal } from '../ui/Modal.js';
-
-let chartsMap = new Map(); // Store chart instances by widget ID
+import { initWidgetChart, updateWidgetChart, destroyWidgetChart, clearAllCharts, exportWidgetImage } from './WidgetRenderer.js';
 
 export function initDashboard() {
     if (window.Chart && window.ChartDataLabels) {
@@ -179,8 +178,7 @@ function renderDashboard() {
             <h3>Tableau de bord vide</h3>
             <p>Sélectionnez une colonne ci-dessus pour générer un graphique.</p>
         </div>`;
-        chartsMap.forEach(chart => chart.destroy());
-        chartsMap.clear();
+        clearAllCharts();
         return;
     }
 
@@ -195,10 +193,7 @@ function renderDashboard() {
         const id = card.dataset.id;
         if (!currentIds.includes(id)) {
             // Destroy chart
-            if (chartsMap.has(id)) {
-                chartsMap.get(id).destroy();
-                chartsMap.delete(id);
-            }
+            destroyWidgetChart(id);
             // Remove DOM
             card.remove();
         }
@@ -213,14 +208,14 @@ function renderDashboard() {
             card = createWidgetDOM(widget);
             dashboardGrid.appendChild(card);
             // Create Chart
-            initWidgetChart(widget, card);
+            initWidgetChart(widget, card, currentForm);
         } else {
             // Update Existing Code (Order check?)
             // If we want to support reordering, we should append child again to move it to end?
             // dashboardGrid.appendChild(card); // This moves it to the end, ensuring order matches array
 
             // Update Chart Data
-            updateWidgetChart(widget);
+            updateWidgetChart(widget, currentForm);
         }
     });
 }
@@ -276,268 +271,6 @@ function createWidgetDOM(widget) {
     return card;
 }
 
-function initWidgetChart(widget, card) {
-    const canvas = card.querySelector('canvas');
-    if (!canvas) return;
-
-    const config = prepareChartConfig(widget);
-    if (config && window.Chart) {
-        const chart = new window.Chart(canvas, config);
-        chartsMap.set(widget.id, chart);
-    } else {
-        const container = canvas.parentElement;
-        container.innerHTML = "<div style='text-align:center; margin-top:50px; color:red'>Erreur: Impossible de créer le graphique</div>";
-    }
-}
-
-function updateWidgetChart(widget) {
-    const chart = chartsMap.get(widget.id);
-    if (!chart) return; // Should not happen if DOM exists
-
-    const newConfig = prepareChartConfig(widget);
-    if (!newConfig) return;
-
-    // Check if type changed (requires destroy/recreate)
-    if (chart.config.type !== newConfig.type) {
-        chart.destroy();
-        const card = document.querySelector(`.widget-card[data-id="${widget.id}"]`);
-        if (card) initWidgetChart(widget, card);
-        return;
-    }
-
-    // Update data and options
-    chart.data = newConfig.data;
-    chart.options = newConfig.options; // In case options changed (e.g. legend)
-    chart.update();
-}
-
-function prepareChartConfig(widget) {
-    const colMain = currentForm.columns.find(c => c.id === widget.columnId);
-    if (!colMain) return null;
-
-    const mainIdx = currentForm.columns.findIndex(c => c.id === widget.columnId);
-    const rows = currentForm.rows || [];
-
-    let mainOptions = colMain.params?.options || [];
-    if (mainOptions.length === 0 && rows.length > 0) {
-        mainOptions = [...new Set(rows.map(r => r[mainIdx] || "Non défini"))];
-    }
-
-    const vizType = widget.vizType;
-
-    const showLabels = widget.showLabels !== false;
-    const isPercent = widget.valueFormat === 'percent';
-
-    // Configuration par défaut pour chartjs-plugin-datalabels
-    const datalabelsConfig = {
-        display: showLabels,
-        color: '#000', // Noir pour plus de lisibilité sur les fonds colorés
-        font: { weight: 'bold', size: 13 },
-        formatter: (value, context) => {
-            if (value === 0) return '';
-            if (isPercent) {
-                let total = 0;
-                if (vizType.startsWith('cross_')) {
-                    context.chart.data.datasets.forEach(ds => {
-                        total += ds.data[context.dataIndex] || 0;
-                    });
-                } else {
-                    const dataset = context.chart.data.datasets[context.datasetIndex];
-                    total = dataset.data.reduce((acc, val) => acc + (val || 0), 0);
-                }
-                if (total === 0) return '';
-                const percentage = Math.round((value / total) * 100);
-                return percentage + '%';
-            }
-            return value;
-        }
-    };
-
-    if (vizType.startsWith('cross_')) {
-        const crossIdx = currentForm.columns.findIndex(c => c.id === widget.crossColumnId);
-        if (crossIdx === -1) return null;
-
-        const crossCol = currentForm.columns[crossIdx];
-        const isStacked = vizType === 'cross_stacked';
-
-        let crossValues = [];
-        if (crossCol.params?.options) {
-            crossValues = [...crossCol.params.options];
-            const actualValues = new Set(rows.map(r => r[crossIdx] || "Non défini"));
-            actualValues.forEach(v => { if (!crossValues.includes(v)) crossValues.push(v); });
-        } else {
-            crossValues = [...new Set(rows.map(r => r[crossIdx] || "Non défini"))];
-        }
-
-        const datasets = mainOptions.map((mainOpt, idx) => {
-            let data = crossValues.map(crossVal => {
-                return rows.filter(r => (r[crossIdx] || "Non défini") === crossVal && r[mainIdx] === mainOpt).length;
-            });
-
-            if (isPercent) {
-                data = data.map((val, dataIdx) => {
-                    let totalForCrossValue = 0;
-                    mainOptions.forEach(opt => {
-                        totalForCrossValue += rows.filter(r => (r[crossIdx] || "Non défini") === crossValues[dataIdx] && r[mainIdx] === opt).length;
-                    });
-                    return totalForCrossValue > 0 ? Math.round((val / totalForCrossValue) * 100) : 0;
-                });
-            }
-
-            return {
-                label: mainOpt,
-                data: data,
-                backgroundColor: Utils.getComboColor(colMain.params?.colorScheme, mainOpt, mainOptions) || getColorByIndex(idx)
-            };
-        });
-
-        return {
-            type: 'bar',
-            data: { labels: crossValues, datasets: datasets },
-            options: {
-                indexAxis: 'y', // horizontal
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: isStacked,
-                        beginAtZero: true,
-                        max: isPercent ? 100 : undefined,
-                        ticks: {
-                            callback: function (value) {
-                                return isPercent ? value + '%' : value;
-                            }
-                        }
-                    },
-                    y: { stacked: isStacked }
-                },
-                plugins: {
-                    legend: { position: 'bottom' },
-                    datalabels: datalabelsConfig
-                }
-            }
-        };
-    }
-
-    if (vizType.startsWith('global_')) {
-        const counts = {};
-        rows.forEach(r => {
-            const val = r[mainIdx] || "Non défini";
-            counts[val] = (counts[val] || 0) + 1;
-        });
-
-        const labels = mainOptions.length > 0
-            ? mainOptions.filter(o => counts[o])
-            : Object.keys(counts);
-
-        Object.keys(counts).forEach(k => { if (!labels.includes(k)) labels.push(k); });
-
-        const data = labels.map(l => counts[l] || 0);
-        const colors = labels.map((l, idx) => Utils.getComboColor(colMain.params?.colorScheme, l, mainOptions) || getColorByIndex(idx));
-
-        const type = vizType.split('_')[1];
-
-        return {
-            type: type,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Occurrences',
-                    data: data,
-                    backgroundColor: colors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: type === 'bar' ? 'none' : 'right' },
-                    datalabels: datalabelsConfig
-                }
-            }
-        };
-    }
-    return null;
-}
-
-function getColorByIndex(i) {
-    const palette = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
-    return palette[i % palette.length];
-}
-
-/**
- * Génère l'image Base64 d'un widget pour l'export.
- * @param {String} widgetId 
- * @returns {Promise<String|null>} L'image en data URI Base64
- */
-export async function exportWidgetImage(widgetId) {
-    const widget = currentForm.statics.find(w => w.id === widgetId);
-    if (!widget) return null;
-
-    const config = prepareChartConfig(widget);
-    if (!config || !window.Chart) return null;
-
-    // Désactiver toutes les animations pour un rendu immédiat et forcer une taille fixe
-    config.options.animation = false;
-    config.options.responsive = false;
-    config.options.maintainAspectRatio = false;
-
-    // Forcer un fond blanc opaque si non défini, car canvas transparent -> fond noir / moche dans docx/pptx
-    if (!config.options.plugins) config.options.plugins = {};
-    config.options.plugins.customCanvasBackgroundColor = { color: 'white' };
-
-    // Créer un conteneur fantôme dans le DOM pour forcer le rendu Chart.js
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = '800px';
-    container.style.height = widget.vizType === 'cross_stacked' ? '500px' : '400px';
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = widget.vizType === 'cross_stacked' ? 500 : 400;
-    container.appendChild(canvas);
-    document.body.appendChild(container);
-
-    // Plugin local pour forcer le fond
-    const pluginBg = {
-        id: 'customCanvasBackgroundColor',
-        beforeDraw: (chart, args, options) => {
-            const { ctx } = chart;
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-over';
-            ctx.fillStyle = options.color || '#ffffff';
-            ctx.fillRect(0, 0, chart.width, chart.height);
-            ctx.restore();
-        }
-    };
-
-    config.plugins = [pluginBg];
-
-    // On englobe dans une promise pour s'assurer que le chart.js a fini de dessiner
-    return new Promise((resolve) => {
-        // Remplacer l'option `animation: false` par un objet avec durée 0 et un callback
-        config.options.animation = {
-            duration: 0,
-            onComplete: function () {
-                // Attente d'un frame supplémentaire pour le rendu canvas (sécurité docx)
-                requestAnimationFrame(() => {
-                    const b64 = chart.toBase64Image('image/png', 1.0);
-                    chart.destroy();
-                    if (document.body.contains(container)) {
-                        document.body.removeChild(container);
-                    }
-                    resolve(b64);
-                });
-            }
-        };
-
-        const chart = new window.Chart(canvas, config);
-    });
-}
-
 /**
  * Télécharge les images des widgets sélectionnés pour un livrable donné
  * @param {Object} delivery 
@@ -547,9 +280,9 @@ export async function downloadDeliveryWidgets(delivery) {
     for (const inst of delivery.structure) {
         if (inst.config && inst.config.widgets && inst.config.widgets.length > 0) {
             for (const wId of inst.config.widgets) {
-                const b64Data = await exportWidgetImage(wId);
+                const widgetDef = (currentForm?.statics || []).find(w => w.id === wId);
+                const b64Data = widgetDef ? await exportWidgetImage(widgetDef, currentForm) : null;
                 if (b64Data) {
-                    const widgetDef = (currentForm?.statics || []).find(w => w.id === wId);
                     const widgetTitle = widgetDef ? widgetDef.title : "Graphique";
 
                     // Nettoyer les noms pour les fichiers

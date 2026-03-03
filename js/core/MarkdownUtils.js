@@ -102,5 +102,170 @@ export const MarkdownUtils = {
         markdown = markdown.replace(/\n{3,}/g, '\n\n');
 
         return markdown;
+    },
+
+    /**
+     * Parse inline markdown styles and HTML span styles into an array of run objects.
+     * @param {string} text - The raw text line
+     * @param {Object} baseFormat - Base formatting {color, bold, italic, etc}
+     * @returns {Array} Array of objects to be consumed by Word/PPTX runners
+     */
+    extractInlineStyles(text, baseFormat = {}) {
+        // Remove <br> for linear parsing
+        const cleanText = text.replace(/<br\s*\/?>/ig, '');
+
+        // Split by standard MD tokens and HTML spans
+        const parts = cleanText.split(/(<span\b[^>]*>.*?<\/span>|<u\b[^>]*>.*?<\/u>|<b>.*?<\/b>|<i>.*?<\/i>|\*\*.*?\*\*|\_.*?\_|\*.*?\*|<s\b[^>]*>.*?<\/s>|~~.*?~~)/ig);
+
+        return parts.filter(p => p.length > 0).map(part => {
+            let format = { ...baseFormat };
+            let innerText = part;
+
+            // Handle Span (Colors/Backgrounds)
+            if (part.toLowerCase().startsWith('<span')) {
+                const bgMatch = part.match(/background-color:\s*([^;]+)/i);
+                const colorMatch = part.match(/color:\s*([^;"]+)/i);
+                if (bgMatch) format.background = this.normalizeColor(bgMatch[1].trim());
+                if (colorMatch) format.color = this.normalizeColor(colorMatch[1].trim());
+
+                const contentMatch = part.match(/>(.*?)<\/span>/i);
+                if (contentMatch) innerText = contentMatch[1];
+            } else if (part.startsWith('**') && part.endsWith('**')) {
+                innerText = part.slice(2, -2);
+                format.bold = true;
+            } else if ((part.startsWith('_') && part.endsWith('_')) || (part.startsWith('*') && part.endsWith('*'))) {
+                innerText = part.slice(1, -1);
+                format.italic = true;
+            } else if (part.toLowerCase().startsWith('<u>') && part.toLowerCase().endsWith('</u>')) {
+                innerText = part.slice(3, -4);
+                format.underline = true;
+            } else if (part.toLowerCase().startsWith('<b>') && part.toLowerCase().endsWith('</b>')) {
+                innerText = part.slice(3, -4);
+                format.bold = true;
+            } else if (part.toLowerCase().startsWith('<i>') && part.toLowerCase().endsWith('</i>')) {
+                innerText = part.slice(3, -4);
+                format.italic = true;
+            } else if (part.startsWith('~~') && part.endsWith('~~') || (part.toLowerCase().startsWith('<s>') && part.toLowerCase().endsWith('</s>'))) {
+                innerText = part.startsWith('<') ? part.slice(3, -4) : part.slice(2, -2);
+                format.strike = true;
+            }
+
+            return {
+                text: innerText,
+                format: format
+            };
+        });
+    },
+
+    /**
+     * Converts rgb/rgba/hex# into a clean hex string without `#` for Word/PPT
+     * @param {string} colorString 
+     * @returns {string} Hexadecimal color value without '#'
+     */
+    normalizeColor(colorString) {
+        if (!colorString) return "000000";
+        if (colorString.startsWith('#')) {
+            let hex = colorString.replace('#', '');
+            if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+            return hex.toUpperCase();
+        } else if (colorString.startsWith('rgb')) {
+            const vals = colorString.match(/\d+/g);
+            if (vals && vals.length >= 3) {
+                const r = parseInt(vals[0]).toString(16).padStart(2, '0');
+                const g = parseInt(vals[1]).toString(16).padStart(2, '0');
+                const b = parseInt(vals[2]).toString(16).padStart(2, '0');
+                return (r + g + b).toUpperCase();
+            }
+        }
+        return colorString.toUpperCase();
+    },
+
+    /**
+     * Parses a generic Markdown string into an abstract syntax tree (AST).
+     * @param {string} markdown 
+     * @returns {Array} AST Array of block objects
+     */
+    parseToAST(markdown) {
+        if (!markdown) return [];
+        const lines = markdown.split('\n');
+        const ast = [];
+
+        let inTable = false;
+        let tableRows = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const rawLine = lines[i];
+            const line = rawLine.trim();
+
+            if (line.startsWith('|')) {
+                if (!inTable) {
+                    inTable = true;
+                    tableRows = [];
+                }
+                const cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+                if (cells.some(c => c.match(/^[-:]+$/))) continue; // skip dashes
+                tableRows.push(cells);
+            } else {
+                if (inTable) {
+                    if (tableRows.length > 0) ast.push({ type: 'table', rows: tableRows });
+                    inTable = false;
+                }
+
+                if (line === '') continue;
+
+                // Headers
+                const headerMatch = line.match(/^(#{1,6})\s+(.*)/);
+                if (headerMatch) {
+                    ast.push({
+                        type: 'header',
+                        level: headerMatch[1].length,
+                        text: headerMatch[2],
+                        runs: this.extractInlineStyles(headerMatch[2])
+                    });
+                    continue;
+                }
+
+                // Unordered List
+                const ulMatch = rawLine.match(/^(\s*)([-*])\s+(.*)/);
+                if (ulMatch) {
+                    const level = Math.floor(ulMatch[1].replace(/\t/g, '    ').length / 2);
+                    ast.push({
+                        type: 'list_item',
+                        listType: 'unordered',
+                        level: level,
+                        text: ulMatch[3],
+                        runs: this.extractInlineStyles(ulMatch[3])
+                    });
+                    continue;
+                }
+
+                // Ordered List
+                const olMatch = rawLine.match(/^(\s*)(\d+\.)\s+(.*)/);
+                if (olMatch) {
+                    const level = Math.floor(olMatch[1].replace(/\t/g, '    ').length / 2);
+                    ast.push({
+                        type: 'list_item',
+                        listType: 'ordered',
+                        level: level,
+                        text: olMatch[3],
+                        runs: this.extractInlineStyles(olMatch[3])
+                    });
+                    continue;
+                }
+
+                // Paragraph
+                ast.push({
+                    type: 'paragraph',
+                    text: line,
+                    runs: this.extractInlineStyles(line)
+                });
+            }
+        }
+
+        if (inTable && tableRows.length > 0) {
+            ast.push({ type: 'table', rows: tableRows });
+        }
+
+        return ast;
     }
 };

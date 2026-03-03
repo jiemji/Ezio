@@ -1,6 +1,7 @@
 import { store, currentForm } from '../core/State.js';
 import { registerModuleInit } from '../ui/Navigation.js';
 import { Utils } from '../core/Utils.js';
+import { DataUtils } from '../core/DataUtils.js';
 import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
@@ -53,12 +54,8 @@ function setupDelegation() {
         store.save();
     }, 500);
 
-    // 1. CLICK Delegation
-    els.main.onclick = (e) => {
-        const target = e.target;
-
-        // Buttons: Generate, Move, Remove, Collapse
-        if (target.classList.contains('btn-toggle-collapse')) {
+    const actionsRouter = {
+        'btn-toggle-collapse': (target) => {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             const idx = parseInt(target.dataset.idx);
             if (delivery && delivery.structure[idx]) {
@@ -72,44 +69,27 @@ function setupDelegation() {
 
                 target.innerText = !isCollapsed ? '▶' : '▼';
             }
-            return;
-        }
-
-        if (target.classList.contains('btn-generate')) {
+        },
+        'btn-generate': (target) => {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery) generateModule(delivery, parseInt(target.dataset.idx));
-            return;
-        }
-        if (target.classList.contains('btn-move-left')) {
+        },
+        'btn-move-left': (target) => {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery) moveModule(delivery, parseInt(target.dataset.idx), -1);
-            return;
-        }
-        if (target.classList.contains('btn-move-right')) {
+        },
+        'btn-move-right': (target) => {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery) moveModule(delivery, parseInt(target.dataset.idx), 1);
-            return;
-        }
-        if (target.classList.contains('btn-remove-mod')) {
+        },
+        'btn-remove-mod': (target) => {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery) removeModule(delivery, parseInt(target.dataset.idx));
-            return;
-        }
-
-        // Checkboxes: Chapter, SubChap, Col, FormatTable
-        if (target.classList.contains('chk-chapter')) {
-            handleChapterCheck(target);
-            return;
-        }
-        if (target.classList.contains('chk-subchap')) {
-            handleSubChapCheck(target);
-            return;
-        }
-        if (target.classList.contains('chk-col')) {
-            handleColCheck(target);
-            return;
-        }
-        if (target.classList.contains('chk-format-table')) {
+        },
+        'chk-chapter': (target) => handleChapterCheck(target),
+        'chk-subchap': (target) => handleSubChapCheck(target),
+        'chk-col': (target) => handleColCheck(target),
+        'chk-format-table': (target) => {
             const idx = parseInt(target.dataset.idx);
             const delivery = currentForm.reports.find(d => d.id === selection.id);
             if (delivery && delivery.structure[idx]) {
@@ -117,9 +97,8 @@ function setupDelegation() {
                 delivery.structure[idx].config.isTable = target.checked;
                 store.save();
             }
-            return;
-        }
-        if (target.classList.contains('chk-widget')) {
+        },
+        'chk-widget': (target) => {
             const idx = parseInt(target.dataset.idx);
             const widgetId = target.dataset.widgetid;
             const delivery = currentForm.reports.find(d => d.id === selection.id);
@@ -135,8 +114,21 @@ function setupDelegation() {
                 }
                 store.save();
             }
-            return;
         }
+    };
+
+    // 1. CLICK Delegation
+    els.main.onclick = (e) => {
+        const target = e.target;
+
+        // Route actions based on class list
+        for (const cls of target.classList) {
+            if (actionsRouter[cls]) {
+                actionsRouter[cls](target);
+                return;
+            }
+        }
+
         const btnFormat = target.closest('.btn-md-format');
         if (btnFormat) {
             const action = btnFormat.getAttribute('data-action');
@@ -555,7 +547,7 @@ async function generateModule(delivery, index) {
         const auditData = currentForm;
         if (!auditData.rows) throw new Error("Aucune donnée d'audit.");
 
-        const contextData = await buildContext(instance.config.scope, instance.config.columns, auditData);
+        const contextData = DataUtils.buildContext(instance.config.scope, instance.config.columns, auditData);
 
         const prompt = instance.config.ai.prompt || "Analyse ces données.";
         const modelKey = instance.config.ai.model;
@@ -602,70 +594,6 @@ async function generateModule(delivery, index) {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
-}
-
-export async function buildContext(scope, columnsIds, data) {
-    if (!data || !data.rows || !data.columns) return "";
-
-    // 1. Filtrer les colonnes à inclure
-    const colsToInclude = [];
-    data.columns.forEach((col, idx) => {
-        if (columnsIds.includes(col.id)) {
-            colsToInclude.push({ label: col.label, index: idx });
-        }
-    });
-
-    if (colsToInclude.length === 0) return "Aucune donnée (aucune colonne sélectionnée).";
-
-    // 2. Filtrer les lignes (Scope)
-    let rows = data.rows;
-    if (scope && scope.type === 'chapter' && scope.selection && scope.selection.length > 0) {
-        const chapColIdx = data.columns.findIndex(c => c.type === 'chapitre');
-        const subChapColIdx = data.columns.findIndex(c => c.type === 'sous-chapitre');
-
-        rows = rows.filter(row => {
-            const chap = row[chapColIdx];
-            const sub = row[subChapColIdx];
-            return scope.selection.includes(chap) || scope.selection.includes(sub);
-        });
-    }
-
-    if (rows.length === 0) return "Aucune donnée (aucun chapitre correspondant).";
-
-    // 3. Construire le Tableau Markdown
-    // Header
-    const headers = colsToInclude.map(c => c.label);
-    let md = "| " + headers.join(" | ") + " |\n";
-    md += "| " + headers.map(() => "---").join(" | ") + " |\n";
-
-    // Rows
-    rows.forEach(row => {
-        const cells = colsToInclude.map(c => {
-            let val = row[c.index];
-            const colDef = data.columns[c.index];
-
-            if (val === null || val === undefined) val = "";
-
-            // Handle Combo colors
-            if (colDef && colDef.type === 'combo' && colDef.params?.colorScheme && val) {
-                const options = colDef.params.options || [];
-                // Use the built-in function to get the color, or default to a safe value
-                const bg = Utils.getComboColor(colDef.params.colorScheme, val, options);
-                if (bg) {
-                    // Use a recognizable HTML span that the PPTX/Word parsers can potentially read later
-                    // But for strict MD, we just inject the background color string.
-                    val = `<span style="background-color:${bg};color:#fff;padding:2px 4px;border-radius:3px;">${val}</span>`;
-                }
-            }
-
-            // Nettoyage basique pour ne pas casser le tableau MD
-            val = String(val).replace(/\n/g, "<br>").replace(/\|/g, "\\|");
-            return val;
-        });
-        md += "| " + cells.join(" | ") + " |\n";
-    });
-
-    return md;
 }
 
 function handleAddDelivery() {
@@ -757,7 +685,7 @@ export async function downloadDeliveryReport(delivery) {
 
         if (inst.config?.isTable) {
             // Toujours régénérer le tableau à la volée pour avoir les dernières données et couleurs
-            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+            inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
 
             if (inst.contextTable) {
                 mdContent += `${inst.contextTable}\n\n---\n\n`;
