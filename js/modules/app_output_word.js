@@ -1,9 +1,11 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
-import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { DOM } from '../ui/DOM.js';
 import { currentForm, store } from '../core/State.js';
+import { downloadDeliveryWidgets } from './app_dashboard.js';
 import { DataUtils } from '../core/DataUtils.js';
 import { MarkdownUtils } from '../core/MarkdownUtils.js';
+import { IOManager } from '../core/IOManager.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -68,14 +70,15 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
 
         if (!templateBuffer) {
             // Cas simple : Pas de modèle, on télécharge directement le doc généré
-            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            IOManager.downloadBlob(tempBlob, Utils.toSlug(delivery.name) + ".docx");
             return;
         }
 
         // 3. Cas avec Modèle : Injection XML (Greffe)
         if (!window.JSZip) {
             UI.showToast("La librairie JSZip est manquante. Impossible d'utiliser le modèle.", "danger");
-            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            IOManager.downloadBlob(tempBlob, Utils.toSlug(delivery.name) + ".docx");
+            UI.showToast("Export Word sans modèle de référence généré.", "success");
             return;
         }
 
@@ -159,23 +162,12 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
 
         // f. Générer le fichier final
         const finalBlob = await templateZip.generateAsync({ type: "blob" });
-        downloadBlob(finalBlob, `${Utils.toSlug(delivery.name)}.docx`);
+        IOManager.downloadBlob(finalBlob, Utils.toSlug(delivery.name) + ".docx");
 
     } catch (e) {
         console.error("Erreur lors de la génération Word", e);
         UI.showToast("Erreur lors de la génération : " + e.message, "danger");
     }
-}
-
-function downloadBlob(blob, filename) {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
 }
 
 function parseMarkdownToDocx(mdText, docConfig) {

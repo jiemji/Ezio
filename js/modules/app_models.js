@@ -1,5 +1,7 @@
 import { registerModuleInit } from '../ui/Navigation.js';
 import { ApiService } from '../api/api_ia.js';
+import { store } from '../core/State.js';
+import { IOManager } from '../core/IOManager.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { Utils } from '../core/Utils.js';
 
@@ -150,7 +152,7 @@ function saveModelInMemory() {
 
 function saveModelsToFile() {
     if (currentModelIndex !== -1) saveModelInMemory();
-    Utils.downloadJSON(modelsData, 'models.json');
+    IOManager.downloadFile(JSON.stringify(modelsData, null, 2), 'models.json');
     showModelStatus("Fichier models.json généré.", "success");
 }
 

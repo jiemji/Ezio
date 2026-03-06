@@ -1,5 +1,6 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
+import { IOManager } from '../core/IOManager.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
 import { currentForm, store } from '../core/State.js';
 import { DataUtils } from '../core/DataUtils.js';
@@ -251,7 +252,7 @@ function drawMasterElements(pptx, slide, elements, placeholders, template) {
         // Remplacement placeholders uniquement si c'est du texte
         if (typeof text === 'string') {
             Object.keys(placeholders).forEach(key => {
-                text = text.replace(new RegExp(`{{${key}}}`, 'g'), placeholders[key]);
+                text = text.replace(new RegExp(`{ {${key} } } `, 'g'), placeholders[key]);
             });
         }
 

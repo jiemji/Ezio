@@ -1,7 +1,8 @@
 import { store, currentForm } from '../core/State.js';
 import { registerModuleInit } from '../ui/Navigation.js';
+import { UI } from '../core/UIFactory.js';
+import { IOManager } from '../core/IOManager.js';
 import { Utils } from '../core/Utils.js';
-import { DataUtils } from '../core/DataUtils.js';
 import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
@@ -43,6 +44,16 @@ async function renderDeliveriesModule() {
 
     renderSidebarList();
     renderMainView();
+
+    store.subscribe('deliveries', () => {
+        const deliveriesView = document.getElementById('deliveries-view');
+        if (deliveriesView && !deliveriesView.classList.contains('hidden')) {
+            renderSidebarList();
+            // Optional: checking if main needs full render
+            // renderMainView(); 
+        }
+    });
+
     setupDelegation(); // Attach delegated listeners once
 }
 
@@ -52,6 +63,7 @@ function setupDelegation() {
     // Debounced Save for text inputs
     const debouncedSave = Utils.debounce(() => {
         store.save();
+        // store.notify('deliveries') would rebuild DOM and lose focus, so we don't notify here
     }, 500);
 
     const actionsRouter = {
@@ -61,7 +73,7 @@ function setupDelegation() {
             if (delivery && delivery.structure[idx]) {
                 const isCollapsed = delivery.structure[idx].config.collapsed;
                 delivery.structure[idx].config.collapsed = !isCollapsed;
-                store.save(); // Save state
+                store.save(); store.notify('deliveries'); // Save state
 
                 // Direct DOM update
                 const wrapper = target.closest('.dlv-card-body').querySelector('.dlv-inputs-wrapper');
@@ -95,7 +107,7 @@ function setupDelegation() {
             if (delivery && delivery.structure[idx]) {
                 if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
                 delivery.structure[idx].config.isTable = target.checked;
-                store.save();
+                store.save(); store.notify('deliveries');
             }
         },
         'chk-widget': (target) => {
@@ -112,7 +124,7 @@ function setupDelegation() {
                 } else {
                     delivery.structure[idx].config.widgets = wList.filter(id => id !== widgetId);
                 }
-                store.save();
+                store.save(); store.notify('deliveries');
             }
         }
     };
@@ -140,12 +152,12 @@ function setupDelegation() {
         const btnAITool = target.closest('.btn-md-ai-tool');
         if (btnAITool) {
             const idx = parseInt(btnAITool.getAttribute('data-idx'));
-            const editor = els.main.querySelector(`#dlv-editor-${idx}`);
+            const editor = els.main.querySelector(`#dlv - editor - ${idx} `);
             MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
                 const delivery = currentForm.reports.find(d => d.id === selection.id);
                 if (delivery && delivery.structure[idx]) {
                     delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(newHtml);
-                    store.save();
+                    store.save(); store.notify('deliveries');
                 }
             });
             return;
@@ -161,7 +173,7 @@ function setupDelegation() {
         // Delivery Name
         if (target.id === 'inpDlvName') {
             delivery.name = target.value;
-            store.save();
+            store.save(); store.notify('deliveries');
             renderSidebarList();
             return;
         }
@@ -172,14 +184,14 @@ function setupDelegation() {
         // Prompt (also handled in input for debounce, but change ensures final save)
         if (target.classList.contains('txt-inst-prompt')) {
             delivery.structure[idx].config.ai.prompt = target.value;
-            store.save();
+            store.save(); store.notify('deliveries');
             return;
         }
 
         // Model
         if (target.classList.contains('slc-inst-model')) {
             delivery.structure[idx].config.ai.model = target.value;
-            store.save();
+            store.save(); store.notify('deliveries');
             return;
         }
 
@@ -189,7 +201,7 @@ function setupDelegation() {
             if (target.value === 'global') {
                 delivery.structure[idx].config.scope.selection = [];
             }
-            store.save();
+            store.save(); store.notify('deliveries');
             renderMainView();
             return;
         }
@@ -226,7 +238,7 @@ function setupDelegation() {
                 const idx = parseInt(card.dataset.idx);
                 if (delivery.structure[idx]) {
                     delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(target.innerHTML);
-                    store.save();
+                    store.save(); store.notify('deliveries');
                 }
             }
         }
@@ -237,7 +249,7 @@ function handleMdFormatting(action, idx) {
     const delivery = currentForm.reports.find(d => d.id === selection.id);
     if (!delivery) return;
 
-    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
+    const editor = els.main.querySelector(`#dlv - editor - ${idx} `);
     if (!editor) return;
 
     MarkdownEditor.handleFormatAction(action, editor);
@@ -245,7 +257,7 @@ function handleMdFormatting(action, idx) {
     // Save parsed Markdown back
     if (delivery.structure[idx]) {
         delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(editor.innerHTML);
-        store.save();
+        store.save(); store.notify('deliveries');
     }
 }
 
@@ -270,7 +282,7 @@ function handleChapterCheck(target) {
     }
 
     delivery.structure[idx].config.scope.selection = currentSelection;
-    store.save();
+    store.save(); store.notify('deliveries');
     renderMainView();
 }
 
@@ -289,7 +301,7 @@ function handleSubChapCheck(target) {
     }
 
     delivery.structure[idx].config.scope.selection = currentSelection;
-    store.save();
+    store.save(); store.notify('deliveries');
     renderMainView();
 }
 
@@ -308,17 +320,17 @@ function handleColCheck(target) {
     }
 
     delivery.structure[idx].config.columns = currentCols;
-    store.save();
+    store.save(); store.notify('deliveries');
 }
 function setupSidebar() {
     if (!els.sidebar) return;
 
     els.sidebar.innerHTML = `
-        <div class="dlv-sidebar-header">
-            <h3>Livrables</h3>
-        </div>
-        <div id="dlvSidebarContainer" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
-    `;
+    <div class="dlv-sidebar-header">
+        <h3>Livrables</h3>
+    </div>
+    <div id="dlvSidebarContainer" style="flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
+`;
 
     deliveriesSidebar = new Sidebar('dlvSidebarContainer', '', [], {
         listTitle: 'Mes Livrables',
@@ -329,9 +341,9 @@ function setupSidebar() {
             renderMainView();
         },
         itemRenderer: (item) => `
-            <span class="dlv-name">${Utils.escapeHtml(item.name)}</span>
-            <span class="dlv-date">${new Date(item.created).toLocaleDateString()}</span>
-        `
+    <span class="dlv-name">${Utils.escapeHtml(item.name)}</span>
+        <span class="dlv-date">${new Date(item.created).toLocaleDateString()}</span>
+`
     });
     deliveriesSidebar.render();
 }
@@ -373,9 +385,9 @@ function renderMainView() {
 
     if (!selection.id) {
         els.main.innerHTML = `
-            <div class="deliveries-empty-state">
-                <p>Sélectionnez un livrable pour voir son contenu ou en créer un nouveau.</p>
-            </div>`;
+    <div class="deliveries-empty-state">
+        <p>Sélectionnez un livrable pour voir son contenu ou en créer un nouveau.</p>
+    </div>`;
         return;
     }
 
@@ -383,15 +395,15 @@ function renderMainView() {
     if (!delivery) return;
 
     const headerHTML = `
-        <div class="dlv-editor-header">
-            <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
+    <div class="dlv-editor-header">
+        <input type="text" id="inpDlvName" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px;" value="${Utils.escapeHtml(delivery.name)}">
             <div class="dlv-actions">
                 <button id="btnDownloadReport" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
                 <button id="btnImpression" class="btn-primary small" style="margin-right:10px;">Impression</button>
                 <button id="btnDeleteDelivery" class="btn-danger small" style="margin-left:auto;">Supprimer</button>
             </div>
         </div>
-    `;
+`;
 
     let trackHTML = `<div class="dlv-horizontal-track">`;
     const instances = delivery.structure || [];
@@ -442,7 +454,7 @@ function renderMainView() {
         if (confirm("Supprimer ce livrable ?")) {
             currentForm.reports = currentForm.reports.filter(d => d.id !== selection.id);
             selection = { id: null };
-            store.save();
+            store.save(); store.notify('deliveries');
             renderSidebarList();
             renderMainView();
         }
@@ -518,21 +530,21 @@ function moveModule(delivery, index, direction) {
     const temp = delivery.structure[index];
     delivery.structure[index] = delivery.structure[index + direction];
     delivery.structure[index + direction] = temp;
-    store.save();
+    store.save(); store.notify('deliveries');
     renderMainView();
 }
 
 function removeModule(delivery, index) {
     if (confirm("Retirer ce module du livrable ?")) {
         delivery.structure.splice(index, 1);
-        store.save();
+        store.save(); store.notify('deliveries');
         renderMainView();
     }
 }
 
 async function generateModule(delivery, index) {
     const instance = delivery.structure[index];
-    const card = els.main.querySelector(`.dlv-card[data-idx="${index}"]`);
+    const card = els.main.querySelector(`.dlv - card[data - idx="${index}"]`);
     if (!card) return;
 
     const btn = card.querySelector('.btn-generate');
@@ -573,7 +585,7 @@ async function generateModule(delivery, index) {
         }
 
         instance.result = finalResult;
-        store.save();
+        store.save(); store.notify('deliveries');
 
         resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
         applyTableColumnWidths(resultContainer);
@@ -589,7 +601,7 @@ async function generateModule(delivery, index) {
 
     } catch (e) {
         console.error("Generation Error", e);
-        resultContainer.innerHTML = `<div style="color:var(--danger)">Erreur : ${e.message}</div>`;
+        resultContainer.innerHTML = `<div style="color:var(--danger)"> Erreur : ${e.message}</div>`;
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -599,18 +611,18 @@ async function generateModule(delivery, index) {
 function handleAddDelivery() {
 
     const listHTML = availableTemplates.map(t => `
-        <div class="template-item" data-id="${t.id}" style="padding:1rem; border-bottom:1px solid #eee; cursor:pointer;">
+    <div class="template-item" data-id="${t.id}" style="padding:1rem; border-bottom:1px solid #eee; cursor:pointer;">
             <strong>${Utils.escapeHtml(t.name)}</strong>
             <div style="font-size:0.8rem; color:#666;">${t.structure ? t.structure.length : 0} modules</div>
         </div>
     `).join('');
 
     const content = `
-        <p>Choisissez un modèle de rapport de base :</p>
+    <p>Choisissez un modèle de rapport de base:</p>
         <div class="dlv-template-list" style="max-height:400px; overflow-y:auto; border:1px solid #ddd;">
             ${listHTML || '<div style="padding:1rem;">Aucun modèle disponible.</div>'}
         </div>
-    `;
+`;
 
     const modal = new Modal('modalDlvTemplate', 'Nouveau Livrable', content);
     modal.render();
@@ -664,7 +676,7 @@ function createDeliveryFromTemplate(tplId) {
 
     if (!currentForm.reports) currentForm.reports = [];
     currentForm.reports.push(newDelivery);
-    store.save();
+    store.save(); store.notify('deliveries');
 
     selection = { id: newId };
     renderSidebarList();
@@ -674,31 +686,31 @@ function createDeliveryFromTemplate(tplId) {
 export async function downloadDeliveryReport(delivery) {
     if (!delivery || !delivery.structure) return;
 
-    let mdContent = `# ${delivery.name}\n\n`;
+    let mdContent = `# ${delivery.name} \n\n`;
 
     for (let i = 0; i < delivery.structure.length; i++) {
         const inst = delivery.structure[i];
         const title = inst.name || 'Module';
         const content = inst.result || '(Aucun contenu)';
 
-        mdContent += `## ${title}\n\n`;
+        mdContent += `## ${title} \n\n`;
 
         if (inst.config?.isTable) {
             // Toujours régénérer le tableau à la volée pour avoir les dernières données et couleurs
             inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
 
             if (inst.contextTable) {
-                mdContent += `${inst.contextTable}\n\n---\n\n`;
+                mdContent += `${inst.contextTable} \n\n-- -\n\n`;
             }
         }
 
-        mdContent += `${content}\n\n`;
-        mdContent += `---\n\n`;
+        mdContent += `${content} \n\n`;
+        mdContent += `-- -\n\n`;
     }
 
     // Save one last time in case contextTables were updated
-    store.save();
+    store.save(); store.notify('deliveries');
 
     const filename = `${Utils.toSlug(delivery.name)}.md`;
-    Utils.downloadFile(mdContent, filename, 'text/markdown');
+    IOManager.downloadFile(mdContent, filename, 'text/markdown');
 }

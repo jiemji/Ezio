@@ -37,7 +37,8 @@ export function updateWidgetChart(widget, currentForm) {
     // Check if type changed (requires destroy/recreate)
     if (chart.config.type !== newConfig.type) {
         chart.destroy();
-        const card = document.querySelector(`.widget-card[data-id="${widget.id}"]`);
+        // Fallback to widget-card if ezio-widget isn't active everywhere yet
+        const card = document.querySelector(`ezio-widget[data-id="${widget.id}"]`) || document.querySelector(`.widget-card[data-id="${widget.id}"]`);
         if (card) initWidgetChart(widget, card, currentForm);
         return;
     }

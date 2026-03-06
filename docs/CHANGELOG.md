@@ -2,6 +2,18 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.6.0] - 2026-03-06
+### Fiabilité et Standardisation Web (Axe 8 & Axe 9)
+- **Gestion Globale des Erreurs (Error Boundaries)** : Ajout d'intercepteurs d'erreurs globaux (`window.onerror` et `window.onunhandledrejection`) dans le cœur de l'application permettant d'afficher des notifications (Toasts) propres et d'éviter les crashs silencieux (écrans figés).
+- **Auto-réparation du Store** : Le `Store` détecte désormais les corruptions critiques des données JSON dans le `localStorage` au démarrage. Il isole automatiquement la sauvegarde corrompue et réinitialise l'application de manière sécurisée en prévenant l'utilisateur.
+- **Migration Web Components (Custom Elements)** : Introduction de véritables balises HTML personnalisées (`<ezio-toast>` et `<ezio-widget>`).
+  - L'affichage éphémère (Toasts) est géré de façon 100% autonome et isolée par son propre composant.
+  - La logique du Dashboard a été drastiquement simplifiée. La construction titanesque du DOM des Widgets est externalisée dans `<ezio-widget>`, favorisant un code JavaScript beaucoup plus lisible, déclaratif et réutilisable.
+- **Routage d'URL (Hash Navigation)** : Implémentation d'un routeur front-end natif écoutant les changements de `#hash` dans l'URL.
+  - L'application supporte dorénavant les boutons "Précédent" et "Suivant" du navigateur de manière fluide.
+  - Les modules (Audit, Dashboard, Livrables) disposent d'URLs partageables (`#audit`, `#dashboard`, etc.), permettant de recharger la page directement sur la vue souhaitée.
+  - Remplacement des fonctions programmatiques `switchView()` attachées aux boutons par de simples redirections d'URL (`window.location.hash`), offrant un comportement standardisé de "Single Page Application" (SPA).
+
 ## [2.5.0] - 2026-03-03
 ### Refactorisation et Architecture (Zero Régression)
 - **Découplage analytique (`WidgetDataTransformer.js` & `WidgetRenderer.js`)** : Le cœur du Dashboard a été scindé. La logique métier d'extraction des métriques d'audit est dorénavant isolée de la logique de dessin sur le canevas (Chart.js), allégeant considérablement `app_dashboard.js`.

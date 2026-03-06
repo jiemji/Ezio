@@ -2,6 +2,8 @@ import { Modal } from '../ui/Modal.js';
 import { downloadDeliveryWord } from './app_output_word.js';
 import { downloadDeliveryPpt } from './app_outputppt.js';
 import { UI } from '../core/UIFactory.js';
+import { IOManager } from '../core/IOManager.js';
+import { Utils } from '../core/Utils.js';
 
 /**
  * Affiche la popup d'impression

@@ -33,6 +33,11 @@ graph TD
         Toast[UIFactory.js]
     end
 
+    subgraph Components [Web Components natifs]
+        W_Toast["<ezio-toast>"]
+        W_Widget["<ezio-widget>"]
+    end
+
     subgraph Modules [Modules Fonctionnels]
         Audit[app_audit.js]
         Renderer[AuditRenderer.js]
@@ -43,6 +48,7 @@ graph TD
     subgraph Core [Cœur Applicatif]
         State[State.js]
         Logic[DataUtils.js]
+        IO[IOManager.js]
         Config[Config.js]
         API[api_ia.js]
     end
@@ -51,7 +57,7 @@ graph TD
     User -->|Clics/Saisie| Audit
     User -->|Navigation| Nav
     
-    Audit -->|Met à jour| State
+    Audit -->|Met à jour (Pub/Sub)| State
     Audit -->|Calcule| Logic
     Audit -->|Appelle IA| API
     Audit -->|Context| Renderer
@@ -61,6 +67,7 @@ graph TD
     
     Dlv -->|Lit| State
     Dlv -->|Génère Doc| API
+    Dash -->|Instancie| W_Widget
     
     State -->|Persistance| LocalStorage[(LocalStorage)]
     State -->|Notifie| Audit
@@ -78,7 +85,7 @@ graph TD
 *   `Schemas.js` : Validation et structures de données par défaut.
 
 ### UI & Navigation (`js/ui/`)
-*   `Navigation.js` : Orchestrateur des vues et initilialisation des modules.
+*   `Navigation.js` : **Vue Routeur**. Écoute les changements d'URL (`hashchange`) pour instancier et afficher le bon module, offrant un support natif de l'historique de navigation (Précédent/Suivant) et assurant des liens d'accès direct profonds (`#dashboard`, `#deliveries`).
 *   `Sidebar.js` : Gestionnaire générique de listes latérales.
 *   `Modal.js` : Service de fenêtres modales.
 *   `MarkdownEditor.js` : Composant d'édition de texte enrichi (WYSIWYG) avec barre d'outils et conversion Markdown. Utilisable en mode Standard (Livrables) ou Compact (Audit).

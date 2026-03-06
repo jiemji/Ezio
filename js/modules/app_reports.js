@@ -1,5 +1,6 @@
 import { registerModuleInit } from '../ui/Navigation.js';
-import { Sidebar } from '../ui/Sidebar.js';
+import { Config } from '../core/Config.js';
+import { IOManager } from '../core/IOManager.js';
 import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
 import { reportsStore, reportsData } from '../core/State.js';
@@ -28,7 +29,7 @@ async function renderReportsModule() {
     setupSidebar();
 
     // Subscribe to store updates to auto-refresh UI
-    reportsStore.subscribe(() => {
+    reportsStore.subscribe('reports', () => {
         // Only re-render if we are visible? 
         // For now, simple re-render of lists is enough
         renderSidebarLists();
@@ -127,7 +128,7 @@ function migrateReportsStructure() {
     });
 
     if (changed) {
-        reportsStore.set(newState);
+        reportsStore.set(newState, 'reports');
     }
 }
 
@@ -144,7 +145,7 @@ function saveToLocalStorage() {
     // and we might have mutated it directly in other functions (which is bad practice but common in legacy refactor),
     // we should ideally clone-modify-set. 
     // BUT, for this step, to be safe and ensure the Store saves:
-    reportsStore.set(reportsData);
+    reportsStore.set(reportsData, 'reports');
 
     // Note: The Store class handles the actual localStorage.setItem
 }
@@ -374,5 +375,5 @@ function downloadReportsJSON() {
         }
     });
 
-    Utils.downloadJSON(dataToExport, 'reports.json');
+    IOManager.downloadFile(JSON.stringify(dataToExport, null, 2), 'reports.json');
 }
