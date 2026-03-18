@@ -33,6 +33,11 @@ graph TD
         Toast[UIFactory.js]
     end
 
+    subgraph Components [Web Components natifs]
+        W_Toast["<ezio-toast>"]
+        W_Widget["<ezio-widget>"]
+    end
+
     subgraph Modules [Modules Fonctionnels]
         Audit[app_audit.js]
         Renderer[AuditRenderer.js]
@@ -43,6 +48,7 @@ graph TD
     subgraph Core [Cœur Applicatif]
         State[State.js]
         Logic[DataUtils.js]
+        IO[IOManager.js]
         Config[Config.js]
         API[api_ia.js]
     end
@@ -51,7 +57,7 @@ graph TD
     User -->|Clics/Saisie| Audit
     User -->|Navigation| Nav
     
-    Audit -->|Met à jour| State
+    Audit -->|Met à jour (Pub/Sub)| State
     Audit -->|Calcule| Logic
     Audit -->|Appelle IA| API
     Audit -->|Context| Renderer
@@ -61,6 +67,7 @@ graph TD
     
     Dlv -->|Lit| State
     Dlv -->|Génère Doc| API
+    Dash -->|Instancie| W_Widget
     
     State -->|Persistance| LocalStorage[(LocalStorage)]
     State -->|Notifie| Audit
@@ -78,7 +85,7 @@ graph TD
 *   `Schemas.js` : Validation et structures de données par défaut.
 
 ### UI & Navigation (`js/ui/`)
-*   `Navigation.js` : Orchestrateur des vues et initilialisation des modules.
+*   `Navigation.js` : **Vue Routeur**. Écoute les changements d'URL (`hashchange`) pour instancier et afficher le bon module, offrant un support natif de l'historique de navigation (Précédent/Suivant) et assurant des liens d'accès direct profonds (`#dashboard`, `#deliveries`).
 *   `Sidebar.js` : Gestionnaire générique de listes latérales.
 *   `Modal.js` : Service de fenêtres modales.
 *   `MarkdownEditor.js` : Composant d'édition de texte enrichi (WYSIWYG) avec barre d'outils et conversion Markdown. Utilisable en mode Standard (Livrables) ou Compact (Audit).
@@ -130,10 +137,11 @@ graph TD
     *   *Note :* L'export documentaire (Word/PPT) est désormais géré par le module Impression.
     *   Utilisation de l'API `Blob` pour générer le fichier et déclencher le téléchargement navigateur sans backend.
 73: 
-74: 9.  **Module Output Word (`app_output_word.js`)** :
-75:     *   **Export Word Avancé** : Génère des fichiers `.docx` depuis les données de l'application.
-76:     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
-77:     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
+
+9.  **Module Output Word (`app_output_word.js`)** :
+    *   **Export Word Avancé** : Génère des fichiers `.docx` depuis les données de l'application.
+    *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
+    *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
 10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
     *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.

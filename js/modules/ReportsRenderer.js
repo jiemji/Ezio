@@ -86,7 +86,7 @@ export const ReportsRenderer = {
         const aiPrompt = ai.prompt || '';
 
         const modelOptions = availableModels.map(m =>
-            `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom} (${m.provider})</option>`
+            `<option value="${m.nom}" ${m.nom === aiModel ? 'selected' : ''}>${m.nom} (${m.provider})</option>`
         ).join('');
 
         container.innerHTML = `
@@ -123,9 +123,9 @@ export const ReportsRenderer = {
                 <p class="text-muted" style="margin-bottom:1rem; font-size:0.9rem;">Ces réglages seront appliqués par défaut lorsque vous ajoutez ce module un à rapport.</p>
 
                 <div class="form-group">
-                    <label>Modèle IA</label>
+                    <label>Agent IA</label>
                     <select class="slc-mod-link-model form-control">
-                        <option value="">-- Choisir un modèle --</option>
+                        <option value="">-- Choisir un agent --</option>
                         ${modelOptions}
                     </select>
                 </div>

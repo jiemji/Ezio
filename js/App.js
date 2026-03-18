@@ -1,13 +1,18 @@
 import { DOM } from './ui/DOM.js';
 
 import { store, currentForm } from './core/State.js';
+import { IOManager } from './core/IOManager.js';
 import { Utils } from './core/Utils.js';
-import { switchView, registerModuleInit } from './ui/Navigation.js';
+import { switchView, registerModuleInit, initRouter } from './ui/Navigation.js';
 import { initNotes } from './ui/Notes.js';
 
 // Import Functional Modules (to register themselves)
 // Note: In a real module system, we might want to import them here to ensure they run.
 // usage: import './modules/app_audit.js';
+
+// Import Web Components
+import './components/EzioToast.js';
+import './components/EzioWidget.js';
 
 export const App = {
     init: async () => {
@@ -31,11 +36,11 @@ export const App = {
 
         // Wait for DOM (already waited by main.js usually)
 
-        // Default View
-        switchView('app');
+        // Initialize Router (this will trigger the first switchView based on URL)
+        initRouter();
 
         // 5. Subscribe to Store for Menu State
-        store.subscribe(() => {
+        store.subscribe('menu', () => {
             updateMenuState();
         });
         updateMenuState(); // Initial check
@@ -69,13 +74,29 @@ function updateMenuState() {
 }
 
 function setupGlobalListeners() {
+    // Global Error Boundaries (Axe 8)
+    window.addEventListener('error', (event) => {
+        console.error("Global Error Caught:", event.error || event.message);
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(`Erreur inattendue : ${event.message}`, 'error');
+        }
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error("Unhandled Promise Rejection:", event.reason);
+        if (window.UI && window.UI.showToast) {
+            const msg = event.reason?.message || "Erreur réseau ou promesse rejetée";
+            window.UI.showToast(`Erreur asynchrone : ${msg}`, 'error');
+        }
+    });
+
     // Navigation Buttons
-    DOM.btnShowCreator?.addEventListener('click', () => switchView('creator'));
-    DOM.btnShowApp?.addEventListener('click', () => switchView('app'));
-    DOM.btnShowDashboard?.addEventListener('click', () => switchView('dashboard'));
-    DOM.btnShowModels?.addEventListener('click', () => switchView('models'));
-    DOM.btnShowReports?.addEventListener('click', () => switchView('reports'));
-    DOM.btnShowDeliveries?.addEventListener('click', () => switchView('deliveries'));
+    DOM.btnShowCreator?.addEventListener('click', () => window.location.hash = 'creator');
+    DOM.btnShowApp?.addEventListener('click', () => window.location.hash = 'app');
+    DOM.btnShowDashboard?.addEventListener('click', () => window.location.hash = 'dashboard');
+    DOM.btnShowModels?.addEventListener('click', () => window.location.hash = 'models');
+    DOM.btnShowReports?.addEventListener('click', () => window.location.hash = 'reports');
+    DOM.btnShowDeliveries?.addEventListener('click', () => window.location.hash = 'deliveries');
 
     // Sidebar
     // Sidebar
@@ -167,8 +188,8 @@ function setupGlobalListeners() {
     if (DOM.saveBtn) {
         DOM.saveBtn.onclick = () => {
             store.save();
-            store.notify(); // Force UI update
-            Utils.downloadJSON(store.get(), 'ezio_data.json');
+            store.notify(); // Global trigger to sync everything
+            IOManager.downloadFile(JSON.stringify(store.get(), null, 2), 'ezio_data.json', 'application/json');
         };
     }
 }

@@ -6,7 +6,7 @@ export class Store {
     constructor(storageKey, initialState = {}) {
         this.key = storageKey;
         this.state = initialState;
-        this.listeners = [];
+        this.listeners = {}; // { topicName: [listeners...] }
         this.load();
     }
 
@@ -20,21 +20,23 @@ export class Store {
     /**
      * Replace entire state
      * @param {Object} newState 
+     * @param {string} topic Optional topic to notify
      */
-    set(newState) {
+    set(newState, topic = '*') {
         this.state = newState;
         this.save();
-        this.notify();
+        this.notify(topic);
     }
 
     /**
      * Update partial state (shallow merge)
      * @param {Object} partialState 
+     * @param {string} topic Optional topic to notify
      */
-    update(partialState) {
+    update(partialState, topic = '*') {
         this.state = { ...this.state, ...partialState };
         this.save();
-        this.notify();
+        this.notify(topic);
     }
 
     /**
@@ -48,7 +50,19 @@ export class Store {
                 // Merge with initial state to ensure structure
                 this.state = { ...this.state, ...parsed };
             } catch (e) {
-                console.error("Store: Error loading state", e);
+                console.error(`Store: Erreur critique lors du chargement de '${this.key}'. Les données sont corrompues.`, e);
+                // Sauvegarde de secours au cas où
+                localStorage.setItem(`${this.key}_backup_corrupted`, saved);
+                localStorage.removeItem(this.key);
+
+                // If UI is loaded, show a toast, else it will just reset cleanly
+                setTimeout(() => {
+                    if (window.UI && window.UI.showToast) {
+                        window.UI.showToast(`Les données de sauvegarde étaient corrompues et ont été réinitialisées.`, 'error');
+                    } else {
+                        alert("Erreur critique: Les données sauvegardées étaient corrompues. L'application a été réinitialisée.");
+                    }
+                }, 1000); // Slight delay to ensure UI is ready
             }
         }
     }
@@ -66,20 +80,48 @@ export class Store {
 
     /**
      * Subscribe to changes
-     * @param {Function} listener (state) => void
+     * @param {string|Function} topicOrListener Topic string or listener function (defaults to '*')
+     * @param {Function} [listenerFunc] Listener if topic is string
      * @returns {Function} unsubscribe function
      */
-    subscribe(listener) {
-        this.listeners.push(listener);
+    subscribe(topicOrListener, listenerFunc) {
+        let topic = '*';
+        let listener = topicOrListener;
+
+        if (typeof topicOrListener === 'string') {
+            topic = topicOrListener;
+            listener = listenerFunc;
+        }
+
+        if (!this.listeners[topic]) {
+            this.listeners[topic] = [];
+        }
+        this.listeners[topic].push(listener);
+
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            if (this.listeners[topic]) {
+                this.listeners[topic] = this.listeners[topic].filter(l => l !== listener);
+            }
         };
     }
 
     /**
-     * Notify all listeners
+     * Notify listeners of a specific topic, plus the global '*' listeners
+     * @param {string} topic 
      */
-    notify() {
-        this.listeners.forEach(listener => listener(this.state));
+    notify(topic = '*') {
+        const toNotify = new Set();
+
+        // Add specific topic listeners
+        if (this.listeners[topic]) {
+            this.listeners[topic].forEach(l => toNotify.add(l));
+        }
+
+        // Add global listeners if topic is not already '*'
+        if (topic !== '*' && this.listeners['*']) {
+            this.listeners['*'].forEach(l => toNotify.add(l));
+        }
+
+        toNotify.forEach(listener => listener(this.state, topic));
     }
 }

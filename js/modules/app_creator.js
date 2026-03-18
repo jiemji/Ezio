@@ -2,6 +2,8 @@ import { DOM } from '../ui/DOM.js';
 import { Utils } from '../core/Utils.js';
 import { store, currentForm } from '../core/State.js';
 import { switchView, registerModuleInit } from '../ui/Navigation.js';
+import { Config } from '../core/Config.js';
+import { IOManager } from '../core/IOManager.js';
 import { Modal } from '../ui/Modal.js';
 import { UI } from '../core/UIFactory.js';
 import { renderAudit } from './app_audit.js'; // Optional: for direct re-render if needed, or rely on stored subscription
@@ -20,24 +22,49 @@ export function initCreator() {
     const csvFileName = document.getElementById('csvFileName');
 
     if (csvInput) {
-        csvInput.onchange = (e) => {
+        csvInput.addEventListener('change', async function (e) {
             const file = e.target.files[0];
-            if (!file) return;
-            if (csvFileName) csvFileName.textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                try {
-                    const jsonData = JSON.parse(evt.target.result);
-                    parseImportJSON(jsonData);
-                    renderCreatorTable();
-                    renderCreatorTable();
-                } catch (err) {
-                    UI.showToast("Erreur de lecture du JSON : " + err.message, "danger");
-                    console.error(err);
+            if (!file) {
+                UI.showToast("Aucun fichier sélectionné.", "warning");
+                return;
+            }
+
+            try {
+                const formData = await IOManager.readJSON(file);
+                // Basic validation
+                if (!formData.name || !Array.isArray(formData.columns)) {
+                    throw new Error("Format de formulaire invalide.");
                 }
-            };
-            reader.readAsText(file, 'UTF-8');
-        };
+
+                // Assuming creatorData needs to be populated from formData
+                // This part is a guess based on the original parseImportJSON logic
+                // and the new formData structure.
+                creatorData.headers = formData.columns.map(c => c.label);
+                creatorData.rows = formData.rows || []; // Assuming rows might be part of formData
+                creatorData.configs = formData.columns.map(col => ({
+                    label: col.label,
+                    visible: col.visible !== false,
+                    type: col.type || 'question',
+                    params: col.params || {}
+                }));
+                formData.columns.forEach((col, idx) => {
+                    if (col.size) {
+                        if (!creatorData.configs[idx].params) creatorData.configs[idx].params = {};
+                        creatorData.configs[idx].params.size = col.size;
+                    }
+                });
+
+                renderCreatorTable(); // Assuming renderCreatorForm() is now renderCreatorTable()
+                const creatorConfigDiv = document.getElementById('creatorConfig');
+                if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
+
+                UI.showToast(`Formulaire "${formData.name}" importé avec succès.`, "success");
+
+            } catch (error) {
+                // Toast already shown by IOManager if JSON parse fails, but we can catch structural errors here
+                UI.showToast("Erreur d'import : " + error.message, "danger");
+            }
+        });
     }
 
     const btnOpenAddCol = document.getElementById('btnOpenAddCol');
@@ -388,10 +415,10 @@ function generateAndLoad() {
         rowMeta: new Array(finalRows.length).fill(0).map(() => ({}))
     };
 
-    Utils.downloadJSON(finalJson, 'audit_config.json');
-
+    IOManager.downloadFile(JSON.stringify(finalJson, null, 2), 'audit_config.json', 'application/json');
+    UI.showToast("Formulaire téléchargé ! Vous pouvez l'importer dans un nouvel audit.", "success");
     if (confirm("JSON généré ! Charger dans l'application ?")) {
-        store.set(finalJson);
+        store.set(finalJson, 'audit');
         switchView('app');
         // renderAudit() handled by subscription
     }

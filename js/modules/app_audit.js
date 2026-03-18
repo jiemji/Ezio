@@ -8,6 +8,7 @@ import { ApiService } from '../api/api_ia.js';
 import { Config } from '../core/Config.js';
 import { UI } from '../core/UIFactory.js';
 import { DataUtils } from '../core/DataUtils.js';
+import { IOManager } from '../core/IOManager.js';
 import { AuditRenderer } from './AuditRenderer.js';
 
 let activeFilters = { chapter: null, subChapter: null };
@@ -37,7 +38,7 @@ export function initAudit() {
     }
 
     // Global Listener for Store updates to re-render if visible
-    store.subscribe(() => {
+    store.subscribe('audit', () => {
         if (!DOM.auditView.classList.contains('hidden')) {
             renderAudit();
         }
@@ -88,21 +89,17 @@ function openLoadModal() {
     // Bind File Input
     const fileInput = document.getElementById('jsonInputModal');
     if (fileInput) {
-        fileInput.onchange = (e) => {
+        fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    applyLoadedData(data, "Fichier local chargé");
-                    modal.close();
-                    UI.showToast("Import réussi !", "success");
-                } catch (err) {
-                    UI.showToast("Erreur JSON: " + err.message, "danger");
-                }
-            };
-            reader.readAsText(file);
+            try {
+                const data = await IOManager.readJSON(file);
+                applyLoadedData(data, "Fichier local chargé");
+                modal.close();
+                UI.showToast("Import réussi !", "success");
+            } catch (err) {
+                // Toast already handled by IOManager, or we can leave this here
+            }
         };
     }
 
@@ -169,6 +166,7 @@ function applyLoadedData(data, message) {
 
     switchView('app');
     // renderAudit() will be called by subscription or switchView
+    store.notify('audit'); // Force render since we fully replaced state
 
     // UI Feedback
     const statusIndicator = document.getElementById('statusIndicator'); // Not in DOM.js yet, assume global or add

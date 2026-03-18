@@ -19,53 +19,68 @@ export class Modal {
         const existing = document.getElementById(this.id);
         if (existing) existing.remove();
 
+        // Background / Overlay
         const modal = document.createElement('div');
         modal.id = this.id;
         modal.className = 'modal';
         modal.style.display = 'block'; // Show immediately
 
-        const actionsHTML = this.actions.map((action, idx) => `
-            <button class="${action.class || 'btn-secondary'} action-btn-${idx}">${action.label}</button>
-        `).join('');
+        // Content Wrapper
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'modal-content';
 
-        modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h3>${Utils.escapeHtml(this.title)}</h3>
-                <div class="modal-body">${this.contentHTML}</div>
-                <div class="modal-actions">
-                    ${actionsHTML}
-                </div>
-            </div>
-        `;
+        // Close button
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-modal';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => this.close();
+
+        // Title
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = this.title;
+
+        // Body
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'modal-body';
+        if (typeof this.contentHTML === 'string') {
+            bodyDiv.innerHTML = this.contentHTML;
+        } else if (this.contentHTML instanceof HTMLElement) {
+            bodyDiv.appendChild(this.contentHTML);
+        }
+
+        // Actions
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'modal-actions';
+
+        this.actions.forEach((action) => {
+            const btn = document.createElement('button');
+            btn.className = action.class || 'btn-secondary';
+            btn.textContent = action.label;
+            if (action.onClick) {
+                btn.onclick = (e) => action.onClick(e, this);
+            }
+            actionsDiv.appendChild(btn);
+        });
+
+        // Assemble
+        contentDiv.appendChild(closeBtn);
+        contentDiv.appendChild(titleEl);
+        contentDiv.appendChild(bodyDiv);
+        contentDiv.appendChild(actionsDiv);
+        modal.appendChild(contentDiv);
 
         document.body.appendChild(modal);
         this.element = modal;
-
         this.bindEvents();
     }
 
     bindEvents() {
         if (!this.element) return;
 
-        // Close button
-        const closeBtn = this.element.querySelector('.close-modal');
-        if (closeBtn) {
-            closeBtn.onclick = () => this.close();
-        }
-
-        // Click outside to close
+        // Click outside to close (background overlay)
         window.addEventListener('click', (e) => {
             if (e.target === this.element) {
                 this.close();
-            }
-        });
-
-        // Action buttons
-        this.actions.forEach((action, idx) => {
-            const btn = this.element.querySelector(`.action-btn-${idx}`);
-            if (btn && action.onClick) {
-                btn.onclick = (e) => action.onClick(e, this);
             }
         });
     }

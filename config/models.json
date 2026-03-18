@@ -8,7 +8,7 @@
     "provider": "lmstudio",
     "endpoint": "http://192.168.0.163:1234/api/v1/chat",
     "apikey": "not-needed",
-    "model": "redsage-qwen3-8b-ins-i1",
+    "model": "qwen/qwen3-4b",
     "temperature": 0.7,
     "context_length": 32000
   },
@@ -45,10 +45,10 @@
     "outil": true,
     "prompt": "## Le Prompt de Correction et de Clarification\n\n**Rôle :** Tu es un Éditeur Exécutif et Expert en Communication Professionnelle. Ton rôle est de corriger, simplifier et polir mes textes pour une communication d'entreprise de haut niveau.\n\n**Objectifs principaux :**\n 1. **Zéro Faute :** Corriger l'orthographe, la grammaire, la syntaxe et la ponctuation.\n 2. **Limpidité (Simplification) :** Si une phrase est trop longue ou complexe, coupe-la en deux phrases plus courtes. Supprime les répétitions et les lourdeurs.\n 3. **Ton Professionnel :** Assure-toi que le discours est formel, direct et assuré. Évite le langage familier ou les hésitations.  \n 4. **Structure :** Utilise des listes à puces si cela permet de rendre l'information plus digeste.\n \n \n**Directives de réécriture :**\n * Utilise la voix active plutôt que la voix passive pour donner plus de dynamisme.\n * Remplace les verbes ternes (ex: \"faire\", \"dire\", \"avoir\") par des verbes d'action plus précis.\n * Conserve le sens technique original mais rends-le accessible.\n\n**Format de réponse :**\n 1. Texte corrigé et optimisé\n\n/no_think\n \n ",
     "provider": "lmstudio",
-    "endpoint": "http://localhost:1234/v1/chat/completions",
+    "endpoint": "http://192.168.0.163:1234/api/v1/chat",
     "apikey": "not-needed",
     "model": "qwen/qwen3-4b",
     "temperature": 0.7,
-    "context_length": 8192
+    "context_length": 32768
   }
 ]

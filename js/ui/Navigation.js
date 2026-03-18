@@ -11,7 +11,32 @@ export function registerModuleInit(name, initFn) {
     moduleInits[name] = initFn;
 }
 
-export function switchView(view) {
+export function initRouter() {
+    window.addEventListener('hashchange', handleHashChange);
+    // Initial load
+    handleHashChange();
+}
+
+function handleHashChange() {
+    let hash = window.location.hash.substring(1); // remove '#'
+    console.log('[Router] Hash changed to:', hash);
+    if (!hash) {
+        console.log('[Router] No hash, forcing to #app');
+        // Default route
+        hash = 'app';
+        // Force the hash in the URL immediately so history is consistent
+        window.history.replaceState(null, null, '#app');
+    }
+    console.log('[Router] Switching view to:', hash);
+    switchView(hash, true); // true = called by router, don't update hash again
+}
+
+export function switchView(view, fromRouter = false) {
+    if (!fromRouter) {
+        window.location.hash = view;
+        return; // The 'hashchange' event will trigger handleHashChange to do the actual switching
+    }
+
     // 1. Masquer toutes les VUES
     [DOM.auditView, DOM.creatorView, DOM.dashboardView, DOM.modelsView, DOM.reportsView, DOM.deliveriesView]
         .forEach(el => el && el.classList.add('hidden'));

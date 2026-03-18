@@ -79,10 +79,10 @@ export const DeliveriesRenderer = {
                                 <textarea class="form-control txt-inst-prompt" data-idx="${idx}" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
                             </div>
                             <div class="form-group">
-                                <label>Modèle IA</label>
+                                <label>Agent IA</label>
                                 <select class="form-control slc-inst-model" data-idx="${idx}">
                                     <option value="">-- Défaut --</option>
-                                    ${availableModels.map(m => `<option value="${m.model}" ${m.model === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
+                                    ${availableModels.map(m => `<option value="${m.nom}" ${m.nom === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
                                 </select>
                             </div>
                         </div>

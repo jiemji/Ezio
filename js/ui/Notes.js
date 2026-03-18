@@ -65,11 +65,11 @@ export function initNotes() {
 
         DOM.notesTextarea.oninput = (e) => {
             currentForm.notes = e.target.value;
-            store.update({ notes: e.target.value });
+            store.update({ notes: e.target.value }, 'notes');
         };
 
         // Subscribe to store updates to keep notes in sync if changed elsewhere
-        store.subscribe((state) => {
+        store.subscribe('notes', (state) => {
             if (document.activeElement !== DOM.notesTextarea) {
                 DOM.notesTextarea.value = state.notes || "";
             }

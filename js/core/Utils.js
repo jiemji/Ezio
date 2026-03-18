@@ -63,30 +63,28 @@ export const Utils = {
     },
 
     /**
-     * Download content as file
+     * Download content as file (DEPRECATED)
      * @param {string} content 
      * @param {string} filename 
      * @param {string} mimeType 
      */
     downloadFile: (content, filename, mimeType = 'text/plain') => {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        console.warn("Utils.downloadFile is deprecated. Use IOManager.downloadFile instead.");
+        import('./IOManager.js').then(({ IOManager }) => {
+            IOManager.downloadFile(content, filename, mimeType);
+        });
     },
 
     /**
-     * Download data as JSON file
+     * Download data as JSON file (DEPRECATED)
      * @param {Object} data 
      * @param {string} filename 
      */
     downloadJSON: (data, filename) => {
-        Utils.downloadFile(JSON.stringify(data, null, 2), filename, 'application/json');
+        console.warn("Utils.downloadJSON is deprecated. Use IOManager.downloadFile instead.");
+        import('./IOManager.js').then(({ IOManager }) => {
+            IOManager.downloadFile(JSON.stringify(data, null, 2), filename, 'application/json');
+        });
     },
 
     /**

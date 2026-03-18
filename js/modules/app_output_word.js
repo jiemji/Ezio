@@ -1,8 +1,11 @@
 import { Utils } from '../core/Utils.js';
 import { UI } from '../core/UIFactory.js';
-import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { DOM } from '../ui/DOM.js';
 import { currentForm, store } from '../core/State.js';
-import { buildContext } from './app_deliveries.js';
+import { downloadDeliveryWidgets } from './app_dashboard.js';
+import { DataUtils } from '../core/DataUtils.js';
+import { MarkdownUtils } from '../core/MarkdownUtils.js';
+import { IOManager } from '../core/IOManager.js';
 
 /**
  * Génère et télécharge le fichier Word pour un livrable donné.
@@ -38,7 +41,7 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
         );
 
         if (inst.config?.isTable) {
-            inst.contextTable = await buildContext(inst.config.scope, inst.config.columns, currentForm);
+            inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
                 allBlocks.push(...parseMarkdownToDocx(inst.contextTable, docConfig));
             }
@@ -67,14 +70,15 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
 
         if (!templateBuffer) {
             // Cas simple : Pas de modèle, on télécharge directement le doc généré
-            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            IOManager.downloadBlob(tempBlob, Utils.toSlug(delivery.name) + ".docx");
             return;
         }
 
         // 3. Cas avec Modèle : Injection XML (Greffe)
         if (!window.JSZip) {
             UI.showToast("La librairie JSZip est manquante. Impossible d'utiliser le modèle.", "danger");
-            downloadBlob(tempBlob, `${Utils.toSlug(delivery.name)}.docx`);
+            IOManager.downloadBlob(tempBlob, Utils.toSlug(delivery.name) + ".docx");
+            UI.showToast("Export Word sans modèle de référence généré.", "success");
             return;
         }
 
@@ -158,7 +162,7 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
 
         // f. Générer le fichier final
         const finalBlob = await templateZip.generateAsync({ type: "blob" });
-        downloadBlob(finalBlob, `${Utils.toSlug(delivery.name)}.docx`);
+        IOManager.downloadBlob(finalBlob, Utils.toSlug(delivery.name) + ".docx");
 
     } catch (e) {
         console.error("Erreur lors de la génération Word", e);
@@ -166,163 +170,82 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
     }
 }
 
-function downloadBlob(blob, filename) {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-}
-
 function parseMarkdownToDocx(mdText, docConfig) {
-    const lines = mdText.split('\n');
     const children = [];
-    let inTable = false;
-    let tableRows = [];
+    const ast = MarkdownUtils.parseToAST(mdText);
 
-    for (let i = 0; i < lines.length; i++) {
-        const rawLine = lines[i];
-        const line = rawLine.trim();
+    for (const block of ast) {
+        if (block.type === 'table') {
+            children.push(createDocxTable(block.rows, docConfig));
+        } else if (block.type === 'header') {
+            const hStyleMap = {
+                1: { style: docConfig?.styles?.h1 || window.docx.HeadingLevel.TITLE, spacing: { before: 400, after: 200 } },
+                2: { style: docConfig?.styles?.h2 || window.docx.HeadingLevel.HEADING_1, spacing: { before: 300, after: 150 } },
+                3: { style: docConfig?.styles?.h3 || window.docx.HeadingLevel.HEADING_2, spacing: { before: 200, after: 100 } },
+                4: { style: docConfig?.styles?.h4 || window.docx.HeadingLevel.HEADING_3, spacing: { before: 200, after: 100 } },
+                5: { style: docConfig?.styles?.h5 || window.docx.HeadingLevel.HEADING_4, spacing: { before: 200, after: 100 } },
+                6: { style: docConfig?.styles?.h6 || window.docx.HeadingLevel.HEADING_5, spacing: { before: 200, after: 100 } },
+            };
+            const config = hStyleMap[block.level] || hStyleMap[1];
 
-        if (line.startsWith('|')) {
-            if (!inTable) {
-                inTable = true;
-                tableRows = [];
-            }
-            // Parse table row
-            const cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+            children.push(new window.docx.Paragraph({
+                children: block.runs.map(r => new window.docx.TextRun({ text: r.text, color: r.format.color, shading: r.format.background ? { type: window.docx.ShadingType.CLEAR, color: r.format.background, fill: r.format.background } : undefined })),
+                style: typeof config.style === 'string' ? config.style : undefined,
+                heading: typeof config.style === 'string' ? undefined : config.style,
+                spacing: config.spacing
+            }));
+        } else if (block.type === 'list_item') {
+            const styleList = docConfig?.styles?.[block.listType === 'ordered' ? 'ol' : 'ul'];
+            let appliedStyle = undefined;
+            let appliedIndent = undefined;
 
-            // Ignore separator lines like |---|---|
-            if (cells.some(c => c.match(/^[-:]+$/))) continue;
-
-            tableRows.push(cells);
-        } else {
-            if (inTable) {
-                // End of table, generate docx table
-                if (tableRows.length > 0) {
-                    children.push(createDocxTable(tableRows, docConfig));
+            if (Array.isArray(styleList)) {
+                appliedStyle = styleList[Math.min(block.level, styleList.length - 1)];
+            } else if (typeof styleList === 'string') {
+                appliedStyle = styleList;
+                if (block.level > 0) {
+                    appliedIndent = { left: 720 * block.level };
                 }
-                inTable = false;
             }
 
-            if (line === '') continue;
-
-            if (line.startsWith('# ')) {
-                const styleH1 = docConfig?.styles?.h1 || window.docx.HeadingLevel.TITLE;
-                children.push(new window.docx.Paragraph({
-                    text: line.replace('# ', ''),
-                    style: typeof styleH1 === 'string' ? styleH1 : undefined,
-                    heading: typeof styleH1 === 'string' ? undefined : styleH1,
-                    spacing: { before: 400, after: 200 }
-                }));
-            } else if (line.startsWith('## ')) {
-                const styleH2 = docConfig?.styles?.h2 || window.docx.HeadingLevel.HEADING_1;
-                children.push(new window.docx.Paragraph({
-                    text: line.replace('## ', ''),
-                    style: typeof styleH2 === 'string' ? styleH2 : undefined,
-                    heading: typeof styleH2 === 'string' ? undefined : styleH2,
-                    spacing: { before: 300, after: 150 }
-                }));
-            } else if (line.startsWith('### ')) {
-                const styleH3 = docConfig?.styles?.h3 || window.docx.HeadingLevel.HEADING_2;
-                children.push(new window.docx.Paragraph({
-                    text: line.replace('### ', ''),
-                    style: typeof styleH3 === 'string' ? styleH3 : undefined,
-                    heading: typeof styleH3 === 'string' ? undefined : styleH3,
-                    spacing: { before: 200, after: 100 }
-                }));
-            } else if (line.startsWith('#### ')) {
-                const styleH4 = docConfig?.styles?.h4 || window.docx.HeadingLevel.HEADING_3;
-                children.push(new window.docx.Paragraph({
-                    text: line.replace('#### ', ''),
-                    style: typeof styleH4 === 'string' ? styleH4 : undefined,
-                    heading: typeof styleH4 === 'string' ? undefined : styleH4,
-                    spacing: { before: 200, after: 100 }
-                }));
-            } else if (line.startsWith('##### ')) {
-                const styleH5 = docConfig?.styles?.h5 || window.docx.HeadingLevel.HEADING_4;
-                children.push(new window.docx.Paragraph({
-                    text: line.replace('##### ', ''),
-                    style: typeof styleH5 === 'string' ? styleH5 : undefined,
-                    heading: typeof styleH5 === 'string' ? undefined : styleH5,
-                    spacing: { before: 200, after: 100 }
-                }));
-            } else if (rawLine.match(/^(\s*)[-*]\s+(.*)/)) {
-                const match = rawLine.match(/^(\s*)([-*])\s+(.*)/);
-                const spaces = match[1].replace(/\t/g, '    ').length;
-                const level = Math.floor(spaces / 2); // 2 spaces = 1 indent level
-
-                const styleUl = docConfig?.styles?.ul;
-                let appliedStyle = undefined;
-                let appliedIndent = undefined;
-
-                if (Array.isArray(styleUl)) {
-                    appliedStyle = styleUl[Math.min(level, styleUl.length - 1)];
-                } else if (typeof styleUl === 'string') {
-                    appliedStyle = styleUl;
-                    if (level > 0) {
-                        // 720 twips = 0.5 inches native indent
-                        appliedIndent = { left: 720 * level };
-                    }
-                }
-
-                const isCustom = !!appliedStyle;
-                const text = isCustom ? match[3] : line;
-
-                children.push(new window.docx.Paragraph({
-                    children: parseTextFormatting(text),
-                    style: appliedStyle,
-                    indent: appliedIndent,
-                    spacing: { after: 100 }
-                }));
-            } else if (rawLine.match(/^(\s*)\d+\.\s+(.*)/)) {
-                const match = rawLine.match(/^(\s*)(\d+\.)\s+(.*)/);
-                const spaces = match[1].replace(/\t/g, '    ').length;
-                const level = Math.floor(spaces / 2);
-
-                const styleOl = docConfig?.styles?.ol;
-                let appliedStyle = undefined;
-                let appliedIndent = undefined;
-
-                if (Array.isArray(styleOl)) {
-                    appliedStyle = styleOl[Math.min(level, styleOl.length - 1)];
-                } else if (typeof styleOl === 'string') {
-                    appliedStyle = styleOl;
-                    if (level > 0) {
-                        appliedIndent = { left: 720 * level };
-                    }
-                }
-
-                const isCustom = !!appliedStyle;
-                const text = isCustom ? match[3] : line;
-
-                children.push(new window.docx.Paragraph({
-                    children: parseTextFormatting(text),
-                    style: appliedStyle,
-                    indent: appliedIndent,
-                    spacing: { after: 100 }
-                }));
-            } else {
-                const styleP = docConfig?.styles?.p;
-                // Standard paragraph with bold parsing
-                children.push(new window.docx.Paragraph({
-                    children: parseTextFormatting(line),
-                    style: typeof styleP === 'string' ? styleP : undefined,
-                    spacing: { after: 100 }
-                }));
-            }
+            children.push(new window.docx.Paragraph({
+                children: convertRunsToDocx(block.runs),
+                style: appliedStyle,
+                indent: appliedIndent,
+                spacing: { after: 100 },
+                bullet: appliedStyle ? undefined : { level: block.level } // Fallback to basic bullet
+            }));
+        } else if (block.type === 'paragraph') {
+            const styleP = docConfig?.styles?.p;
+            children.push(new window.docx.Paragraph({
+                children: convertRunsToDocx(block.runs),
+                style: typeof styleP === 'string' ? styleP : undefined,
+                spacing: { after: 100 }
+            }));
         }
     }
 
-    // Handle table at very end of content
-    if (inTable && tableRows.length > 0) {
-        children.push(createDocxTable(tableRows, docConfig));
-    }
-
     return children;
+}
+
+function convertRunsToDocx(runs, baseColor, baseBold) {
+    if (!runs || runs.length === 0) return [new window.docx.TextRun({ text: "" })];
+    return runs.map(r => {
+        const tr = {
+            text: r.text,
+            bold: r.format.bold || baseBold,
+            italics: r.format.italic,
+            strike: r.format.strike,
+            underline: r.format.underline ? { type: window.docx.UnderlineType.SINGLE } : undefined,
+            color: r.format.color || baseColor,
+            shading: r.format.background ? {
+                type: window.docx.ShadingType.CLEAR,
+                color: r.format.background,
+                fill: r.format.background
+            } : undefined
+        };
+        return new window.docx.TextRun(tr);
+    });
 }
 
 function createDocxTable(rowsData, docConfig) {
@@ -358,37 +281,22 @@ function createDocxTable(rowsData, docConfig) {
                     let cellColor = isHeader ? headerColor : "000000";
                     let rawText = cellText;
 
-                    const spanMatch = rawText.match(/<span style="background-color:([^;]+);color:([^;]+);.*?">(.*?)<\/span>/i);
-                    if (spanMatch) {
-                        let extractedBg = spanMatch[1].trim();
-                        let extractedColor = spanMatch[2].trim();
+                    let runs = MarkdownUtils.extractInlineStyles(rawText);
 
-                        if (extractedBg.startsWith('#')) {
-                            cellFill = extractedBg.replace('#', '');
-                            if (cellFill.length === 3) {
-                                cellFill = cellFill.split('').map(c => c + c).join('');
-                            }
-                        } else if (extractedBg.startsWith('rgba') || extractedBg.startsWith('rgb')) {
-                            const rgbVals = extractedBg.match(/\d+/g);
-                            if (rgbVals && rgbVals.length >= 3) {
-                                const r = parseInt(rgbVals[0]).toString(16).padStart(2, '0');
-                                const g = parseInt(rgbVals[1]).toString(16).padStart(2, '0');
-                                const b = parseInt(rgbVals[2]).toString(16).padStart(2, '0');
-                                cellFill = (r + g + b).toUpperCase();
-                            }
-                        }
+                    // Cell Background priority: Span > Header > Alternating
+                    const bgRun = runs.find(r => r.format.background);
+                    if (bgRun) cellFill = bgRun.format.background;
 
-                        if (extractedColor.startsWith('#')) {
-                            cellColor = extractedColor.replace('#', '');
-                            if (cellColor.length === 3) {
-                                cellColor = cellColor.split('').map(c => c + c).join('');
-                            }
-                        }
-                        rawText = spanMatch[3];
-                    }
+                    // Remove background from runs since we apply it to the whole cell shading
+                    runs = runs.map(r => {
+                        const newFormat = { ...r.format };
+                        if (newFormat.color) cellColor = newFormat.color;
+                        delete newFormat.background;
+                        return { text: r.text, format: newFormat };
+                    });
 
                     return new window.docx.TableCell({
-                        children: parseMarkdownCell(rawText, docConfig, cellColor, isHeader),
+                        children: parseMarkdownCellText(rawText, docConfig, cellColor, isHeader),
                         shading: {
                             fill: cellFill
                         }
@@ -399,100 +307,36 @@ function createDocxTable(rowsData, docConfig) {
     });
 }
 
-function parseTextFormatting(text, baseColor, baseBold) {
-    // Nettoyer les balises <br> injectées par MarkdownUtils pour la persistance des sauts de ligne.
-    // Etant donné que l'export Word (.docx) gère déjà chaque `\n` comme un vrai Paragraphe distinct, 
-    // la balise est purement visuelle/markdown et doit être ignorée en texte brut.
-    const cleanText = text.replace(/<br\s*\/?>/ig, '');
-
-    // Parser for **bold**, _italic_, *italic*, <u>underline</u>, <s>strikethrough</s>
-    const parts = cleanText.split(/(<u\b[^>]*>.*?<\/u>|<b>.*?<\/b>|<i>.*?<\/i>|\*\*.*?\*\*|\_.*?\_|\*.*?\*|<s\b[^>]*>.*?<\/s>|~~.*?~~)/ig);
-
-    return parts.filter(p => p.length > 0).map(part => {
-        let isBold = baseBold;
-        let isItalic = false;
-        let isUnderline = false;
-        let isStrikethrough = false;
-        let innerText = part;
-
-        if (part.startsWith('**') && part.endsWith('**')) {
-            innerText = part.slice(2, -2);
-            isBold = true;
-        } else if ((part.startsWith('_') && part.endsWith('_')) || (part.startsWith('*') && part.endsWith('*'))) {
-            innerText = part.slice(1, -1);
-            isItalic = true;
-        } else if (part.toLowerCase().startsWith('<u>') && part.toLowerCase().endsWith('</u>')) {
-            innerText = part.slice(3, -4);
-            isUnderline = true;
-        } else if (part.toLowerCase().startsWith('<b>') && part.toLowerCase().endsWith('</b>')) {
-            innerText = part.slice(3, -4);
-            isBold = true;
-        } else if (part.toLowerCase().startsWith('<i>') && part.toLowerCase().endsWith('</i>')) {
-            innerText = part.slice(3, -4);
-            isItalic = true;
-        } else if (part.startsWith('~~') && part.endsWith('~~') || (part.toLowerCase().startsWith('<s>') && part.toLowerCase().endsWith('</s>'))) {
-            innerText = part.startsWith('<') ? part.slice(3, -4) : part.slice(2, -2);
-            isStrikethrough = true;
-        }
-
-        return new window.docx.TextRun({
-            text: innerText,
-            color: baseColor,
-            bold: isBold,
-            italics: isItalic,
-            strike: isStrikethrough,
-            underline: isUnderline ? { type: window.docx.UnderlineType.SINGLE } : undefined
-        });
-    });
-}
-
-function parseMarkdownCell(rawText, docConfig, cellColor, isHeader) {
+function parseMarkdownCellText(rawText, docConfig, cellColor, isHeader) {
+    // Basic split for multiline table cells
     const lines = rawText.split(/<br\s*\/?>|\n/i);
     const paragraphs = [];
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (!line && i === lines.length - 1) continue; // Skip trailing empty line
+        if (!line && i === lines.length - 1) continue;
 
         let appliedStyle = undefined;
         let bulletActive = false;
         let textToParse = line;
 
-        // Check for bullet points
         const matchUl = line.match(/^[-*]\s+(.*)/);
         if (matchUl) {
             bulletActive = true;
             textToParse = matchUl[1];
-            const styleUl = docConfig?.styles?.ul;
-            if (Array.isArray(styleUl)) {
-                appliedStyle = styleUl[0];
-            } else if (typeof styleUl === 'string') {
-                appliedStyle = styleUl;
-            }
         } else {
-            // Check for numbered lists
             const matchOl = line.match(/^(\d+\.)\s+(.*)/);
             if (matchOl) {
-                bulletActive = true; // Use simple bullet fallback
+                bulletActive = true;
                 textToParse = matchOl[2];
-                const styleOl = docConfig?.styles?.ol;
-                if (Array.isArray(styleOl)) {
-                    appliedStyle = styleOl[0];
-                } else if (typeof styleOl === 'string') {
-                    appliedStyle = styleOl;
-                }
             }
         }
 
         const pConfig = {
-            children: parseTextFormatting(textToParse, cellColor, isHeader)
+            children: convertRunsToDocx(MarkdownUtils.extractInlineStyles(textToParse), cellColor, isHeader)
         };
 
-        if (appliedStyle) {
-            pConfig.style = appliedStyle;
-        } else if (bulletActive) {
-            pConfig.bullet = { level: 0 };
-        }
+        if (bulletActive) pConfig.bullet = { level: 0 };
 
         paragraphs.push(new window.docx.Paragraph(pConfig));
     }

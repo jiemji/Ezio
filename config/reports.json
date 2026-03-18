@@ -43,7 +43,7 @@
           "type": "chapter"
         },
         "ai": {
-          "model": "redsage-qwen3-8b-ins-i1",
+          "model": "Relecture",
           "prompt": "Rédige une introduction formelle pour un rapport d'audit de sécurité, en résumant le contexte de l'organisation et les objectifs de l'audit."
         }
       }
@@ -58,7 +58,7 @@
           "type": "global"
         },
         "ai": {
-          "model": "redsage-qwen3-8b-ins-i1",
+          "model": "RedSage",
           "prompt": "Analyse les données fournies et évalue la conformité par rapport aux normes ISO 27001. Liste les points de non-conformité majeurs et mineurs."
         }
       }
@@ -73,7 +73,7 @@
           "type": "global"
         },
         "ai": {
-          "model": "redsage-qwen3-8b-ins-i1",
+          "model": "RedSage",
           "prompt": "Identifie les risques principaux basés sur les vulnérabilités détectées. Classe-les par criticité (Élevé, Moyen, Faible)."
         }
       }
@@ -88,7 +88,7 @@
           "type": "global"
         },
         "ai": {
-          "model": "gpt-4",
+          "model": "RedSage",
           "prompt": "Propose un plan d'action priorisé pour remédier aux non-conformités et réduire les risques identifiés."
         }
       }
