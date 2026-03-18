@@ -1,13 +1,13 @@
 [
     {
         "name": "Test Rapport",
-        "filename": "Test_rapport.json"
+        "filename": "GHI.json"
     },
-        {
+    {
         "name": "Audit ISO 27001 - SMSI",
         "filename": "ISO27002.json"
     },
-        {
+    {
         "name": "Audit ISO 42002 - SMIA",
         "filename": "ISO42001.json"
     }

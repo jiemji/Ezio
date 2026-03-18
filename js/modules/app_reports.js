@@ -3,6 +3,7 @@ import { Config } from '../core/Config.js';
 import { IOManager } from '../core/IOManager.js';
 import { Utils } from '../core/Utils.js';
 import { Modal } from '../ui/Modal.js';
+import { Sidebar } from '../ui/Sidebar.js';
 import { reportsStore, reportsData } from '../core/State.js';
 import { Schemas } from '../core/Schemas.js';
 import { ReportsRenderer } from './ReportsRenderer.js';
