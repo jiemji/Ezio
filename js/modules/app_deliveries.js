@@ -3,6 +3,7 @@ import { registerModuleInit } from '../ui/Navigation.js';
 import { UI } from '../core/UIFactory.js';
 import { IOManager } from '../core/IOManager.js';
 import { Utils } from '../core/Utils.js';
+import { DataUtils } from '../core/DataUtils.js';
 import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
@@ -152,7 +153,7 @@ function setupDelegation() {
         const btnAITool = target.closest('.btn-md-ai-tool');
         if (btnAITool) {
             const idx = parseInt(btnAITool.getAttribute('data-idx'));
-            const editor = els.main.querySelector(`#dlv - editor - ${idx} `);
+            const editor = els.main.querySelector(`#dlv-editor-${idx}`);
             MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
                 const delivery = currentForm.reports.find(d => d.id === selection.id);
                 if (delivery && delivery.structure[idx]) {
@@ -249,7 +250,7 @@ function handleMdFormatting(action, idx) {
     const delivery = currentForm.reports.find(d => d.id === selection.id);
     if (!delivery) return;
 
-    const editor = els.main.querySelector(`#dlv - editor - ${idx} `);
+    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
     if (!editor) return;
 
     MarkdownEditor.handleFormatAction(action, editor);
@@ -544,7 +545,7 @@ function removeModule(delivery, index) {
 
 async function generateModule(delivery, index) {
     const instance = delivery.structure[index];
-    const card = els.main.querySelector(`.dlv - card[data - idx="${index}"]`);
+    const card = els.main.querySelector(`.dlv-card[data-idx="${index}"]`);
     if (!card) return;
 
     const btn = card.querySelector('.btn-generate');
@@ -562,12 +563,12 @@ async function generateModule(delivery, index) {
         const contextData = DataUtils.buildContext(instance.config.scope, instance.config.columns, auditData);
 
         const prompt = instance.config.ai.prompt || "Analyse ces données.";
-        const modelKey = instance.config.ai.model;
+        const agentName = instance.config.ai.model;
 
-        if (!modelKey) throw new Error("Aucun modèle IA sélectionné.");
+        if (!agentName) throw new Error("Aucun agent IA sélectionné.");
 
-        const modelConfig = availableModels.find(m => m.model === modelKey);
-        if (!modelConfig) throw new Error(`Configuration du modèle '${modelKey}' introuvable.`);
+        const modelConfig = availableModels.find(m => m.nom === agentName);
+        if (!modelConfig) throw new Error(`Configuration de l'agent '${agentName}' introuvable.`);
 
         const messages = [
             { role: 'system', content: prompt },
