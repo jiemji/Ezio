@@ -6,7 +6,7 @@ import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { reportsStore, reportsData } from '../core/State.js';
 import { Schemas } from '../core/Schemas.js';
-import { ReportsRenderer } from './ReportsRenderer.js';
+import '../components/EzioReportEditor.js';
 
 let availableModels = [];
 let selection = { id: null, type: null };
@@ -165,89 +165,96 @@ function renderSidebarLists() {
 function renderMainView() {
     if (!els.main) return;
 
-    const context = {
-        selection,
-        data: {},
-        availableModels,
-        actions: {
-            onAddModuleToReport: () => {
-                const report = reportsData.reports.find(r => r.id === selection.id);
-                if (report) showAddModuleModal(report);
-            },
-            onDeleteReport: () => {
-                if (confirm('Supprimer ce modèle ?')) {
-                    reportsData.reports = reportsData.reports.filter(r => r.id !== selection.id);
-                    selection = { id: null, type: null };
-                    saveToLocalStorage();
-                    renderSidebarLists();
-                    renderMainView();
-                }
-            },
-            onMoveModule: (index, dir) => {
-                const report = reportsData.reports.find(r => r.id === selection.id);
-                if (report) {
-                    if (index + dir < 0 || index + dir >= report.structure.length) return;
-                    const temp = report.structure[index];
-                    report.structure[index] = report.structure[index + dir];
-                    report.structure[index + dir] = temp;
-                    saveToLocalStorage();
-                    renderMainView();
-                }
-            },
-            onRemoveModule: (index) => {
-                const report = reportsData.reports.find(r => r.id === selection.id);
-                if (report && confirm("Retirer ce module du modèle ?")) {
-                    report.structure.splice(index, 1);
-                    saveToLocalStorage();
-                    renderMainView();
-                }
-            },
-            onDeleteModule: () => {
-                if (confirm('Supprimer ce module ?')) {
-                    reportsData.modules = reportsData.modules.filter(m => m.id !== selection.id);
-                    reportsData.reports.forEach(r => {
-                        if (r.structure) {
-                            r.structure = r.structure.filter(inst => inst.sourceId !== selection.id);
-                        }
-                    });
-                    selection = { id: null, type: null };
-                    saveToLocalStorage();
-                    renderSidebarLists();
-                    renderMainView();
-                }
-            },
-            onUpdateReportName: (newName) => {
-                const report = reportsData.reports.find(r => r.id === selection.id);
-                if (report) {
-                    report.name = newName;
-                    saveToLocalStorage();
-                    renderSidebarLists();
-                }
-            },
-            onUpdateModule: (modData) => {
-                const module = reportsData.modules.find(m => m.id === selection.id);
-                if (module) {
-                    module.name = modData.name;
-                    module.type = modData.type;
-                    if (!module.config) module.config = { scope: {}, ai: {} };
-                    module.config.scope.type = modData.scopeType;
-                    module.config.ai.model = modData.aiModel;
-                    module.config.ai.prompt = modData.aiPrompt;
-                    saveToLocalStorage();
-                    renderSidebarLists();
-                }
-            }
-        }
-    };
-
+    const data = {};
     if (selection.type === 'report') {
-        context.data.report = reportsData.reports.find(r => r.id === selection.id);
-        context.data.modules = reportsData.modules;
+        data.report = reportsData.reports.find(r => r.id === selection.id);
+        data.modules = reportsData.modules;
     } else if (selection.type === 'module') {
-        context.data.module = reportsData.modules.find(m => m.id === selection.id);
+        data.module = reportsData.modules.find(m => m.id === selection.id);
     }
 
-    ReportsRenderer.render(els.main, context);
+    // Create or reuse the <ezio-report-editor>
+    els.main.innerHTML = '';
+    const editor = document.createElement('ezio-report-editor');
+    editor.config = { selection, data, availableModels };
+    els.main.appendChild(editor);
+
+    // Listen for custom events from the WC
+    editor.addEventListener('report-add-module', () => {
+        const report = reportsData.reports.find(r => r.id === selection.id);
+        if (report) showAddModuleModal(report);
+    });
+
+    editor.addEventListener('report-delete', () => {
+        if (confirm('Supprimer ce modèle ?')) {
+            reportsData.reports = reportsData.reports.filter(r => r.id !== selection.id);
+            selection = { id: null, type: null };
+            saveToLocalStorage();
+            renderSidebarLists();
+            renderMainView();
+        }
+    });
+
+    editor.addEventListener('report-move-module', (e) => {
+        const report = reportsData.reports.find(r => r.id === selection.id);
+        if (report) {
+            const { index, direction } = e.detail;
+            if (index + direction < 0 || index + direction >= report.structure.length) return;
+            const temp = report.structure[index];
+            report.structure[index] = report.structure[index + direction];
+            report.structure[index + direction] = temp;
+            saveToLocalStorage();
+            renderMainView();
+        }
+    });
+
+    editor.addEventListener('report-remove-module', (e) => {
+        const report = reportsData.reports.find(r => r.id === selection.id);
+        if (report && confirm('Retirer ce module du modèle ?')) {
+            report.structure.splice(e.detail.index, 1);
+            saveToLocalStorage();
+            renderMainView();
+        }
+    });
+
+    editor.addEventListener('report-name-change', (e) => {
+        const report = reportsData.reports.find(r => r.id === selection.id);
+        if (report) {
+            report.name = e.detail.name;
+            saveToLocalStorage();
+            renderSidebarLists();
+        }
+    });
+
+    editor.addEventListener('module-delete', () => {
+        if (confirm('Supprimer ce module ?')) {
+            reportsData.modules = reportsData.modules.filter(m => m.id !== selection.id);
+            reportsData.reports.forEach(r => {
+                if (r.structure) {
+                    r.structure = r.structure.filter(inst => inst.sourceId !== selection.id);
+                }
+            });
+            selection = { id: null, type: null };
+            saveToLocalStorage();
+            renderSidebarLists();
+            renderMainView();
+        }
+    });
+
+    editor.addEventListener('module-update', (e) => {
+        const module = reportsData.modules.find(m => m.id === selection.id);
+        if (module) {
+            const { name, type, scopeType, aiModel, aiPrompt } = e.detail;
+            module.name = name;
+            module.type = type;
+            if (!module.config) module.config = { scope: {}, ai: {} };
+            module.config.scope.type = scopeType;
+            module.config.ai.model = aiModel;
+            module.config.ai.prompt = aiPrompt;
+            saveToLocalStorage();
+            renderSidebarLists();
+        }
+    });
 }
 
 // Old render functions removed by ReportsRenderer refactor.
@@ -353,7 +360,7 @@ function showAddModuleModal(report) {
                 };
                 report.structure.push(instance);
                 saveToLocalStorage();
-                renderReportEditor(report.id);
+                renderMainView();
                 modal.close();
             };
         });

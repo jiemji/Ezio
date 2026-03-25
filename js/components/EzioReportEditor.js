@@ -1,41 +1,63 @@
 /**
- * EZIO - REPORTS RENDERER
- * Handles the generation of HTML and event delegation for the Reports and Modules views.
+ * EZIO - REPORT EDITOR WEB COMPONENT
+ * <ezio-report-editor> - Self-contained editor for reports and modules.
+ * Handles report template editing (module list + reorder) and module config editing.
+ *
+ * Properties:
+ *   .config - Set { selection, data, availableModels } to render
+ *
+ * Events (bubble to parent):
+ *   'report-add-module'    - { }
+ *   'report-delete'        - { }
+ *   'report-move-module'   - { index, direction }
+ *   'report-remove-module' - { index }
+ *   'report-name-change'   - { name }
+ *   'module-delete'        - { }
+ *   'module-update'        - { name, type, scopeType, aiModel, aiPrompt }
  */
 
 import { Utils } from '../core/Utils.js';
 
-export const ReportsRenderer = {
-    /**
-     * Render the main editor view for either a Report or a Module
-     * @param {HTMLElement} container - The DOM element to render into
-     * @param {Object} context - The context containing data and actions
-     */
-    render: (container, context) => {
-        if (!container) return;
+export class EzioReportEditor extends HTMLElement {
+    #selection = null;
+    #data = null;
+    #availableModels = [];
 
-        const { selection, data, actions, availableModels } = context;
+    constructor() {
+        super();
+    }
 
-        if (!selection.id) {
-            container.innerHTML = `
+    // --- Public API ---
+
+    set config({ selection, data, availableModels }) {
+        this.#selection = selection;
+        this.#data = data;
+        this.#availableModels = availableModels || [];
+        this.#render();
+    }
+
+    // --- Rendering ---
+
+    #render() {
+        if (!this.#selection?.id) {
+            this.innerHTML = `
                 <div class="reports-empty-state">
                     <p>Sélectionnez un rapport ou un module pour commencer.</p>
                 </div>`;
             return;
         }
 
-        if (selection.type === 'report') {
-            ReportsRenderer._renderReportEditor(container, data, actions);
-        } else if (selection.type === 'module') {
-            ReportsRenderer._renderModuleEditor(container, data, actions, availableModels);
+        if (this.#selection.type === 'report') {
+            this.#renderReportEditor();
+        } else if (this.#selection.type === 'module') {
+            this.#renderModuleEditor();
         }
 
-        // Setup Event Delegation
-        ReportsRenderer._setupEventDelegation(container, actions);
-    },
+        this.#bindEvents();
+    }
 
-    _renderReportEditor: (container, data, actions) => {
-        const { report, modules } = data;
+    #renderReportEditor() {
+        const { report, modules } = this.#data;
         if (!report) return;
 
         const headerHTML = `
@@ -69,14 +91,13 @@ export const ReportsRenderer = {
         }
         listHTML += `</div>`;
 
-        container.innerHTML = headerHTML + `<div class="rpt-editor-body vertical">${listHTML}</div>`;
-    },
+        this.innerHTML = headerHTML + `<div class="rpt-editor-body vertical">${listHTML}</div>`;
+    }
 
-    _renderModuleEditor: (container, data, actions, availableModels) => {
-        const { module } = data;
+    #renderModuleEditor() {
+        const { module } = this.#data;
         if (!module) return;
 
-        // Ensure defaults exist for rendering (they are forced in controller, but safer here)
         const config = module.config || {};
         const ai = config.ai || {};
         const scope = config.scope || {};
@@ -85,11 +106,11 @@ export const ReportsRenderer = {
         const aiModel = ai.model || '';
         const aiPrompt = ai.prompt || '';
 
-        const modelOptions = availableModels.map(m =>
+        const modelOptions = this.#availableModels.map(m =>
             `<option value="${m.nom}" ${m.nom === aiModel ? 'selected' : ''}>${m.nom} (${m.provider})</option>`
         ).join('');
 
-        container.innerHTML = `
+        this.innerHTML = `
             <div class="editor-container" style="padding: 2rem; max-width: 900px; margin: 0 auto;">
                 <header style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
                     <label class="form-label" style="display:block; color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Nom du module (Bibliothèque)</label>
@@ -140,74 +161,80 @@ export const ReportsRenderer = {
                 </div>
             </div>
         `;
-    },
+    }
 
-    _setupEventDelegation: (container, actions) => {
-        // Clear previous event listeners if any to avoid stacking
-        container.onclick = null;
-        container.onchange = null;
-        container.oninput = null;
+    // --- Internal event binding ---
 
-        container.onclick = (e) => {
+    #bindEvents() {
+        // CLICK delegation
+        this.addEventListener('click', (e) => {
             const target = e.target;
 
-            // Report Actions
             if (target.classList.contains('btn-add-mod-to-rpt')) {
-                actions.onAddModuleToReport();
+                this.#emit('report-add-module', {});
                 return;
             }
             if (target.classList.contains('btn-delete-report')) {
-                actions.onDeleteReport();
+                this.#emit('report-delete', {});
                 return;
             }
             if (target.classList.contains('btn-move-up')) {
-                actions.onMoveModule(parseInt(target.dataset.idx), -1);
+                this.#emit('report-move-module', { index: parseInt(target.dataset.idx), direction: -1 });
                 return;
             }
             if (target.classList.contains('btn-move-down')) {
-                actions.onMoveModule(parseInt(target.dataset.idx), 1);
+                this.#emit('report-move-module', { index: parseInt(target.dataset.idx), direction: 1 });
                 return;
             }
             if (target.classList.contains('btn-remove-mod')) {
-                actions.onRemoveModule(parseInt(target.dataset.idx));
+                this.#emit('report-remove-module', { index: parseInt(target.dataset.idx) });
                 return;
             }
-
-            // Module Actions
             if (target.classList.contains('btn-delete-module')) {
-                actions.onDeleteModule();
+                this.#emit('module-delete', {});
                 return;
             }
-        };
+        });
 
-        // Handle typing directly for inputs that should autosave (names)
-        container.onchange = (e) => {
+        // CHANGE delegation
+        this.addEventListener('change', (e) => {
             const target = e.target;
 
-            // Report Name
+            // Report name
             if (target.classList.contains('inp-rpt-name')) {
-                actions.onUpdateReportName(target.value);
+                this.#emit('report-name-change', { name: target.value });
                 return;
             }
 
-            // Module Fields
+            // Module fields — collect and emit all at once
             if (target.classList.contains('inp-mod-name') ||
                 target.classList.contains('slc-mod-type') ||
                 target.classList.contains('slc-mod-scope') ||
                 target.classList.contains('slc-mod-link-model') ||
                 target.classList.contains('txt-mod-prompt')
             ) {
-                // Collect all values at once
-                const modData = {
-                    name: container.querySelector('.inp-mod-name').value,
-                    type: container.querySelector('.slc-mod-type').value,
-                    scopeType: container.querySelector('.slc-mod-scope').value,
-                    aiModel: container.querySelector('.slc-mod-link-model').value,
-                    aiPrompt: container.querySelector('.txt-mod-prompt').value
-                };
-                actions.onUpdateModule(modData);
+                this.#emitModuleUpdate();
                 return;
             }
-        };
+        });
     }
-};
+
+    #emitModuleUpdate() {
+        const modData = {
+            name: this.querySelector('.inp-mod-name')?.value || '',
+            type: this.querySelector('.slc-mod-type')?.value || 'analysis',
+            scopeType: this.querySelector('.slc-mod-scope')?.value || 'global',
+            aiModel: this.querySelector('.slc-mod-link-model')?.value || '',
+            aiPrompt: this.querySelector('.txt-mod-prompt')?.value || ''
+        };
+        this.#emit('module-update', modData);
+    }
+
+    // --- Event emitter ---
+
+    #emit(name, detail) {
+        this.dispatchEvent(new CustomEvent(name, { bubbles: true, detail }));
+    }
+}
+
+customElements.define('ezio-report-editor', EzioReportEditor);
