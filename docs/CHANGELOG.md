@@ -2,6 +2,20 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.7.0] - 2026-03-26
+### Refactorisation Finales & Stabilité (Phase 6)
+- **Modularisation PowerPoint (`PptSlideBuilders.js`)** : La logique titanesque de construction des slides, de pagination et de rendu des tableaux a été extraite de `app_outputppt.js`. Ce dernier est désormais un orchestrateur léger (-70% de lignes de code).
+- **Spécialisation Datation (`AIContextBuilder.js`)** : Séparation nette entre le traitement des données (`DataUtils.js`) et la construction de contextes Markdown pour l'IA ou les rapports.
+- **Typage JSDoc Centralisé (`Types.js`)** : Introduction d'un système de types robuste pour `AuditData`, `Delivery`, `Column`, etc. Amélioration massive de l'auto-complétion et de la sécurité du code dans l'IDE.
+- **Consommation Unifiée** : Tous les formats d'export (Word, PPT) et le module Livrables utilisent désormais le même bâtisseur de contexte (`AIContextBuilder`).
+
+## [2.6.5] - 2026-03-25
+### Harmonisation UI & Sidebar (Phase 5)
+- **Composant Rapport (`<ezio-report-editor>`)** : Migration de l'éditeur de rapports vers un Web Component unifié, supprimant `ReportsRenderer.js`.
+- **Sidebar Audit (`AuditSidebar.js`)** : Extraction de la logique de navigation latérale et des filtres d'audit.
+- **Indicateur de Statut** : Déplacement de l'indicateur de lignes filtrées vers le haut de la sidebar pour une meilleure visibilité.
+- **Fix Layout Flexbox** : Correction d'un bug majeur de débordement CSS dans la grille d'audit qui masquait les dernières lignes du tableau.
+
 ## [2.6.0] - 2026-03-06
 ### Fiabilité et Standardisation Web (Axe 8 & Axe 9)
 - **Gestion Globale des Erreurs (Error Boundaries)** : Ajout d'intercepteurs d'erreurs globaux (`window.onerror` et `window.onunhandledrejection`) dans le cœur de l'application permettant d'afficher des notifications (Toasts) propres et d'éviter les crashs silencieux (écrans figés).

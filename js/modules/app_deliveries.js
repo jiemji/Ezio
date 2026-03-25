@@ -4,6 +4,7 @@ import { UI } from '../core/UIFactory.js';
 import { IOManager } from '../core/IOManager.js';
 import { Utils } from '../core/Utils.js';
 import { DataUtils } from '../core/DataUtils.js';
+import { AIContextBuilder } from '../core/AIContextBuilder.js';
 import { Modal } from '../ui/Modal.js';
 import { Sidebar } from '../ui/Sidebar.js';
 import { ApiService } from '../api/api_ia.js';
@@ -362,7 +363,7 @@ async function generateModule(delivery, index) {
         const auditData = currentForm;
         if (!auditData.rows) throw new Error("Aucune donnée d'audit.");
 
-        const contextData = DataUtils.buildContext(instance.config.scope, instance.config.columns, auditData);
+        const contextData = AIContextBuilder.buildTable(instance.config.scope, instance.config.columns, auditData);
 
         const prompt = instance.config.ai.prompt || "Analyse ces données.";
         const agentName = instance.config.ai.model;
@@ -508,7 +509,7 @@ export async function downloadDeliveryReport(delivery) {
 
         if (inst.config?.isTable) {
             // Toujours régénérer le tableau à la volée pour avoir les dernières données et couleurs
-            inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
+            inst.contextTable = AIContextBuilder.buildTable(inst.config.scope, inst.config.columns, currentForm);
 
             if (inst.contextTable) {
                 mdContent += `${inst.contextTable} \n\n-- -\n\n`;

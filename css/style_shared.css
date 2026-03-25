@@ -436,6 +436,18 @@ main {
     margin-bottom: 0.75rem;
 }
 
+.sidebar-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: -4px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+    line-height: 1.4;
+    word-break: break-word; /* Ensure long search strings don't force a horizontal scrollbar */
+}
+
 .sidebar-title {
     font-family: var(--font-heading);
     font-size: 0.7rem;
@@ -554,6 +566,7 @@ main {
 /* Base Table Styles (Socle commun pour Audit et Creator) */
 .table-responsive {
     flex: 1;
+    min-height: 0; /* Crucial: allows flex child to scroll instead of pushing parent height */
     overflow: auto;
     padding: 0 1.5rem 1.5rem 1.5rem;
     width: 100%;

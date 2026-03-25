@@ -96,7 +96,7 @@ Fichier maître situé à la racine.
 
 ### Implémentation Technique (`app_deliveries.js`)
 *   **Fonction Clé :** `generateModule(delivery, index)`
-*   **Helper :** `buildContext(scope, columns, data)`
+*   **Helper :** `AIContextBuilder.buildTable(scope, columns, data)` (Extrait en Phase 6)
     *   Filtre les colonnes (config module).
     *   Filtre les lignes (config scope).
     *   Génère une string Markdown (`| Header |\n| --- |\n| Cell |...`).

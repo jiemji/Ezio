@@ -1,11 +1,14 @@
-# Liste des tâches du projet (Ezio)
+# Phase 6 — Stabilité & Finitions
 
-- [x] Création du dossier .agents/artefacts accomplie
-- [x] Initialisation de `task.md`
-- [x] Initialisation de `implementation_plan.md`
-- [x] Génération de l'artefact `ARCHITECTURE_REVIEW.md` depuis `docs/`
-- [x] Génération de l'artefact `CHANGELOG.md` depuis `docs/`
-- [x] Génération de l'artefact `IA_IMPLEMENTATION.md` depuis `docs/`
-- [x] Génération de l'artefact `OUTPUT_CONFIG_GUIDE.md` depuis `docs/`
-- [x] Génération de l'artefact `PROJECT_KNOWLEDGE.md` depuis `docs/`
-- [x] Nettoyage et bascule du dossier par erreur `.agent/` vers `.agents/`
+- [x] Phase 6 — Axe 1 : Refactoring `app_outputppt.js`
+    - [x] Créer `js/modules/PptSlideBuilders.js`
+    - [x] Mettre à jour `app_outputppt.js`
+    - [x] Nettoyer `app_outputppt.js`
+- [x] Phase 6 — Axe 2 : Spécialisation de `DataUtils.js`
+    - [x] Créer `js/core/AIContextBuilder.js`
+    - [x] Migrer `buildContext` vers `AIContextBuilder.buildTable`
+    - [x] Mettre à jour les consommateurs (Deliverables, Word, PPT)
+- [x] Phase 6 — Axe 3 : Typage JSDoc
+    - [x] Créer `js/core/Types.js` pour centraliser les types
+    - [x] Ajouter les types JSDoc clés pour currentForm et les configurations PPT/Word
+    - [x] Documenter les nouveaux modules (Builders/Context)

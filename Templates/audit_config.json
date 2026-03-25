@@ -824,26 +824,6 @@
       ""
     ]
   ],
-  "statics": [
-    {
-      "id": "widget_1774470586938",
-      "title": "Analyse: Domaine",
-      "columnId": "conformite",
-      "crossColumnId": "domaine",
-      "vizType": "cross_stacked",
-      "showLabels": true,
-      "valueFormat": "percent"
-    },
-    {
-      "id": "widget_1774470631111",
-      "title": "Analyse: Conformité",
-      "columnId": "conformite",
-      "crossColumnId": "",
-      "vizType": "global_doughnut",
-      "showLabels": true,
-      "valueFormat": "raw"
-    }
-  ],
   "rowMeta": [
     {},
     {},
@@ -886,6 +866,37 @@
     {},
     {}
   ],
+  "statics": [
+    {
+      "id": "widget_1774470586938",
+      "title": "Analyse: Domaine",
+      "columnId": "conformite",
+      "crossColumnId": "domaine",
+      "vizType": "cross_stacked",
+      "showLabels": true,
+      "valueFormat": "percent"
+    },
+    {
+      "id": "widget_1774470631111",
+      "title": "Analyse: Conformité",
+      "columnId": "conformite",
+      "crossColumnId": "",
+      "vizType": "global_doughnut",
+      "showLabels": true,
+      "valueFormat": "raw"
+    },
+    {
+      "id": "widget_1774472165144",
+      "title": "Analyse: Conformité",
+      "columnId": "menace",
+      "crossColumnId": "typologie",
+      "vizType": "cross_stacked",
+      "showLabels": true,
+      "valueFormat": "percent"
+    }
+  ],
+  "notes": "",
+  "deliveries": [],
   "reports": [
     {
       "id": "dlv_1774470409539",
@@ -915,7 +926,8 @@
               "recommandation",
               "menace"
             ],
-            "widgets": []
+            "widgets": [],
+            "collapsed": true
           },
           "result": ""
         },

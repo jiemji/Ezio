@@ -48,6 +48,8 @@ graph TD
     subgraph Core [Cœur Applicatif]
         State[State.js]
         Logic[DataUtils.js]
+        AIContext[AIContextBuilder.js]
+        Types[Types.js]
         IO[IOManager.js]
         Config[Config.js]
         API[api_ia.js]
@@ -60,13 +62,15 @@ graph TD
     Audit -->|Met à jour (Pub/Sub)| State
     Audit -->|Calcule| Logic
     Audit -->|Appelle IA| API
-    Audit -->|Context| Renderer
+    Audit -->|Context| AIContext
     
     Renderer -->|Génère HTML| User
     Renderer -->|Bind Events| Audit
     
     Dlv -->|Lit| State
-    Dlv -->|Génère Doc| API
+    Dlv -->|Tableaux| AIContext
+    Dlv -->|IA| API
+    
     Dash -->|Instancie| W_Widget
     
     State -->|Persistance| LocalStorage[(LocalStorage)]
@@ -77,9 +81,11 @@ graph TD
 *   `index.html` : Point d'entrée unique. Charge le module principal via `<script type="module" src="js/main.js">`.
 *   `js/main.js` : Point d'entrée JavaScript. Initialise l'application et les modules.
 ### Core & Structure (`js/core/`)
-*   `State.js` : **État Global**. Singleton gérant les données de l'application (`currentForm`, `reportsStore`) et la persistance (`Store.js`).
+*   `State.js` : **État Global**. Singleton gérant les données de l'application (`currentForm`, `reportsStore`) et la persistance (`Store.js`). Gère le lien réactif avec les contrôleurs. Typé via JSDoc.
+*   `Types.js` : **Système de Types**. Centralisation des @typedef JSDoc pour sécuriser les manipulations de données.
 *   `Utils.js` : Helpers basiques (slugify, escapeHtml, **debounce**) et extensions de prototypes.
-*   `DataUtils.js` : **Logique Métier Pure**. Contient les algorithmes de tri, filtrage, recherche et traitement des données. Totalement découplé du DOM.
+*   `DataUtils.js` : **Logique Métier Pure**. Contient les algorithmes de tri et de filtrage.
+*   `AIContextBuilder.js` : **Bâtisseur de Contexte**. Spécialisé dans la génération de tableaux Markdown pour l'IA et les rapports.
 *   `UIFactory.js` : **Composants UI**. Bibliothèque de générateurs d'éléments (Boutons, Badges, Toasts) pour une UX cohérente. Remplace les `alert()` par des Toasts.
 *   `Config.js` : Constantes (Couleurs, Seuils, Valeurs par défaut).
 *   `Schemas.js` : Validation et structures de données par défaut.
@@ -143,15 +149,19 @@ graph TD
     *   **Support des Modèles** : Capable de charger un template utilisateur (`.docx`/`.dotx`), de parser son XML interne et d'injecter (greffer) le contenu généré à un emplacement spécifique (tag `{{CONTENT}}`), préservant ainsi toute la mise en page d'origine.
     *   **Librairies** : Utilise `docx` pour la génération de contenu et `JSZip` pour la manipulation des archives Word.
 
-10. **Module Impression & Output (`app_outputppt.js`, `app_output_word.js`)** :
+10. **Module Impression & Output** :
     *   **Interface Unifiée** : Bouton "Impression" dans le header ouvrant une modale de sélection de format (Word/PPT) et de modèle.
     *   **Configuration Centralisée** : Fichier `output_config.json` gérant à la fois les templates PowerPoint (`templates`) et les modèles Word (`documents`).
-    *   **Génération PPTX Avancée** : Crée des présentations PowerPoint natives via `PptxGenJS`. Supporte la création organique d'une slide de couverture (`TITRE`), d'intercalaires de sections (`CHAPITRE`), et de contenu (`SLIDE`). Le moteur inclut un algorithme de **Pagination Intelligente (Overflow)** qui scinde automatiquement les longs textes Markdown et génère de nouvelles diapositives à la volée. Intègre et formate automatiquement les Tableaux furtifs sur des slides dédiées. De plus, il garantit un **Rendu Markdown Fidèle** de l'éditeur riche en gérant nativement les puces, les indentations et les textes en gras `**` au niveau de la présentation PowerPoint.
+    *   **Génération PPTX Avancée** :
+        *   **Orchestrateur (`app_outputppt.js`)** : Gère le flux d'exportation et le téléchargement.
+        *   **Bâtisseur (`PptSlideBuilders.js`)** : Moteur de rendu scindé. Crée des présentations PowerPoint natives via `PptxGenJS`. Supporte la création organique d'une slide de couverture (`TITRE`), d'intercalaires de sections (`CHAPITRE`), et de contenu (`SLIDE`).
+        *   **Pagination Intelligente (Overflow)** : Algorithme scindant automatiquement les longs textes Markdown et générant de nouvelles diapositives à la volée.
+        *   **Rendu Markdown Fidèle** : Gère nativement les puces, les indentations et les textes en gras `**`.
     *   **Formatage des Tableaux (PPTX & Word)** :
-        *   Les cellules de type "Combo" (listes déroulantes) de l'Audit injectent automatiquement leur schéma de couleur (`colorScheme`) dans le code HTML Markdown.
-        *   Les moteurs Word et PPTX interceptent ces couleurs HTML à la volée, colorisant nativement l'arrière-plan des cellules exportées et adaptant la couleur de police pour un contraste optimal.
+        *   Les cellules de type "Combo" (listes déroulantes) de l'Audit injectent automatiquement leur schéma de couleur (`colorScheme`) dans le code HTML Markdown via `AIContextBuilder`.
+        *   Les moteurs Word et PPTX interceptent ces couleurs HTML à la volée, colorisant nativement l'arrière-plan des cellules exportées.
         *   `output_config.json` permet de structurer un objet `tableFormat` par template (en-tête, bordures, zébrage).
-    *   **Génération Word** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) à l'emplacement exact de la balise `{{CONTENU}}`. Remplace dynamiquement les variables `{{TITRE}}` et `{{DATE}}` y compris dans les en-têtes/pieds de page. Supporte le mapping complet des styles Markdown (titres, paragraphes, listes `ul`/`ol`) vers les IDs de styles natifs Word via la configuration `styles`.
+    *   **Génération Word (`app_output_word.js`)** : Injecte le contenu Markdown généré dans des modèles Word (`.docx`) à l'emplacement exact de la balise `{{CONTENU}}`. Remplace dynamiquement les variables `{{TITRE}}` et `{{DATE}}`. Supporte le mapping complet des styles Markdown.
     *   **Export Widgets** : Les graphiques sélectionnés parmi vos widgets Dashboard sont automatiquement téléchargés sous forme d'images PNG séparées lors de l'Impression Word ou PPT, proprement nommées et prêtes à être glissées dans vos documents.
 
 11. **Outil d'Extraction PowerPoint (`extract.html`)** :

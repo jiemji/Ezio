@@ -4,6 +4,7 @@ import { DOM } from '../ui/DOM.js';
 import { currentForm, store } from '../core/State.js';
 import { downloadDeliveryWidgets } from './app_dashboard.js';
 import { DataUtils } from '../core/DataUtils.js';
+import { AIContextBuilder } from '../core/AIContextBuilder.js';
 import { MarkdownUtils } from '../core/MarkdownUtils.js';
 import { IOManager } from '../core/IOManager.js';
 
@@ -41,7 +42,7 @@ export async function downloadDeliveryWord(delivery, templateBuffer, docConfig) 
         );
 
         if (inst.config?.isTable) {
-            inst.contextTable = DataUtils.buildContext(inst.config.scope, inst.config.columns, currentForm);
+            inst.contextTable = AIContextBuilder.buildTable(inst.config.scope, inst.config.columns, currentForm);
             if (inst.contextTable) {
                 allBlocks.push(...parseMarkdownToDocx(inst.contextTable, docConfig));
             }

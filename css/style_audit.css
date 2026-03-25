@@ -11,6 +11,19 @@
     background: var(--bg-color);
 }
 
+.status-bar {
+    padding: 8px 16px;
+    background: var(--bg-color);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-height: 36px;
+    flex-shrink: 0;
+}
+
 /* Column Sizing */
 .col-s {
     width: 100px;

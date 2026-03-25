@@ -27,51 +27,52 @@ Ezio/
 ├── index.html              # SPA – point d'entrée unique
 ├── extract.html            # Utilitaire autonome d'extraction PPTX
 ├── js/
-│   ├── main.js             # Bootstrap
-│   ├── App.js              # Orchestrateur principal
-│   ├── core/               # Cœur applicatif (9 fichiers)
-│   │   ├── State.js        # Singleton d'état global
-│   │   ├── Store.js        # Persistance localStorage + auto-réparation
-│   │   ├── Config.js       # Constantes, couleurs, seuils
-│   │   ├── Schemas.js      # Validation JSON
-│   │   ├── DataUtils.js    # Logique métier pure (tri, filtre, contexte MD)
-│   │   ├── MarkdownUtils.js# AST Markdown + conversion HTML↔MD
-│   │   ├── IOManager.js    # Lectures/écritures fichiers centralisées
-│   │   ├── UIFactory.js    # Composants UI (boutons, badges, toasts)
-│   │   └── Utils.js        # Helpers (slugify, escapeHtml, debounce)
-│   ├── ui/                 # Couche interface (6 fichiers)
-│   │   ├── Navigation.js   # Hash-router SPA (#audit, #dashboard…)
-│   │   ├── Sidebar.js      # Menu latéral rétractable
-│   │   ├── Modal.js        # Service de modales
-│   │   ├── MarkdownEditor.js # Éditeur riche WYSIWYG ↔ Markdown
-│   │   ├── Notes.js        # Gestion des notes
-│   │   └── DOM.js          # Cache de sélecteurs DOM
-│   ├── api/
-│   │   └── api_ia.js       # Abstraction multi-provider (LM Studio, OpenAI, Groq)
-│   ├── components/         # Web Components natifs
-│   │   ├── EzioToast.js    # <ezio-toast>
-│   │   └── EzioWidget.js   # <ezio-widget>
-│   └── modules/            # Modules fonctionnels (15 fichiers)
-│       ├── app_audit.js & AuditRenderer.js     # Grille d'audit (MVC)
-│       ├── app_dashboard.js                    # KPIs + Chart.js
-│       ├── WidgetDataTransformer.js & WidgetRenderer.js # Données → Canvas
-│       ├── app_deliveries.js & DeliveriesRenderer.js    # Livrables IA
-│       ├── app_reports.js & ReportsRenderer.js          # Templates de rapports
-│       ├── app_creator.js                      # Constructeur de formulaires
-│       ├── app_models.js                       # Gestion des modèles IA
-│       ├── app_export.js                       # Export JSON/CSV
-│       ├── app_output_word.js                  # Export Word (.docx)
-│       ├── app_outputppt.js                    # Export PowerPoint (.pptx)
-│       └── app_impression_logic.js             # Orchestrateur d'impression
+30: │   ├── main.js             # Bootstrap
+31: │   ├── App.js              # Orchestrateur principal
+32: │   ├── core/               # Cœur applicatif (11 fichiers)
+33: │   │   ├── State.js        # Singleton d'état global
+34: │   │   ├── Store.js        # Persistance localStorage + auto-réparation
+35: │   │   ├── Config.js       # Constantes, couleurs, seuils
+36: │   │   ├── Schemas.js      # Validation JSON
+37: │   │   ├── DataUtils.js    # Logique métier pure (tri, filtre)
+38: │   │   ├── AIContextBuilder.js # Bâtisseur de contexte IA & Rapports (Phase 6)
+39: │   │   ├── Types.js        # Centralisation JSDoc (Phase 6)
+40: │   │   ├── MarkdownUtils.js# AST Markdown + conversion HTML↔MD
+41: │   │   ├── IOManager.js    # Lectures/écritures fichiers centralisées
+42: │   │   ├── UIFactory.js    # Composants UI (boutons, badges, toasts)
+43: │   │   └── Utils.js        # Helpers (slugify, escapeHtml, debounce)
+44: │   ├── ui/                 # Couche interface (5 fichiers)
+45: │   │   ├── Navigation.js   # Hash-router SPA (#audit, #dashboard…)
+46: │   │   ├── Sidebar.js      # Menu latéral rétractable
+47: │   │   ├── Modal.js        # Service de modales
+48: │   │   ├── Notes.js        # Gestion des notes
+49: │   │   └── DOM.js          # Cache de sélecteurs DOM
+50: │   ├── api/
+51: │   │   └── api_ia.js       # Abstraction multi-provider (LM Studio, OpenAI, Groq)
+52: │   ├── components/         # Web Components natifs
+53: │   │   ├── EzioToast.js    # <ezio-toast>
+54: │   │   ├── EzioWidget.js   # <ezio-widget>
+55: │   │   ├── EzioMarkdownEditor.js  # <ezio-markdown-editor>
+56: │   │   ├── EzioDeliveryCard.js    # <ezio-delivery-card>
+57: │   │   └── EzioReportEditor.js    # <ezio-report-editor>
+58: │   └── modules/            # Modules fonctionnels (13 fichiers)
+59: │       ├── app_audit.js                        # Orchestrateur Grille d'audit
+60: │       ├── AuditRenderer.js                    # Rendu de la grille (MVC)
+61: │       ├── AuditSidebar.js                     # Menu hiérarchique & state des filtres
+62: │       ├── app_dashboard.js                    # KPIs + Chart.js
+63: │       ├── WidgetDataTransformer.js & WidgetRenderer.js # Données → Canvas
+64: │       ├── app_deliveries.js                          # Livrables IA
+65: │       ├── app_reports.js                             # Templates de rapports
+66: │       ├── app_creator.js                      # Constructeur de formulaires
+67: │       ├── app_models.js                       # Gestion des modèles IA
+68: │       ├── app_export.js                       # Export JSON/CSV
+69: │       ├── app_output_word.js                  # Export Word (.docx)
+70: │       ├── app_outputppt.js                    # Export PowerPoint (Orchestrateur)
+71: │       ├── PptSlideBuilders.js                 # Export PowerPoint (Bâtisseur) (Phase 6)
+72: │       └── app_impression_logic.js             # Orchestrateur d'impression
 ├── css/                    # 7 feuilles (shared + par module)
 ├── config/                 # Fichiers de configuration
-│   ├── models.json         # Modèles IA (providers, prompts, endpoints)
-│   ├── reports.json        # Templates de rapports (listes de modules)
-│   ├── output_config.json  # Config export Word/PPT (masters, styles, tableaux)
-│   ├── formats.json        # Formats disponibles
-│   └── templates.json      # Références de templates
 ├── templates/              # Fichiers d'audit pré-remplis (ISO27002, ISO42001, GHI…)
-├── tools/                  # Utilitaires Excel (Xls2Ezio.xlsm, mockup)
 └── docs/                   # Documentation technique (5 fichiers)
 ```
 
@@ -93,56 +94,13 @@ Ezio/
 
 ---
 
-## Flux IA
-
-1. **Audit (ligne par ligne)** : System prompt (`models.json`) + User prompt (colonne) + contexte JSON de la ligne → réponse dans la cellule IA.
-2. **Livrables (batch)** : Scope (global ou chapitre) → filtre colonnes → génération d'un tableau Markdown → envoi à l'IA → résultat dans l'éditeur WYSIWYG.
-3. **Outils IA** : Modèles marqués `outil: true` → baguette magique dans l'éditeur Markdown (traduction, correction…).
-4. **Adaptateur LM Studio** : Payload structuré `{ type: "text" }` pour contourner les limitations des petits modèles locaux.
-
----
-
-## Données — Structure JSON (`currentForm`)
-
-```
-currentForm
-├── columns[]        # Définitions (id, label, type, params, colorScheme…)
-├── rows[][]         # Valeurs (tableau de tableaux)
-├── rowMeta[]        # Métadonnées (isAdded pour les lignes clonées)
-├── statics[]        # Widgets du Dashboard (vizType, columnId…)
-└── deliveries[]     # Instances de rapports (structure de modules + résultats IA)
-```
-
----
-
-## Design & UX
-
-- **Thème premium** : palette Midnight/Indigo (sombre) et Beige/Sable/Rose poudré (clair)
-- **Hash Navigation** : routeur SPA natif (`#audit`, `#dashboard`, `#deliveries`…)
-- **Sidebar rétractable** avec handle hover + épinglage
-- **Web Components** : `<ezio-toast>`, `<ezio-widget>` pour isolation et réutilisabilité
-- **Délégation d'événements** généralisée pour la performance sur de gros jeux de données
-
----
-
-## État du Refactoring
+## Bilan du Refactoring
 
 | Phase | Statut | Points clés |
 |---|---|---|
 | Phase 1 | ✅ Complète | AST Markdown mutualisé, découplage Dashboard (MVC), Action Router livrables |
 | Phase 2 | ✅ Complète | Store Pub/Sub, IOManager centralisé, UIFactory enrichie |
 | Phase 3 | ✅ Partielle | Error Boundaries ✅, Web Components ✅, JSDoc abandonné |
-| Phase 4 | 📋 Proposée | MarkdownEditor → Web Component, Refonte Créateur, Cartes Livrables WC |
-
----
-
-## Documentation Existante
-
-| Fichier | Contenu |
-|---|---|
-| [PROJECT_KNOWLEDGE.md](file:///g:/devapps/Ezio/docs/PROJECT_KNOWLEDGE.md) | Architecture complète, stack, structure JSON, détails IA |
-| [ARCHITECTURE_REVIEW.md](file:///g:/devapps/Ezio/docs/ARCHITECTURE_REVIEW.md) | Axes de refactoring Phases 1→4 |
-| [IA_IMPLEMENTATION.md](file:///g:/devapps/Ezio/docs/IA_IMPLEMENTATION.md) | Spécifications fonctionnelles & techniques de l'IA |
-| [OUTPUT_CONFIG_GUIDE.md](file:///g:/devapps/Ezio/docs/OUTPUT_CONFIG_GUIDE.md) | Guide de configuration exports Word/PPT |
-| [CHANGELOG.md](file:///g:/devapps/Ezio/docs/CHANGELOG.md) | Historique des versions (v1.0 → v2.6) |
-| [documentation.html](file:///g:/devapps/Ezio/docs/documentation.html) | Documentation HTML embarquée |
+| Phase 4 | ✅ Complète | `<ezio-markdown-editor>` WC, `<ezio-delivery-card>` WC, Nettoyage Créateur |
+| Phase 5 | ✅ Complète | `<ezio-report-editor>` WC, extraction `AuditSidebar.js` (`app_audit.js` -32%) |
+| Phase 6 | ✅ Complète | Modularisation PPT, spécialisation AIContext, Typage JSDoc |
