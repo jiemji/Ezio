@@ -10,9 +10,7 @@ import { ApiService } from '../api/api_ia.js';
 import { downloadDeliveryWord } from './app_output_word.js';
 import { downloadDeliveryPpt } from './app_outputppt.js';
 import { showImpressionPopup } from './app_impression_logic.js';
-import { MarkdownUtils } from '../core/MarkdownUtils.js';
-import { DeliveriesRenderer } from './DeliveriesRenderer.js';
-import { MarkdownEditor } from '../ui/MarkdownEditor.js';
+import '../components/EzioDeliveryCard.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -55,274 +53,74 @@ async function renderDeliveriesModule() {
         }
     });
 
-    setupDelegation(); // Attach delegated listeners once
+    setupDelegation();
 }
 
 function setupDelegation() {
     if (!els.main) return;
 
-    // Debounced Save for text inputs
-    const debouncedSave = Utils.debounce(() => {
+    const debouncedSave = Utils.debounce(() => { store.save(); }, 500);
+
+    // 1. Card custom events — handled by <ezio-delivery-card> Web Component
+    els.main.addEventListener('card-generate', (e) => {
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (delivery) generateModule(delivery, e.detail.idx);
+    });
+
+    els.main.addEventListener('card-move', (e) => {
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (delivery) moveModule(delivery, e.detail.idx, e.detail.direction);
+    });
+
+    els.main.addEventListener('card-remove', (e) => {
+        const delivery = currentForm.reports.find(d => d.id === selection.id);
+        if (delivery) removeModule(delivery, e.detail.idx);
+    });
+
+    els.main.addEventListener('card-config-change', () => {
         store.save();
-        // store.notify('deliveries') would rebuild DOM and lose focus, so we don't notify here
-    }, 500);
+    });
 
-    const actionsRouter = {
-        'btn-toggle-collapse': (target) => {
+    // 2. Markdown editor change — result saved from <ezio-markdown-editor> inside <ezio-delivery-card>
+    els.main.addEventListener('change', (e) => {
+        const editorComponent = e.target.closest('ezio-markdown-editor');
+        if (editorComponent && e.detail?.markdown !== undefined) {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
-            const idx = parseInt(target.dataset.idx);
-            if (delivery && delivery.structure[idx]) {
-                const isCollapsed = delivery.structure[idx].config.collapsed;
-                delivery.structure[idx].config.collapsed = !isCollapsed;
-                store.save(); store.notify('deliveries'); // Save state
-
-                // Direct DOM update
-                const wrapper = target.closest('.dlv-card-body').querySelector('.dlv-inputs-wrapper');
-                if (wrapper) wrapper.style.display = !isCollapsed ? 'none' : 'block';
-
-                target.innerText = !isCollapsed ? '▶' : '▼';
-            }
-        },
-        'btn-generate': (target) => {
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery) generateModule(delivery, parseInt(target.dataset.idx));
-        },
-        'btn-move-left': (target) => {
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), -1);
-        },
-        'btn-move-right': (target) => {
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery) moveModule(delivery, parseInt(target.dataset.idx), 1);
-        },
-        'btn-remove-mod': (target) => {
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery) removeModule(delivery, parseInt(target.dataset.idx));
-        },
-        'chk-chapter': (target) => handleChapterCheck(target),
-        'chk-subchap': (target) => handleSubChapCheck(target),
-        'chk-col': (target) => handleColCheck(target),
-        'chk-format-table': (target) => {
-            const idx = parseInt(target.dataset.idx);
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery && delivery.structure[idx]) {
-                if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
-                delivery.structure[idx].config.isTable = target.checked;
-                store.save(); store.notify('deliveries');
-            }
-        },
-        'chk-widget': (target) => {
-            const idx = parseInt(target.dataset.idx);
-            const widgetId = target.dataset.widgetid;
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            if (delivery && delivery.structure[idx]) {
-                if (!delivery.structure[idx].config) delivery.structure[idx].config = {};
-                if (!delivery.structure[idx].config.widgets) delivery.structure[idx].config.widgets = [];
-
-                const wList = delivery.structure[idx].config.widgets;
-                if (target.checked) {
-                    if (!wList.includes(widgetId)) wList.push(widgetId);
-                } else {
-                    delivery.structure[idx].config.widgets = wList.filter(id => id !== widgetId);
-                }
-                store.save(); store.notify('deliveries');
-            }
-        }
-    };
-
-    // 1. CLICK Delegation
-    els.main.onclick = (e) => {
-        const target = e.target;
-
-        // Route actions based on class list
-        for (const cls of target.classList) {
-            if (actionsRouter[cls]) {
-                actionsRouter[cls](target);
-                return;
-            }
-        }
-
-        const btnFormat = target.closest('.btn-md-format');
-        if (btnFormat) {
-            const action = btnFormat.getAttribute('data-action');
-            const idx = parseInt(btnFormat.getAttribute('data-idx'));
-            handleMdFormatting(action, idx);
-            return;
-        }
-
-        const btnAITool = target.closest('.btn-md-ai-tool');
-        if (btnAITool) {
-            const idx = parseInt(btnAITool.getAttribute('data-idx'));
-            const editor = els.main.querySelector(`#dlv-editor-${idx}`);
-            MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
-                const delivery = currentForm.reports.find(d => d.id === selection.id);
-                if (delivery && delivery.structure[idx]) {
-                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(newHtml);
-                    store.save(); store.notify('deliveries');
-                }
-            });
-            return;
-        }
-    };
-
-    // 2. CHANGE Delegation (Selects)
-    els.main.onchange = (e) => {
-        const target = e.target;
-        const delivery = currentForm.reports.find(d => d.id === selection.id);
-        if (!delivery) return;
-
-        // Delivery Name
-        if (target.id === 'inpDlvName') {
-            delivery.name = target.value;
-            store.save(); store.notify('deliveries');
-            renderSidebarList();
-            return;
-        }
-
-        const idx = parseInt(target.dataset.idx);
-        if (isNaN(idx) || !delivery.structure[idx]) return;
-
-        // Prompt (also handled in input for debounce, but change ensures final save)
-        if (target.classList.contains('txt-inst-prompt')) {
-            delivery.structure[idx].config.ai.prompt = target.value;
-            store.save(); store.notify('deliveries');
-            return;
-        }
-
-        // Model
-        if (target.classList.contains('slc-inst-model')) {
-            delivery.structure[idx].config.ai.model = target.value;
-            store.save(); store.notify('deliveries');
-            return;
-        }
-
-        // Scope Type
-        if (target.classList.contains('slc-inst-scope')) {
-            delivery.structure[idx].config.scope.type = target.value;
-            if (target.value === 'global') {
-                delivery.structure[idx].config.scope.selection = [];
-            }
-            store.save(); store.notify('deliveries');
-            renderMainView();
-            return;
-        }
-    };
-
-    // 3. INPUT Delegation (Debounced Text)
-    els.main.oninput = (e) => {
-        const target = e.target;
-        const delivery = currentForm.reports.find(d => d.id === selection.id);
-        if (!delivery) return;
-
-        if (target.classList.contains('txt-inst-prompt')) {
-            const idx = parseInt(target.dataset.idx);
-            if (delivery.structure[idx]) {
-                delivery.structure[idx].config.ai.prompt = target.value;
-                debouncedSave();
-            }
-        }
-        // Delivery Name Debounce
-        if (target.id === 'inpDlvName') {
-            delivery.name = target.value;
-            debouncedSave();
-            // Note: Sidebar update might be delayed, which is fine
-        }
-    };
-
-    // 4. BLUR Delegation (ContentEditable)
-    els.main.addEventListener('blur', (e) => {
-        const target = e.target;
-        if (target.classList.contains('dlv-card-result')) {
-            const delivery = currentForm.reports.find(d => d.id === selection.id);
-            const card = target.closest('.dlv-card');
+            const card = editorComponent.closest('ezio-delivery-card');
             if (delivery && card) {
                 const idx = parseInt(card.dataset.idx);
                 if (delivery.structure[idx]) {
-                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(target.innerHTML);
-                    store.save(); store.notify('deliveries');
+                    delivery.structure[idx].result = e.detail.markdown;
+                    store.save();
                 }
             }
         }
-    }, true); // Capture phase for blur
+    });
+
+    // 3. Delivery name (header input — outside card components)
+    els.main.onchange = (e) => {
+        if (e.target.id === 'inpDlvName') {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) {
+                delivery.name = e.target.value;
+                store.save(); store.notify('deliveries');
+                renderSidebarList();
+            }
+        }
+    };
+
+    els.main.oninput = (e) => {
+        if (e.target.id === 'inpDlvName') {
+            const delivery = currentForm.reports.find(d => d.id === selection.id);
+            if (delivery) {
+                delivery.name = e.target.value;
+                debouncedSave();
+            }
+        }
+    };
 }
 
-function handleMdFormatting(action, idx) {
-    const delivery = currentForm.reports.find(d => d.id === selection.id);
-    if (!delivery) return;
-
-    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
-    if (!editor) return;
-
-    MarkdownEditor.handleFormatAction(action, editor);
-
-    // Save parsed Markdown back
-    if (delivery.structure[idx]) {
-        delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(editor.innerHTML);
-        store.save(); store.notify('deliveries');
-    }
-}
-
-// Helper functions for checkboxes to keep delegation clean
-function handleChapterCheck(target) {
-    const delivery = currentForm.reports.find(d => d.id === selection.id);
-    const idx = parseInt(target.dataset.idx);
-    const chapName = target.getAttribute('data-chap');
-    const hierarchy = buildChapterHierarchy();
-    const chap = hierarchy.find(c => c.name === chapName);
-
-    if (!delivery || !chap) return;
-
-    let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-    if (target.checked) {
-        chap.subs.forEach(s => {
-            if (!currentSelection.includes(s)) currentSelection.push(s);
-        });
-    } else {
-        currentSelection = currentSelection.filter(s => !chap.subs.includes(s));
-    }
-
-    delivery.structure[idx].config.scope.selection = currentSelection;
-    store.save(); store.notify('deliveries');
-    renderMainView();
-}
-
-function handleSubChapCheck(target) {
-    const delivery = currentForm.reports.find(d => d.id === selection.id);
-    const idx = parseInt(target.dataset.idx);
-    const subName = target.getAttribute('data-sub');
-    if (!delivery) return;
-
-    let currentSelection = delivery.structure[idx].config.scope.selection || [];
-
-    if (target.checked) {
-        if (!currentSelection.includes(subName)) currentSelection.push(subName);
-    } else {
-        currentSelection = currentSelection.filter(s => s !== subName);
-    }
-
-    delivery.structure[idx].config.scope.selection = currentSelection;
-    store.save(); store.notify('deliveries');
-    renderMainView();
-}
-
-function handleColCheck(target) {
-    const delivery = currentForm.reports.find(d => d.id === selection.id);
-    const idx = parseInt(target.dataset.idx);
-    const colId = target.getAttribute('data-colid');
-    if (!delivery) return;
-
-    let currentCols = delivery.structure[idx].config.columns || [];
-
-    if (target.checked) {
-        if (!currentCols.includes(colId)) currentCols.push(colId);
-    } else {
-        currentCols = currentCols.filter(c => c !== colId);
-    }
-
-    delivery.structure[idx].config.columns = currentCols;
-    store.save(); store.notify('deliveries');
-}
+// Checkbox handlers removed — now handled internally by <ezio-delivery-card>
 function setupSidebar() {
     if (!els.sidebar) return;
 
@@ -415,7 +213,11 @@ function renderMainView() {
     if (instances.length === 0) {
         trackHTML += `<div style="padding:2rem;">Ce livrable est vide.</div>`;
     }
+    trackHTML += `</div>`;
 
+    els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
+
+    // Create <ezio-delivery-card> elements programmatically
     const context = {
         availableModels,
         availableModules,
@@ -424,12 +226,12 @@ function renderMainView() {
         totalInstances: instances.length
     };
 
+    const track = els.main.querySelector('.dlv-horizontal-track');
     instances.forEach((inst, idx) => {
-        trackHTML += DeliveriesRenderer.renderCard(inst, idx, context);
+        const card = document.createElement('ezio-delivery-card');
+        card.config = { instance: inst, idx, context };
+        track.appendChild(card);
     });
-    trackHTML += `</div>`;
-
-    els.main.innerHTML = headerHTML + `<div class="dlv-editor-body">${trackHTML}</div>`;
 
     // Name change handled by delegation in setupDelegation
 
@@ -545,16 +347,16 @@ function removeModule(delivery, index) {
 
 async function generateModule(delivery, index) {
     const instance = delivery.structure[index];
-    const card = els.main.querySelector(`.dlv-card[data-idx="${index}"]`);
+    const card = els.main.querySelector(`ezio-delivery-card[data-idx="${index}"]`);
     if (!card) return;
 
     const btn = card.querySelector('.btn-generate');
-    const resultContainer = card.querySelector('.dlv-card-result');
+    const editorComponent = card.getEditor();
 
     const originalText = btn.innerHTML;
     btn.innerHTML = `<span class="rpt-loading">↻</span> Génération...`;
     btn.disabled = true;
-    resultContainer.innerHTML = '';
+    if (editorComponent) editorComponent.value = '';
 
     try {
         const auditData = currentForm;
@@ -588,21 +390,29 @@ async function generateModule(delivery, index) {
         instance.result = finalResult;
         store.save(); store.notify('deliveries');
 
-        resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
-        applyTableColumnWidths(resultContainer);
+        if (editorComponent) {
+            editorComponent.value = finalResult;
+            // Apply table column widths to the inner editor
+            const innerEditor = editorComponent.querySelector('.dlv-card-result');
+            if (innerEditor) applyTableColumnWidths(innerEditor);
 
-        // Auto-expand to bottom of window
-        requestAnimationFrame(() => {
-            const rect = resultContainer.getBoundingClientRect();
-            const newHeight = window.innerHeight - rect.top - 40; // 40px margin bottom
-            if (newHeight > 300) {
-                resultContainer.style.height = newHeight + 'px';
-            }
-        });
+            // Auto-expand to bottom of window
+            requestAnimationFrame(() => {
+                if (innerEditor) {
+                    const rect = innerEditor.getBoundingClientRect();
+                    const newHeight = window.innerHeight - rect.top - 40; // 40px margin bottom
+                    if (newHeight > 300) {
+                        innerEditor.style.height = newHeight + 'px';
+                    }
+                }
+            });
+        }
 
     } catch (e) {
         console.error("Generation Error", e);
-        resultContainer.innerHTML = `<div style="color:var(--danger)"> Erreur : ${e.message}</div>`;
+        if (editorComponent) {
+            editorComponent.htmlContent = `<div style="color:var(--danger)"> Erreur : ${e.message}</div>`;
+        }
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;

@@ -158,40 +158,7 @@ function addNewColumn(name) {
     if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
 }
 
-function parseImportJSON(data) {
-    const creatorConfigDiv = document.getElementById('creatorConfig');
-    if (data.columns && Array.isArray(data.columns) && data.rows && Array.isArray(data.rows)) {
-        // Ezio Full
-        creatorData.headers = data.columns.map(c => c.label);
-        creatorData.rows = data.rows;
-        creatorData.configs = data.columns.map(col => ({
-            label: col.label,
-            visible: col.visible !== false,
-            type: col.type || 'question',
-            params: col.params || {}
-        }));
-        data.columns.forEach((col, idx) => {
-            if (col.size) {
-                if (!creatorData.configs[idx].params) creatorData.configs[idx].params = {};
-                creatorData.configs[idx].params.size = col.size;
-            }
-        });
-    } else if (Array.isArray(data) && data.length > 0) {
-        // Raw Array
-        creatorData.headers = Object.keys(data[0]);
-        creatorData.rows = data.map(obj => creatorData.headers.map(h => obj[h] || ""));
-        creatorData.configs = creatorData.headers.map(h => ({
-            label: h,
-            visible: true,
-            type: 'question',
-            params: {}
-        }));
-    } else {
-        UI.showToast("Format non reconnu.", "danger");
-        return;
-    }
-    if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
-}
+// parseImportJSON removed — logic already exists in csvInput listener (lines 25-67)
 
 function renderCreatorTable() {
     const configTable = document.getElementById('configTable');
@@ -263,115 +230,132 @@ function renderCreatorTable() {
 function renderParamsCell(colIdx) {
     const cell = document.getElementById(`params-cell-${colIdx}`);
     if (!cell) return;
-    cell.innerHTML = "";
+    cell.innerHTML = '';
 
     const cfg = creatorData.configs[colIdx];
     if (!cfg.params) cfg.params = {};
-    const mkLabel = (txt) => { const l = document.createElement('span'); l.className = 'param-label'; l.innerText = txt; return l; };
 
     if (['question', 'reference'].includes(cfg.type)) {
-        cell.appendChild(mkLabel("Taille"));
-        const sel = document.createElement('select');
-        sel.className = 'config-input';
-        ['', 'S', 'M', 'L'].forEach(s => {
-            const o = document.createElement('option');
-            o.value = s; o.innerText = s || "-- Choisir --";
-            if (cfg.params.size === s) o.selected = true;
-            sel.appendChild(o);
-        });
-        sel.onchange = (e) => cfg.params.size = e.target.value;
-        cell.appendChild(sel);
+        renderSizeParams(cell, cfg);
+    } else if (cfg.type === 'combo') {
+        renderComboParams(cell, cfg);
+    } else if (cfg.type === 'ia') {
+        renderIAParams(cell, cfg);
+    } else if (cfg.type === 'qcm') {
+        renderQCMParams(cell);
     }
+}
 
-    if (['combo'].includes(cfg.type)) {
-        cell.appendChild(mkLabel("Options (une/ligne)"));
-        const txt = document.createElement('textarea');
-        txt.className = 'config-textarea';
-        txt.value = Array.isArray(cfg.params.options) ? cfg.params.options.join('\n') : "";
-        txt.onchange = (e) => { cfg.params.options = e.target.value.split('\n').map(x => x.trim()).filter(x => x); };
-        cell.appendChild(txt);
-        cell.appendChild(mkLabel("Schéma de Couleurs"));
-        const cSel = document.createElement('select');
-        cSel.className = 'config-input';
-        const schemes = [
-            { k: '', v: 'Aucun' },
-            { k: 'alert3', v: 'Alerte (3 coul)' },
-            { k: 'alert6', v: 'Alerte (6 coul)' },
-            { k: 'rainbow', v: 'Arc-en-Ciel (7 coul.)' },
-            { k: 'blue', v: 'Bleu (Dégradé)' },
-            { k: 'green', v: 'Vert (Dégradé)' },
-            { k: 'red', v: 'Rouge (Dégradé)' },
-            { k: 'purple', v: 'Violet (Dégradé)' },
-            { k: 'orange', v: 'Orange (Dégradé)' },
-            { k: 'yellow', v: 'Jaune (Dégradé)' }
-        ];
-        schemes.forEach(sc => {
-            const o = document.createElement('option');
-            o.value = sc.k; o.innerText = sc.v;
-            if (cfg.params.colorScheme === sc.k) o.selected = true;
-            cSel.appendChild(o);
-        });
-        cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
-        cell.appendChild(cSel);
-    }
+function mkLabel(txt) {
+    const l = document.createElement('span');
+    l.className = 'param-label';
+    l.innerText = txt;
+    return l;
+}
 
-    if (cfg.type === 'ia') {
-        cell.appendChild(mkLabel("Prompt"));
-        const pInp = document.createElement('textarea');
-        pInp.className = 'config-textarea';
-        pInp.style.height = '60px';
-        pInp.value = cfg.params.requete || "";
-        pInp.onchange = (e) => cfg.params.requete = e.target.value;
-        cell.appendChild(pInp);
+function renderSizeParams(cell, cfg) {
+    cell.appendChild(mkLabel('Taille'));
+    const sel = document.createElement('select');
+    sel.className = 'config-input';
+    ['', 'S', 'M', 'L'].forEach(s => {
+        const o = document.createElement('option');
+        o.value = s;
+        o.innerText = s || '-- Choisir --';
+        if (cfg.params.size === s) o.selected = true;
+        sel.appendChild(o);
+    });
+    sel.onchange = (e) => cfg.params.size = e.target.value;
+    cell.appendChild(sel);
+}
 
-        cell.appendChild(mkLabel("Colonnes contexte"));
-        const colListDiv = document.createElement('div');
-        colListDiv.style.maxHeight = '100px';
-        colListDiv.style.overflowY = 'auto';
-        colListDiv.style.border = '1px solid var(--border)';
-        colListDiv.style.padding = '5px';
-        colListDiv.style.marginBottom = '5px';
-        colListDiv.style.backgroundColor = 'var(--bg-color)';
+function renderComboParams(cell, cfg) {
+    cell.appendChild(mkLabel('Options (une/ligne)'));
+    const txt = document.createElement('textarea');
+    txt.className = 'config-textarea';
+    txt.value = Array.isArray(cfg.params.options) ? cfg.params.options.join('\n') : '';
+    txt.onchange = (e) => { cfg.params.options = e.target.value.split('\n').map(x => x.trim()).filter(x => x); };
+    cell.appendChild(txt);
 
-        if (!cfg.params.colonnes) cfg.params.colonnes = [];
+    cell.appendChild(mkLabel('Schéma de Couleurs'));
+    const cSel = document.createElement('select');
+    cSel.className = 'config-input';
+    const schemes = [
+        { k: '', v: 'Aucun' },
+        { k: 'alert3', v: 'Alerte (3 coul)' },
+        { k: 'alert6', v: 'Alerte (6 coul)' },
+        { k: 'rainbow', v: 'Arc-en-Ciel (7 coul.)' },
+        { k: 'blue', v: 'Bleu (Dégradé)' },
+        { k: 'green', v: 'Vert (Dégradé)' },
+        { k: 'red', v: 'Rouge (Dégradé)' },
+        { k: 'purple', v: 'Violet (Dégradé)' },
+        { k: 'orange', v: 'Orange (Dégradé)' },
+        { k: 'yellow', v: 'Jaune (Dégradé)' }
+    ];
+    schemes.forEach(sc => {
+        const o = document.createElement('option');
+        o.value = sc.k;
+        o.innerText = sc.v;
+        if (cfg.params.colorScheme === sc.k) o.selected = true;
+        cSel.appendChild(o);
+    });
+    cSel.onchange = (e) => cfg.params.colorScheme = e.target.value;
+    cell.appendChild(cSel);
+}
 
-        creatorData.headers.forEach(h => {
-            if (h === cfg.label) return;
-            const div = document.createElement('div');
-            div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '5px';
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.checked = cfg.params.colonnes.includes(h);
-            cb.onchange = (e) => {
-                if (e.target.checked) { if (!cfg.params.colonnes.includes(h)) cfg.params.colonnes.push(h); }
-                else { cfg.params.colonnes = cfg.params.colonnes.filter(c => c !== h); }
-            };
-            const lbl = document.createElement('span'); lbl.innerText = h; lbl.style.fontSize = '0.8rem';
-            div.appendChild(cb); div.appendChild(lbl); colListDiv.appendChild(div);
-        });
-        cell.appendChild(colListDiv);
+function renderIAParams(cell, cfg) {
+    cell.appendChild(mkLabel('Prompt'));
+    const pInp = document.createElement('textarea');
+    pInp.className = 'config-textarea';
+    pInp.style.height = '60px';
+    pInp.value = cfg.params.requete || '';
+    pInp.onchange = (e) => cfg.params.requete = e.target.value;
+    cell.appendChild(pInp);
 
-        cell.appendChild(mkLabel("Modèle IA"));
-        const mSel = document.createElement('select');
-        mSel.className = 'config-input';
-        mSel.appendChild(new Option("-- Choisir un modèle --", ""));
-        creatorAvailableModels.forEach(m => {
-            const opt = new Option(m.nom, m.nom);
-            if (cfg.params.modele === m.nom) opt.selected = true;
-            mSel.appendChild(opt);
-        });
-        mSel.onchange = (e) => cfg.params.modele = e.target.value;
-        cell.appendChild(mSel);
-    }
+    cell.appendChild(mkLabel('Colonnes contexte'));
+    const colListDiv = document.createElement('div');
+    colListDiv.style.cssText = 'max-height:100px; overflow-y:auto; border:1px solid var(--border); padding:5px; margin-bottom:5px; background:var(--bg-color);';
 
-    if (cfg.type === 'qcm') {
-        const info = document.createElement('div');
-        info.className = 'param-info';
-        info.style.fontSize = '0.8em';
-        info.style.color = 'var(--primary)';
-        info.innerText = "Mode automatique : les options seront extraites des données de la colonne.";
-        cell.appendChild(info);
-    }
+    if (!cfg.params.colonnes) cfg.params.colonnes = [];
+
+    creatorData.headers.forEach(h => {
+        if (h === cfg.label) return;
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; align-items:center; gap:5px;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = cfg.params.colonnes.includes(h);
+        cb.onchange = (e) => {
+            if (e.target.checked) { if (!cfg.params.colonnes.includes(h)) cfg.params.colonnes.push(h); }
+            else { cfg.params.colonnes = cfg.params.colonnes.filter(c => c !== h); }
+        };
+        const lbl = document.createElement('span');
+        lbl.innerText = h;
+        lbl.style.fontSize = '0.8rem';
+        div.appendChild(cb);
+        div.appendChild(lbl);
+        colListDiv.appendChild(div);
+    });
+    cell.appendChild(colListDiv);
+
+    cell.appendChild(mkLabel('Modèle IA'));
+    const mSel = document.createElement('select');
+    mSel.className = 'config-input';
+    mSel.appendChild(new Option('-- Choisir un modèle --', ''));
+    creatorAvailableModels.forEach(m => {
+        const opt = new Option(m.nom, m.nom);
+        if (cfg.params.modele === m.nom) opt.selected = true;
+        mSel.appendChild(opt);
+    });
+    mSel.onchange = (e) => cfg.params.modele = e.target.value;
+    cell.appendChild(mSel);
+}
+
+function renderQCMParams(cell) {
+    const info = document.createElement('div');
+    info.className = 'param-info';
+    info.style.cssText = 'font-size:0.8em; color:var(--primary);';
+    info.innerText = 'Mode automatique : les options seront extraites des données de la colonne.';
+    cell.appendChild(info);
 }
 
 async function loadModels() {
