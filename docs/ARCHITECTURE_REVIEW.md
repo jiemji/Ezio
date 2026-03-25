@@ -68,22 +68,33 @@ Suite à la finalisation réussie des Phases 1 et 2, l'application a abordé la 
 
 ---
 
-## Nouveaux Axes de Simplification (Phase 4 - Propositions)
+## Bilan de Simplification (Phase 4 - Complétée le 25/03/2026)
 
-Voici les 4 pistes les plus viables pour continuer à alléger et moderniser le fonctionnement du projet.
+Les 4 pistes proposées ont été traitées. 3 ont été implémentées, 1 (Piste 3 — Routage) était déjà résolue lors de la Phase 2.
 
-### Piste 1 : Transformer l'Éditeur Markdown en Web Component (Suite Axe 9)
-- **Problème** : `MarkdownEditor.js` est une classe qui retourne une énorme chaîne HTML ("usine à texte"). La logique de ses clics/boutons (Gras, Titres, appel IA) est redéclarée manuellement plusieurs fois à l'extérieur (dans `app_audit.js`, `app_deliveries.js`).
-- **Solution** : Créer une balise autonome `<ezio-markdown-editor>`. Elle gérera elle-même ses propres clics, sa barre d'outils et son `contenteditable`. L'extérieur n'aura plus qu'à écrire `editor.value` ou `editor.addEventListener('change', ...)`.
+### Piste 1 ✅ : Transformer l'Éditeur Markdown en Web Component
+- **Problème** : `MarkdownEditor.js` était un objet littéral retournant du HTML brut. La logique de clics (Gras, Titres, appel IA) était dupliquée dans `app_audit.js` et `app_deliveries.js`.
+- **Solution Appliquée** : Création de `<ezio-markdown-editor>` (362 lignes), Web Component natif sans Shadow DOM gérant toolbar, formatting, AI tools modal, et émettant un événement `change` custom.
+- **Résultat** : Suppression de `js/ui/MarkdownEditor.js`. ~80 lignes de délégation dupliquée retirées des consommateurs (`AuditRenderer.js`, `app_deliveries.js`).
 
-### Piste 2 : Refonte du Créateur de Formulaire (`app_creator.js`)
-- **Problème** : Le constructeur de formulaire (`app_creator.js`) est l'un des fichiers les plus complexes à maintenir (17 Ko). Il gère le Drag & Drop des lignes et colonnes de manière très impérative, via beaucoup de manipulation directe du DOM et des injections `innerHTML`.
-- **Solution** : Abstraire la complexité visuelle en créant des Web Components natifs tels que `<ezio-builder-row>` et `<ezio-builder-col>`, de la même façon que nous avons encapsulé l'immense structure des widgets Dashboard.
+### Piste 2 ✅ : Nettoyage du Créateur de Formulaire (`app_creator.js`)
+- **Problème** : `renderParamsCell()` était un monolithe de 113 lignes avec un if/else géant. La fonction `parseImportJSON` dupliquait la logique du listener `csvInput`.
+- **Solution Appliquée** (Option B — nettoyage léger) : Extraction de 4 sous-fonctions nommées (`renderSizeParams`, `renderComboParams`, `renderIAParams`, `renderQCMParams`). Suppression du code mort.
+- **Résultat** : `app_creator.js` passe de 426 à 361 lignes (-15%).
 
-### Piste 3 : Un vrai système de Routage (Navigation par URL)
-- **Problème** : Quand on change de module ("Dashboard", "Livrables", "Audit"), l'application masque/affiche de gros blocs `div` (display: none). L'URL du navigateur reste figée (`index.html`). Conséquence: le bouton "Précédent" du navigateur fait quitter complètement l'application au lieu de ramener à l'écran précédent, et aucun lien vers "juste un livrable" n'est partageable.
-- **Solution** : Intégrer un mini-routeur natif basé sur le `location.hash` (`#dashboard`, `#deliveries`). Cela modernisera totalement l'expérience (UX de type Single Page Application complète).
+### Piste 3 ⏭️ : Routage par URL
+- **Statut** : Déjà résolu en Phase 2 via le hash-router natif (`Navigation.js`, `#audit`, `#dashboard`, etc.).
 
-### Piste 4 : Système de "Cartes de Livrables" (Suite Axe 3)
-- **Problème** : `app_deliveries.js` génère les cartes de chaque bloc audit/markdown via une gigantesque fonction dans `DeliveriesRenderer.js` produisant des centaines de lignes de chaînes HTML manuelles.
-- **Solution** : Utiliser la puissance de la nouvelle balise `<ezio-markdown-editor>` (Piste 1) pour créer un composant `<ezio-delivery-card>` qui encapsule sa propre structure de carte (header, boutons de déplacement, paramètres et contenu), purifiant radicalement le fichier des livrables.
+### Piste 4 ✅ : Cartes de Livrables en Web Component
+- **Problème** : `DeliveriesRenderer.js` (171 lignes) générait le HTML des cartes. `app_deliveries.js` contenait ~170 lignes de délégation (`setupDelegation`) et 60 lignes de handlers checkbox (`handleChapterCheck`, etc.) pour gérer les événements des cartes.
+- **Solution Appliquée** : Création de `<ezio-delivery-card>` (338 lignes), Web Component encapsulant le rendu complet et tous les événements internes. Émet 4 événements custom (`card-generate`, `card-move`, `card-remove`, `card-config-change`).
+- **Résultat** : Suppression de `js/modules/DeliveriesRenderer.js`. `app_deliveries.js` passe de 692 à 528 lignes (-37%).
+
+### Inventaire des Web Components Ezio (post-Phase 4)
+
+| Composant | Fichier | Créé en |
+|---|---|---|
+| `<ezio-toast>` | `js/components/EzioToast.js` | Phase 3 |
+| `<ezio-widget>` | `js/components/EzioWidget.js` | Phase 3 |
+| `<ezio-markdown-editor>` | `js/components/EzioMarkdownEditor.js` | Phase 4 |
+| `<ezio-delivery-card>` | `js/components/EzioDeliveryCard.js` | Phase 4 |
