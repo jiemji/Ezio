@@ -4,7 +4,7 @@
  */
 
 import { Utils } from '../core/Utils.js';
-import { MarkdownEditor } from '../ui/MarkdownEditor.js';
+import '../components/EzioMarkdownEditor.js';
 
 export const DeliveriesRenderer = {
     renderCard: (inst, idx, context) => {
@@ -90,7 +90,7 @@ export const DeliveriesRenderer = {
                 </div>
                 <div class="dlv-card-footer">
                      <button class="btn-primary small btn-generate" data-idx="${idx}" style="width:100%;">Tester / Générer</button>
-                     ${MarkdownEditor.render(`dlv-editor-${idx}`, inst.result || '', idx, '300px')}
+                     <ezio-markdown-editor editor-id="dlv-editor-${idx}" min-height="300px" data-value="${Utils.escapeHtml(inst.result || '')}"></ezio-markdown-editor>
                 </div>
             </div>
         `;

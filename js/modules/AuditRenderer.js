@@ -2,7 +2,7 @@ import { Utils } from '../core/Utils.js';
 import { Config } from '../core/Config.js';
 import { UI } from '../core/UIFactory.js';
 import { DataUtils } from '../core/DataUtils.js';
-import { MarkdownEditor } from '../ui/MarkdownEditor.js';
+import '../components/EzioMarkdownEditor.js';
 import { MarkdownUtils } from '../core/MarkdownUtils.js';
 
 export const AuditRenderer = {
@@ -123,7 +123,7 @@ function renderCellHtml(col, value, r, c, currentForm) {
             return Utils.escapeHtml(valStr);
 
         case 'reponse':
-            return MarkdownEditor.render(`editor-${r}-${c}`, valStr, `${r}-${c}`, '100px', true);
+            return `<ezio-markdown-editor editor-id="editor-${r}-${c}" compact min-height="100px" data-r="${r}" data-c="${c}" data-value="${Utils.escapeHtml(valStr)}"></ezio-markdown-editor>`;
 
         case 'combo':
             const options = col.params?.options || [];
@@ -163,9 +163,8 @@ function renderCellHtml(col, value, r, c, currentForm) {
             </div>`;
 
         case 'ia':
-            const iaBtnHtml = `<button class="btn-ia" data-r="${r}" data-c="${c}" title="Générer IA" style="border-radius: 4px; padding: 4px 6px; font-size: 0.9rem; background: var(--primary); color: #fff; border: 1px solid var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 26px;">✨</button>`;
             return `<div class="ia-cell">
-                ${MarkdownEditor.render(`editor-${r}-${c}`, valStr, `${r}-${c}`, '100px', true, iaBtnHtml)}
+                <ezio-markdown-editor editor-id="editor-${r}-${c}" compact min-height="100px" data-r="${r}" data-c="${c}" data-value="${Utils.escapeHtml(valStr)}" data-extra-toolbar='<button class="btn-ia" data-r="${r}" data-c="${c}" title="Générer IA" style="border-radius: 4px; padding: 4px 6px; font-size: 0.9rem; background: var(--primary); color: %23fff; border: 1px solid var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 26px;">✨</button>'></ezio-markdown-editor>
             </div>`;
 
         default:
@@ -211,41 +210,7 @@ function attachEvents(container, actions, currentForm) {
             return;
         }
 
-        // D. MARKDOWN FORMATTING
-        const btnFormat = target.closest('.btn-md-format');
-        if (btnFormat) {
-            const action = btnFormat.getAttribute('data-action');
-            const idxStr = btnFormat.getAttribute('data-idx'); // `${r}-${c}`
-            const editor = container.querySelector(`#editor-${idxStr}`);
-            MarkdownEditor.handleFormatAction(action, editor);
-
-            // Save after formatting
-            if (editor) {
-                const parts = idxStr.split('-');
-                if (parts.length === 2) {
-                    const r = parseInt(parts[0]);
-                    const c = parseInt(parts[1]);
-                    actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(editor.innerHTML));
-                }
-            }
-            return;
-        }
-
-        // E. AI TOOLS
-        const btnAITool = target.closest('.btn-md-ai-tool');
-        if (btnAITool) {
-            const idxStr = btnAITool.getAttribute('data-idx');
-            const editor = container.querySelector(`#editor-${idxStr}`);
-            MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
-                const parts = idxStr.split('-');
-                if (parts.length === 2) {
-                    const r = parseInt(parts[0]);
-                    const c = parseInt(parts[1]);
-                    actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(newHtml));
-                }
-            });
-            return;
-        }
+        // D-E. MARKDOWN FORMATTING & AI TOOLS — Now handled internally by <ezio-markdown-editor>
     };
 
     // 2. CHANGE DELEGATION
@@ -301,7 +266,7 @@ function attachEvents(container, actions, currentForm) {
     };
 
     // 3. INPUT DELEGATION
-    // Handles: Text Inputs (Editable Question, Markdown Editor)
+    // Handles: Text Inputs (Editable Question)
     container.oninput = (e) => {
         const target = e.target;
 
@@ -309,13 +274,18 @@ function attachEvents(container, actions, currentForm) {
             const r = parseInt(target.dataset.r);
             const c = parseInt(target.dataset.c);
             actions.updateValue(r, c, target.value);
-        } else if (target.classList.contains('markdown-editor-content')) {
-            const parts = target.id.split('-');
-            if (parts.length === 3) {
-                const r = parseInt(parts[1]);
-                const c = parseInt(parts[2]);
-                actions.updateValue(r, c, MarkdownUtils.htmlToMarkdown(target.innerHTML));
-            }
         }
     };
+
+    // 4. CHANGE DELEGATION for <ezio-markdown-editor>
+    container.addEventListener('change', (e) => {
+        const editorComponent = e.target.closest('ezio-markdown-editor');
+        if (editorComponent && e.detail?.markdown !== undefined) {
+            const r = parseInt(editorComponent.dataset.r);
+            const c = parseInt(editorComponent.dataset.c);
+            if (!isNaN(r) && !isNaN(c)) {
+                actions.updateValue(r, c, e.detail.markdown);
+            }
+        }
+    });
 }

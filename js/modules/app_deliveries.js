@@ -12,7 +12,7 @@ import { downloadDeliveryPpt } from './app_outputppt.js';
 import { showImpressionPopup } from './app_impression_logic.js';
 import { MarkdownUtils } from '../core/MarkdownUtils.js';
 import { DeliveriesRenderer } from './DeliveriesRenderer.js';
-import { MarkdownEditor } from '../ui/MarkdownEditor.js';
+import '../components/EzioMarkdownEditor.js';
 
 let availableTemplates = [];
 let availableModels = [];
@@ -142,27 +142,7 @@ function setupDelegation() {
             }
         }
 
-        const btnFormat = target.closest('.btn-md-format');
-        if (btnFormat) {
-            const action = btnFormat.getAttribute('data-action');
-            const idx = parseInt(btnFormat.getAttribute('data-idx'));
-            handleMdFormatting(action, idx);
-            return;
-        }
-
-        const btnAITool = target.closest('.btn-md-ai-tool');
-        if (btnAITool) {
-            const idx = parseInt(btnAITool.getAttribute('data-idx'));
-            const editor = els.main.querySelector(`#dlv-editor-${idx}`);
-            MarkdownEditor.openAIToolsModal(editor, (newHtml) => {
-                const delivery = currentForm.reports.find(d => d.id === selection.id);
-                if (delivery && delivery.structure[idx]) {
-                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(newHtml);
-                    store.save(); store.notify('deliveries');
-                }
-            });
-            return;
-        }
+        // Markdown format & AI tool buttons — Now handled internally by <ezio-markdown-editor>
     };
 
     // 2. CHANGE Delegation (Selects)
@@ -229,38 +209,24 @@ function setupDelegation() {
         }
     };
 
-    // 4. BLUR Delegation (ContentEditable)
-    els.main.addEventListener('blur', (e) => {
-        const target = e.target;
-        if (target.classList.contains('dlv-card-result')) {
+    // 4. CHANGE delegation for <ezio-markdown-editor>
+    els.main.addEventListener('change', (e) => {
+        const editorComponent = e.target.closest('ezio-markdown-editor');
+        if (editorComponent && e.detail?.markdown !== undefined) {
             const delivery = currentForm.reports.find(d => d.id === selection.id);
-            const card = target.closest('.dlv-card');
+            const card = editorComponent.closest('.dlv-card');
             if (delivery && card) {
                 const idx = parseInt(card.dataset.idx);
                 if (delivery.structure[idx]) {
-                    delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(target.innerHTML);
+                    delivery.structure[idx].result = e.detail.markdown;
                     store.save(); store.notify('deliveries');
                 }
             }
         }
-    }, true); // Capture phase for blur
+    });
 }
 
-function handleMdFormatting(action, idx) {
-    const delivery = currentForm.reports.find(d => d.id === selection.id);
-    if (!delivery) return;
-
-    const editor = els.main.querySelector(`#dlv-editor-${idx}`);
-    if (!editor) return;
-
-    MarkdownEditor.handleFormatAction(action, editor);
-
-    // Save parsed Markdown back
-    if (delivery.structure[idx]) {
-        delivery.structure[idx].result = MarkdownUtils.htmlToMarkdown(editor.innerHTML);
-        store.save(); store.notify('deliveries');
-    }
-}
+// handleMdFormatting removed — now handled internally by <ezio-markdown-editor>
 
 // Helper functions for checkboxes to keep delegation clean
 function handleChapterCheck(target) {
@@ -549,12 +515,12 @@ async function generateModule(delivery, index) {
     if (!card) return;
 
     const btn = card.querySelector('.btn-generate');
-    const resultContainer = card.querySelector('.dlv-card-result');
+    const editorComponent = card.querySelector('ezio-markdown-editor');
 
     const originalText = btn.innerHTML;
     btn.innerHTML = `<span class="rpt-loading">↻</span> Génération...`;
     btn.disabled = true;
-    resultContainer.innerHTML = '';
+    if (editorComponent) editorComponent.value = '';
 
     try {
         const auditData = currentForm;
@@ -588,21 +554,29 @@ async function generateModule(delivery, index) {
         instance.result = finalResult;
         store.save(); store.notify('deliveries');
 
-        resultContainer.innerHTML = window.marked ? window.marked.parse(finalResult) : finalResult;
-        applyTableColumnWidths(resultContainer);
+        if (editorComponent) {
+            editorComponent.value = finalResult;
+            // Apply table column widths to the inner editor
+            const innerEditor = editorComponent.querySelector('.dlv-card-result');
+            if (innerEditor) applyTableColumnWidths(innerEditor);
 
-        // Auto-expand to bottom of window
-        requestAnimationFrame(() => {
-            const rect = resultContainer.getBoundingClientRect();
-            const newHeight = window.innerHeight - rect.top - 40; // 40px margin bottom
-            if (newHeight > 300) {
-                resultContainer.style.height = newHeight + 'px';
-            }
-        });
+            // Auto-expand to bottom of window
+            requestAnimationFrame(() => {
+                if (innerEditor) {
+                    const rect = innerEditor.getBoundingClientRect();
+                    const newHeight = window.innerHeight - rect.top - 40; // 40px margin bottom
+                    if (newHeight > 300) {
+                        innerEditor.style.height = newHeight + 'px';
+                    }
+                }
+            });
+        }
 
     } catch (e) {
         console.error("Generation Error", e);
-        resultContainer.innerHTML = `<div style="color:var(--danger)"> Erreur : ${e.message}</div>`;
+        if (editorComponent) {
+            editorComponent.htmlContent = `<div style="color:var(--danger)"> Erreur : ${e.message}</div>`;
+        }
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
