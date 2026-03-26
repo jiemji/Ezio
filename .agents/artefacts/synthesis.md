@@ -27,58 +27,64 @@ Ezio/
 ├── index.html              # SPA – point d'entrée unique
 ├── extract.html            # Utilitaire autonome d'extraction PPTX
 ├── js/
-30: │   ├── main.js             # Bootstrap
-31: │   ├── App.js              # Orchestrateur principal
-32: │   ├── core/               # Cœur applicatif (11 fichiers)
-33: │   │   ├── State.js        # Singleton d'état global
-34: │   │   ├── Store.js        # Persistance localStorage + auto-réparation
-35: │   │   ├── Config.js       # Constantes, couleurs, seuils
-36: │   │   ├── Schemas.js      # Validation JSON
-37: │   │   ├── DataUtils.js    # Logique métier pure (tri, filtre)
-38: │   │   ├── AIContextBuilder.js # Bâtisseur de contexte IA & Rapports (Phase 6)
-39: │   │   ├── Types.js        # Centralisation JSDoc (Phase 6)
-40: │   │   ├── MarkdownUtils.js# AST Markdown + conversion HTML↔MD
-41: │   │   ├── IOManager.js    # Lectures/écritures fichiers centralisées
-42: │   │   ├── UIFactory.js    # Composants UI (boutons, badges, toasts)
-43: │   │   └── Utils.js        # Helpers (slugify, escapeHtml, debounce)
-44: │   ├── ui/                 # Couche interface (5 fichiers)
-45: │   │   ├── Navigation.js   # Hash-router SPA (#audit, #dashboard…)
-46: │   │   ├── Sidebar.js      # Menu latéral rétractable
-47: │   │   ├── Modal.js        # Service de modales
-48: │   │   ├── Notes.js        # Gestion des notes
-49: │   │   └── DOM.js          # Cache de sélecteurs DOM
-50: │   ├── api/
-51: │   │   └── api_ia.js       # Abstraction multi-provider (LM Studio, OpenAI, Groq)
-52: │   ├── components/         # Web Components natifs
-53: │   │   ├── EzioToast.js    # <ezio-toast>
-54: │   │   ├── EzioWidget.js   # <ezio-widget>
-55: │   │   ├── EzioMarkdownEditor.js  # <ezio-markdown-editor>
-56: │   │   ├── EzioDeliveryCard.js    # <ezio-delivery-card>
-57: │   │   └── EzioReportEditor.js    # <ezio-report-editor>
-58: │   └── modules/            # Modules fonctionnels (13 fichiers)
-59: │       ├── app_audit.js                        # Orchestrateur Grille d'audit
-60: │       ├── AuditRenderer.js                    # Rendu de la grille (MVC)
-61: │       ├── AuditSidebar.js                     # Menu hiérarchique & state des filtres
-62: │       ├── app_dashboard.js                    # KPIs + Chart.js
-63: │       ├── WidgetDataTransformer.js & WidgetRenderer.js # Données → Canvas
-64: │       ├── app_deliveries.js                          # Livrables IA
-65: │       ├── app_reports.js                             # Templates de rapports
-66: │       ├── app_creator.js                      # Constructeur de formulaires
-67: │       ├── app_models.js                       # Gestion des modèles IA
-68: │       ├── app_export.js                       # Export JSON/CSV
-69: │       ├── app_output_word.js                  # Export Word (.docx)
-70: │       ├── app_outputppt.js                    # Export PowerPoint (Orchestrateur)
-71: │       ├── PptSlideBuilders.js                 # Export PowerPoint (Bâtisseur) (Phase 6)
-72: │       └── app_impression_logic.js             # Orchestrateur d'impression
+│   ├── main.js             # Bootstrap
+│   ├── App.js              # Orchestrateur principal
+│   ├── core/               # Cœur applicatif (11 fichiers)
+│   │   ├── State.js        # Singleton d'état global (typé JSDoc)
+│   │   ├── Store.js        # Persistance localStorage + auto-réparation
+│   │   ├── Config.js       # Constantes, couleurs, seuils
+│   │   ├── Schemas.js      # Validation JSON
+│   │   ├── DataUtils.js    # Logique métier pure (tri, filtre)
+│   │   ├── AIContextBuilder.js # Bâtisseur de contexte IA & Rapports
+│   │   ├── Types.js        # Centralisation JSDoc (@typedef)
+│   │   ├── MarkdownUtils.js# AST Markdown + conversion HTML↔MD
+│   │   ├── IOManager.js    # Lectures/écritures fichiers centralisées
+│   │   ├── UIFactory.js    # Composants UI (boutons, badges, toasts)
+│   │   └── Utils.js        # Helpers (slugify, escapeHtml, debounce)
+│   ├── ui/                 # Couche interface (5 fichiers)
+│   │   ├── Navigation.js   # Hash-router SPA (#audit, #dashboard…)
+│   │   ├── Sidebar.js      # Menu latéral rétractable
+│   │   ├── Modal.js        # Service de modales
+│   │   ├── Notes.js        # Gestion des notes
+│   │   └── DOM.js          # Cache de sélecteurs DOM
+│   ├── api/
+│   │   └── api_ia.js       # Abstraction multi-provider (LM Studio, OpenAI, Groq)
+│   ├── components/         # Web Components natifs (5)
+│   │   ├── EzioToast.js    # <ezio-toast>
+│   │   ├── EzioWidget.js   # <ezio-widget>
+│   │   ├── EzioMarkdownEditor.js  # <ezio-markdown-editor>
+│   │   ├── EzioDeliveryCard.js    # <ezio-delivery-card>
+│   │   └── EzioReportEditor.js    # <ezio-report-editor>
+│   └── modules/            # Modules fonctionnels (15 fichiers)
+│       ├── app_audit.js            # Orchestrateur Grille d'audit
+│       ├── AuditRenderer.js        # Rendu de la grille (MVC)
+│       ├── AuditSidebar.js         # Menu hiérarchique & state des filtres
+│       ├── app_dashboard.js        # KPIs + Chart.js
+│       ├── WidgetDataTransformer.js # Extraction séries de données
+│       ├── WidgetRenderer.js       # Rendu Canvas Chart.js
+│       ├── app_deliveries.js       # Livrables IA
+│       ├── app_reports.js          # Templates de rapports
+│       ├── app_creator.js          # Constructeur de formulaires
+│       ├── app_models.js           # Gestion des modèles IA
+│       ├── app_export.js           # Export JSON/CSV
+│       ├── app_output_word.js      # Export Word (.docx)
+│       ├── app_outputppt.js        # Export PowerPoint (Orchestrateur)
+│       ├── PptSlideBuilders.js     # Export PowerPoint (Bâtisseur)
+│       └── app_impression_logic.js # Orchestrateur d'impression
 ├── css/                    # 7 feuilles (shared + par module)
 ├── config/                 # Fichiers de configuration
-├── templates/              # Fichiers d'audit pré-remplis (ISO27002, ISO42001, GHI…)
-└── docs/                   # Documentation technique (5 fichiers)
+│   ├── formats.json
+│   ├── models.json         # Configuration des LLM
+│   ├── output_config.json  # Templates Word/PPT
+│   ├── reports.json        # Définitions de rapports
+│   └── templates.json
+├── templates/              # Fichiers d'audit pré-remplis + modèle Word
+└── docs/                   # Documentation technique (6 fichiers)
 ```
 
 ---
 
-## Modules Fonctionnels — Vue d'ensemble
+## Modules Fonctionnels
 
 | # | Module | Rôle |
 |---|---|---|
@@ -94,13 +100,27 @@ Ezio/
 
 ---
 
+## Web Components
+
+| Composant | Fichier | Créé en |
+|---|---|---|
+| `<ezio-toast>` | `js/components/EzioToast.js` | Phase 3 |
+| `<ezio-widget>` | `js/components/EzioWidget.js` | Phase 3 |
+| `<ezio-markdown-editor>` | `js/components/EzioMarkdownEditor.js` | Phase 4 |
+| `<ezio-delivery-card>` | `js/components/EzioDeliveryCard.js` | Phase 4 |
+| `<ezio-report-editor>` | `js/components/EzioReportEditor.js` | Phase 5 |
+
+---
+
 ## Bilan du Refactoring
 
 | Phase | Statut | Points clés |
 |---|---|---|
-| Phase 1 | ✅ Complète | AST Markdown mutualisé, découplage Dashboard (MVC), Action Router livrables |
-| Phase 2 | ✅ Complète | Store Pub/Sub, IOManager centralisé, UIFactory enrichie |
+| Phase 1 | ✅ | AST Markdown mutualisé, découplage Dashboard (MVC), Action Router livrables |
+| Phase 2 | ✅ | Store Pub/Sub, IOManager centralisé, UIFactory enrichie |
 | Phase 3 | ✅ Partielle | Error Boundaries ✅, Web Components ✅, JSDoc abandonné |
-| Phase 4 | ✅ Complète | `<ezio-markdown-editor>` WC, `<ezio-delivery-card>` WC, Nettoyage Créateur |
-| Phase 5 | ✅ Complète | `<ezio-report-editor>` WC, extraction `AuditSidebar.js` (`app_audit.js` -32%) |
-| Phase 6 | ✅ Complète | Modularisation PPT, spécialisation AIContext, Typage JSDoc |
+| Phase 4 | ✅ | `<ezio-markdown-editor>` WC, `<ezio-delivery-card>` WC, nettoyage Créateur |
+| Phase 5 | ✅ | `<ezio-report-editor>` WC, extraction `AuditSidebar.js` (-32% `app_audit.js`) |
+| Phase 6 | ✅ | Modularisation PPT (`PptSlideBuilders.js`), `AIContextBuilder.js`, `Types.js` |
+
+Version actuelle : **v2.7.0** (26/03/2026)
