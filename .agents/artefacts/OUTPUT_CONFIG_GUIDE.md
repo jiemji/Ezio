@@ -130,7 +130,7 @@ Uniquement pour `SLIDE`. Définit la zone vide principale de la diapositive où 
   "w": 9.0, "h": 4.0  // Largeur et hauteur disponible
 }
 ```
-**Pagination Intelligente** : Si le texte généré par l'IA dépasse la surface définie par `h`, le moteur Pptx d'Ezio provoquera **un saut de page** (« overflow »), arrêtera l'écriture sur la diapositive pleine, et injectera la suite du texte sur une toute nouvelle diapositive (`SLIDE`) au même point `y`.
+**Pagination Intelligente** : Si le texte généré par l'IA dépasse la surface définie par `h`, le moteur `PptSlideBuilders.js` provoquera **un saut de page** (« overflow »), arrêtera l'écriture sur la diapositive pleine, et injectera la suite du texte sur une toute nouvelle diapositive (`SLIDE`) au même point `y`.
 
 ## Exemple
 

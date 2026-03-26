@@ -90,7 +90,21 @@ Les 4 pistes proposées ont été traitées. 3 ont été implémentées, 1 (Pist
 - **Solution Appliquée** : Création de `<ezio-delivery-card>` (338 lignes), Web Component encapsulant le rendu complet et tous les événements internes. Émet 4 événements custom (`card-generate`, `card-move`, `card-remove`, `card-config-change`).
 - **Résultat** : Suppression de `js/modules/DeliveriesRenderer.js`. `app_deliveries.js` passe de 692 à 528 lignes (-37%).
 
-### Inventaire des Web Components Ezio (post-Phase 4)
+## Bilan de Simplification (Phase 5 - Complétée le 25/03/2026)
+
+La Phase 5 s'est concentrée sur l'harmonisation finale de l'architecture et l'extraction des dernières grosses dépendances.
+
+### Axe 2 ✅ : Éditeur de Rapports en Web Component
+- **Problème** : `ReportsRenderer.js` (214 lignes) fonctionnait sur l'ancien pattern (chaîne HTML manuelle + delegation complexe gérée par le contrôleur parent `app_reports.js`).
+- **Solution Appliquée** : Création de `<ezio-report-editor>` (206 lignes), un Web Component double-mode (éditeur de liste de modules / éditeur de configuration de module unique), émettant sagement 7 Custom Events.
+- **Résultat** : Suppression de `js/modules/ReportsRenderer.js`. `app_reports.js` passe de 381 à 342 lignes (-10%). Gain massif de cohérence architecturale.
+
+### Axe 1 ✅ : Extraction de `AuditSidebar.js`
+- **Problème** : `app_audit.js` (413 lignes) était un monolithe concentrant filtrage, rendu du menu latéral, state local, exécution IA, CRUD lignes.
+- **Solution Appliquée** : Extraction de toute la logique de construction de la hiérarchie latérale, de l'indicateur de statut, et de l'état local du filtre (`auditFilters`) vers un module dédié `AuditSidebar.js` (130 lignes).
+- **Résultat** : `app_audit.js` passe à 280 lignes (-32%). Chaque fichier a désormais une responsabilité plus claire.
+
+### Inventaire final des Web Components Ezio
 
 | Composant | Fichier | Créé en |
 |---|---|---|
@@ -98,3 +112,22 @@ Les 4 pistes proposées ont été traitées. 3 ont été implémentées, 1 (Pist
 | `<ezio-widget>` | `js/components/EzioWidget.js` | Phase 3 |
 | `<ezio-markdown-editor>` | `js/components/EzioMarkdownEditor.js` | Phase 4 |
 | `<ezio-delivery-card>` | `js/components/EzioDeliveryCard.js` | Phase 4 |
+| `<ezio-report-editor>` | `js/components/EzioReportEditor.js` | Phase 5 |
+
+---
+
+## Bilan Final (Phase 6 - Complétée le 26/03/2026) ✅
+
+La Phase 6 a scellé l'architecture d'Ezio en s'attaquant au dernier "gros" module et en introduisant une couche de types.
+
+### Axe 1 : Modularisation des Builders PPT
+- **Résultat** : `app_outputppt.js` ne contient plus que l'orchestration. Le "moteur" est dans `PptSlideBuilders.js`. La maintenance des templates complexes est maintenant isolée de la logique d'export.
+
+### Axe 2 : Spécialisation du contexte IA
+- **Résultat** : Création de `AIContextBuilder.js`. `DataUtils.js` redevient un utilitaire pur de filtrage/tri. Cette séparation permet d'enrichir les prompts IA sans polluer les algorithmes de recherche de la grille.
+
+### Axe 3 : Typage et Documentation
+- **Résultat** : Centralisation des contrats de données dans `Types.js`. L'utilisation systématique de JSDoc dans les nouveaux modules garantit une pérennité du code proche du confort de TypeScript.
+
+## Conclusion Générale
+En l'espace d'un mois, Ezio est passé d'une collection de scripts globaux à une **SPA moderne modulaire**. L'utilisation de Web Components natifs (sans Shadow DOM) et d'un routeur Hash a permis de moderniser l'interface tout en conservant la légèreté et la rapidité du projet initial.

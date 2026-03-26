@@ -10,11 +10,8 @@ import { UI } from '../core/UIFactory.js';
 import { DataUtils } from '../core/DataUtils.js';
 import { IOManager } from '../core/IOManager.js';
 import { AuditRenderer } from './AuditRenderer.js';
+import { auditFilters, renderSidebar, resetFilters, getStatusText } from './AuditSidebar.js';
 
-let activeFilters = { chapter: null, subChapter: null };
-let columnFilters = {};
-let currentSort = { colIndex: -1, direction: 'asc' };
-let currentSearch = "";
 let auditAvailableModels = [];
 
 export function initAudit() {
@@ -27,7 +24,7 @@ export function initAudit() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.oninput = (e) => {
-            currentSearch = e.target.value.toLowerCase();
+            auditFilters.search = e.target.value.toLowerCase();
             renderTable();
         };
     }
@@ -58,7 +55,7 @@ export function renderAudit() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.classList.remove('hidden');
-        renderSidebar();
+        renderSidebar(renderAudit);
     }
     renderTable();
     updateStatusIndicator();
@@ -157,12 +154,7 @@ function applyLoadedData(data, message) {
     store.set(newState);
 
     // Reset local state
-    activeFilters = { chapter: null, subChapter: null };
-    columnFilters = {};
-    currentSort = { colIndex: -1, direction: 'asc' };
-    currentSearch = "";
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.value = "";
+    resetFilters();
 
     switchView('app');
     // renderAudit() will be called by subscription or switchView
@@ -175,90 +167,18 @@ function applyLoadedData(data, message) {
     // I should add it to DOM.js or get it here.
 }
 
-function renderSidebar() {
-    const chapterList = document.getElementById('chapterList');
-    if (!chapterList) return;
-    chapterList.innerHTML = "";
-
-    const chapColIdx = currentForm.columns.findIndex(c => c.type === 'chapitre');
-    const subChapColIdx = currentForm.columns.findIndex(c => c.type === 'sous-chapitre');
-
-    if (chapColIdx === -1) return;
-
-    const hierarchy = new Map();
-    let totalCount = 0;
-
-    currentForm.rows.forEach(row => {
-        const chapName = row[chapColIdx] || "Sans chapitre";
-        const subChapName = subChapColIdx !== -1 ? (row[subChapColIdx] ?? null) : null;
-
-        if (!hierarchy.has(chapName)) {
-            hierarchy.set(chapName, { count: 0, subChapters: new Map() });
-        }
-
-        const chapObj = hierarchy.get(chapName);
-        chapObj.count++;
-        totalCount++;
-
-        if (subChapName) {
-            const currentSubCount = chapObj.subChapters.get(subChapName) || 0;
-            chapObj.subChapters.set(subChapName, currentSubCount + 1);
-        }
-    });
-
-    // All
-    const allItem = document.createElement('li');
-    allItem.className = `chapter-item ${(!activeFilters.chapter) ? 'active' : ''}`;
-    allItem.innerHTML = `<span>Vue Globale</span> <span class="count-badge">${totalCount}</span>`;
-    allItem.onclick = () => {
-        activeFilters = { chapter: null, subChapter: null };
-        columnFilters = {};
-        renderAudit();
-    };
-    chapterList.appendChild(allItem);
-
-    // Hierarchy
-    hierarchy.forEach((data, chapName) => {
-        const isChapActive = activeFilters.chapter === chapName;
-        const liChap = document.createElement('li');
-        liChap.className = `chapter-item ${isChapActive && !activeFilters.subChapter ? 'active' : ''}`;
-        liChap.innerHTML = `<span>${chapName}</span> <span class="count-badge">${data.count}</span>`;
-        liChap.onclick = () => {
-            activeFilters = { chapter: chapName, subChapter: null };
-            renderAudit();
-        };
-
-        const subUl = document.createElement('ul');
-        subUl.className = `sub-chapter-list ${isChapActive ? 'open' : ''}`;
-
-        if (data.subChapters.size > 0) {
-            data.subChapters.forEach((count, subName) => {
-                const liSub = document.createElement('li');
-                const isSubActive = isChapActive && activeFilters.subChapter === subName;
-                liSub.className = `sub-chapter-item ${isSubActive ? 'active' : ''}`;
-                liSub.innerText = `${subName} (${count})`;
-                liSub.onclick = (e) => {
-                    e.stopPropagation();
-                    activeFilters = { chapter: chapName, subChapter: subName };
-                    renderAudit();
-                };
-                subUl.appendChild(liSub);
-            });
-        }
-        const container = document.createElement('div');
-        container.appendChild(liChap);
-        if (data.subChapters.size > 0) container.appendChild(subUl);
-        chapterList.appendChild(container);
-    });
-}
-
 function renderTable() {
     const tableContainer = document.getElementById('tableContainer');
     if (!tableContainer) return;
 
     const context = {
         currentForm,
-        filters: { activeFilters, columnFilters, currentSearch, currentSort },
+        filters: {
+            activeFilters: { chapter: auditFilters.chapter, subChapter: auditFilters.subChapter },
+            columnFilters: auditFilters.columnFilters,
+            currentSearch: auditFilters.search,
+            currentSort: auditFilters.sort
+        },
         actions: {
             handleSort,
             handleColumnFilter,
@@ -278,14 +198,7 @@ function renderTable() {
 function updateStatusIndicatorElements(visibleCount) {
     const statusIndicator = document.getElementById('statusIndicator');
     if (!statusIndicator) return;
-
-    let status = [];
-    if (activeFilters.chapter) status.push(`Chap: ${activeFilters.chapter}`);
-    if (activeFilters.subChapter) status.push(`Sous-Chap: ${activeFilters.subChapter}`);
-    if (Object.keys(columnFilters).length > 0) status.push(`Filtres actifs: ${Object.keys(columnFilters).length}`);
-    if (status.length === 0) status.push("Vue Globale");
-    if (currentSearch) status.push(`Rech: "${currentSearch}"`);
-    statusIndicator.innerText = `${status.join(' | ')} (${visibleCount} lignes)`;
+    statusIndicator.innerText = getStatusText(visibleCount);
 }
 
 function updateStatusIndicator() {
@@ -293,19 +206,19 @@ function updateStatusIndicator() {
 }
 
 function handleSort(cIdx) {
-    if (currentSort.colIndex === cIdx) {
-        if (currentSort.direction === 'asc') currentSort.direction = 'desc';
-        else if (currentSort.direction === 'desc') { currentSort.colIndex = -1; currentSort.direction = 'asc'; }
+    if (auditFilters.sort.colIndex === cIdx) {
+        if (auditFilters.sort.direction === 'asc') auditFilters.sort.direction = 'desc';
+        else if (auditFilters.sort.direction === 'desc') { auditFilters.sort.colIndex = -1; auditFilters.sort.direction = 'asc'; }
     } else {
-        currentSort.colIndex = cIdx;
-        currentSort.direction = 'asc';
+        auditFilters.sort.colIndex = cIdx;
+        auditFilters.sort.direction = 'asc';
     }
     renderTable();
 }
 
 function handleColumnFilter(cIdx, value) {
-    if (value === "") delete columnFilters[cIdx];
-    else columnFilters[cIdx] = value;
+    if (value === "") delete auditFilters.columnFilters[cIdx];
+    else auditFilters.columnFilters[cIdx] = value;
     renderTable();
 }
 

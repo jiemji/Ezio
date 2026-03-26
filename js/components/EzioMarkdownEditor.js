@@ -138,7 +138,7 @@ export class EzioMarkdownEditor extends HTMLElement {
                  <button class="btn-secondary small btn-md-format" data-action="underline" title="Souligné" style="${btnStyle}"><u>S</u></button>
             </div>
             <div class="dlv-card-result form-control markdown-editor-content" id="${editorId}" contenteditable="true"
-                 style="width: 100%; min-height: ${minHeight}; height: ${minHeight}; box-sizing: border-box; overflow-y: auto; overflow-x: auto; margin-top: 5px; text-align: left; resize: vertical; outline: none; border: 1px solid var(--border); border-radius: 4px; padding: 10px;"></div>
+                 style="min-height: ${minHeight}; height: ${minHeight}; box-sizing: border-box; overflow-y: auto; overflow-x: auto; margin-top: 5px; text-align: left; resize: vertical; outline: none; border: 1px solid var(--border); border-radius: 4px; padding: 10px;"></div>
         `;
 
         this.#editorEl = this.querySelector(`#${editorId}`);

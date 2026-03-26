@@ -59,7 +59,7 @@ Fichier maître situé à la racine.
 ## 4. Outils IA (Éditeur Markdown)
 
 ### Spécifications Fonctionnelles
-*   **Objectif :** Appliquer un traitement rapide (traduction, correction, synthesis) sur le texte saisi.
+*   **Objectif :** Appliquer un traitement rapide (traduction, correction, synthèse) sur le texte saisi.
 *   **Trigger :** Clic sur le bouton Baguette Magique (✨) de l'éditeur Markdown (`MarkdownEditor.js`).
 *   **Sélection :** Modèles avec `"outil": true`.
 *   **Action :** Le texte de l'éditeur est envoyé au modèle outil sélectionné, et la réponse remplace le texte original une fois validée.
@@ -96,7 +96,7 @@ Fichier maître situé à la racine.
 
 ### Implémentation Technique (`app_deliveries.js`)
 *   **Fonction Clé :** `generateModule(delivery, index)`
-*   **Helper :** `buildContext(scope, columns, data)`
+*   **Helper :** `AIContextBuilder.buildTable(scope, columns, data)` (Extrait en Phase 6)
     *   Filtre les colonnes (config module).
     *   Filtre les lignes (config scope).
     *   Génère une string Markdown (`| Header |\n| --- |\n| Cell |...`).

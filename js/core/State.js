@@ -19,22 +19,24 @@ const INITIAL_STATE = {
     deliveries: []
 };
 
+// --- AUDIT STORE ---
 /**
  * Main Store Instance (Audit)
- * @type {Store}
+ * @type {import('./Store.js').Store}
  */
 export const store = new Store(STORAGE_KEY, INITIAL_STATE);
 
-// Live binding for currentForm
+/**
+ * Live binding for currentForm
+ * @type {import('./Types.js').AuditData}
+ */
 export let currentForm = store.get();
 
 store.subscribe((newState) => {
     currentForm = newState;
-    // console.log("State Updated:", newState);
 });
 
-// Legacy support if needed (can be removed later)
-// Legacy support if needed (can be removed later)
+// Legacy support
 window.EzioStore = store;
 window.EzioData = currentForm;
 
@@ -45,7 +47,14 @@ const INITIAL_REPORTS_STATE = {
     modules: []
 };
 
+/**
+ * @type {import('./Store.js').Store}
+ */
 export const reportsStore = new Store(STORAGE_KEY_REPORTS, INITIAL_REPORTS_STATE);
+
+/**
+ * @type {Object}
+ */
 export let reportsData = reportsStore.get();
 
 reportsStore.subscribe((newState) => {
