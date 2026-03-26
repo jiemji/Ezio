@@ -137,49 +137,106 @@ body.dark-mode .sidebar-item.selected {
     align-items: flex-start;
 }
 
-/* CONTENT TRACK */
+/* CONTENT TRACK — Vertical stacking */
 .dlv-horizontal-track {
     display: flex;
+    flex-direction: column;
     gap: 1.5rem;
-
-    /* MOVED PADDING HERE to space content from edges */
     padding: 2rem;
-
-    /* Removed forced height/flex so it adapts to children (cards) */
-    /* flex: 1; */
-    /* min-height: 100%; */
-
     height: auto;
-
-    /* Ensure track takes at least full width to allow scrolling if needed */
-    width: max-content;
-    min-width: 100%;
-
-    /* Align items to start so they don't stretch to the height of the container */
-    align-items: flex-start;
+    width: 100%;
+    align-items: stretch;
 }
 
-/* CARDS */
+/* CARDS — Full-width, vertical stacking */
 .dlv-card {
-    /* 
-       Updated Calculation: Fixed Width as requested
-    */
-    width: 732px;
-    min-width: 732px;
-
+    width: fit-content;
+    margin: 0 auto;
+    min-width: 540px;
+    max-width: 100%;
     flex: 0 0 auto;
-    /* No resizing via flex */
-
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-
     height: auto;
-    /* Allow vertical growth */
+    overflow: hidden;
+}
+
+.dlv-card-header {
+    width: 100%;
+}
+
+/* CARD CONTENT — 2-column layout (footer left, body right) */
+.dlv-card-content {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
     overflow: visible;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.dlv-card-content > .dlv-card-footer {
+    flex: 1 1 1024px;
+    width: 1024px;
+    min-width: 500px;
+    max-width: 1024px;
+    border-top: none;
+    transition: all 0.35s ease;
+}
+
+.dlv-card-separator {
+    flex: 0 0 40px;
+    width: 40px;
+    background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    user-select: none;
+}
+
+.dlv-separator-label {
+    transform: rotate(-90deg);
+    white-space: nowrap;
+    font-weight: bold;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+}
+
+.dlv-card-content > .dlv-card-body {
+    flex: 0 0 600px;
+    min-width: 600px;
+    border-top: none;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+    background-color: var(--bg-color);
+}
+
+.dlv-card-content > .dlv-card-body.collapsed {
+    flex: 0 0 0px;
+    min-width: 0px;
+    border: none;
+}
+
+.dlv-card-content > .dlv-card-body.collapsed > .dlv-card-body-content {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dlv-card-content > .dlv-card-body.collapsed:hover {
+    background-color: var(--primary-light);
 }
 
 .dlv-card-header {
@@ -199,9 +256,9 @@ body.dark-mode .sidebar-item.selected {
 }
 
 .dlv-card-body {
-    /* flex: 1; Removed to let the body adapt to content height */
     padding: 15px;
     overflow: visible;
+    overflow-y: auto;
 }
 
 .dlv-card-footer {
@@ -209,7 +266,27 @@ body.dark-mode .sidebar-item.selected {
     padding: 10px 15px;
     border-top: 1px solid var(--border);
     background-color: var(--bg-secondary);
-    text-align: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.dlv-card-footer .btn-generate {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 12px 8px;
+}
+
+.dlv-card-footer ezio-markdown-editor {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* RESULT AREA */

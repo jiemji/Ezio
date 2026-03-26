@@ -1,14 +1,10 @@
-# Phase 6 — Stabilité & Finitions
+# Ezio Deliveries Layout Refinement - Phase 2 (Footer Width Fix)
 
-- [x] Phase 6 — Axe 1 : Refactoring `app_outputppt.js`
-    - [x] Créer `js/modules/PptSlideBuilders.js`
-    - [x] Mettre à jour `app_outputppt.js`
-    - [x] Nettoyer `app_outputppt.js`
-- [x] Phase 6 — Axe 2 : Spécialisation de `DataUtils.js`
-    - [x] Créer `js/core/AIContextBuilder.js`
-    - [x] Migrer `buildContext` vers `AIContextBuilder.buildTable`
-    - [x] Mettre à jour les consommateurs (Deliverables, Word, PPT)
-- [x] Phase 6 — Axe 3 : Typage JSDoc
-    - [x] Créer `js/core/Types.js` pour centraliser les types
-    - [x] Ajouter les types JSDoc clés pour currentForm et les configurations PPT/Word
-    - [x] Documenter les nouveaux modules (Builders/Context)
+## Tasks
+- [x] Fix `style_deliveries.css` footer expansion <!-- id: 29 -->
+    - [x] Set `width: 1024px` on `.dlv-card-footer` to inform `fit-content` sizing <!-- id: 30 -->
+    - [x] Add `max-width: 100%` to `.dlv-card` to ensure responsiveness <!-- id: 31 -->
+    - [x] Add `flex-grow: 1` to footer to ensure it fills available space in the card <!-- id: 32 -->
+- [x] Manual Verification (No Browser Subagent) <!-- id: 33 -->
+    - [x] Verify editor takes 1024px on large screens <!-- id: 34 -->
+    - [x] Verify editor shrinks gracefully on small screens <!-- id: 35 -->

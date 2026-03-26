@@ -25,6 +25,7 @@ export class EzioDeliveryCard extends HTMLElement {
     #context = null;
     #rendered = false;
     #debouncedConfigChange = null;
+    #eventsBound = false;
 
     constructor() {
         super();
@@ -61,6 +62,7 @@ export class EzioDeliveryCard extends HTMLElement {
         const idx = this.#idx;
         const { availableModels, availableModules, currentForm, hierarchy, totalInstances } = this.#context;
 
+        // Note: #bindEvents moved to connectedCallback to prevent duplicates
         const sourceModName = inst.name || ((availableModules || []).find(m => m.id === inst.sourceId) || { name: 'Module' }).name;
 
         // Ensure config defaults
@@ -93,60 +95,67 @@ export class EzioDeliveryCard extends HTMLElement {
                     <button class="btn-card-action danger btn-remove-mod" title="Retirer du livrable">🗑️</button>
                  </div>
             </div>
-            <div class="dlv-card-body">
-                <div class="form-group">
-                    <div style="display:flex; align-items:center; margin-bottom:5px;">
-                        <label style="margin-bottom:0; margin-right: 10px;">Scope (Périmètre)</label>
-                        <button class="btn-toggle-collapse" title="Replier/Déplier" style="padding:0; border:none; background:none; cursor:pointer;">
-                            ${isCollapsed ? '▶' : '▼'}
-                        </button>
-                    </div>
-                    
-                    <div class="dlv-inputs-wrapper" style="${isCollapsed ? 'display:none;' : ''}">
-                        <select class="form-control slc-inst-scope">
-                            <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
-                            <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
-                        </select>
-
-                        ${this.#renderChapterSelector(scopeType, hierarchy, inst.config.scope.selection || [])}
-
-                        <div class="form-group" style="margin-top:1rem;">
-                            <label>Colonnes à inclure</label>
-                            ${this.#renderColumnSelector(inst.config.columns, currentForm)}
+            <div class="dlv-card-content">
+                <div class="dlv-card-footer">
+                     <button class="btn-primary small btn-generate">Tester / Générer</button>
+                     <ezio-markdown-editor editor-id="dlv-editor-${idx}" min-height="300px" data-value="${Utils.escapeHtml(inst.result || '')}"></ezio-markdown-editor>
+                </div>
+                <div class="dlv-card-separator" title="${isCollapsed ? 'Déplier' : 'Replier'} la configuration">
+                    <div class="dlv-separator-label">CONFIGURATION ${isCollapsed ? '▶' : '◀'}</div>
+                </div>
+                <div class="dlv-card-body ${isCollapsed ? 'collapsed' : ''}">
+                    <div class="dlv-card-body-content">
+                        <div class="form-group" style="margin-bottom:5px;">
+                            <label style="margin-bottom:0;">Scope (Périmètre)</label>
                         </div>
-
-                        <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
-                            <input type="checkbox" class="chk-format-table" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
-                            <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
-                        </div>
-
-                        <div class="form-group" style="margin-top:10px;">
-                            <label>Widgets Dashboard (Export Document)</label>
-                            ${this.#renderWidgetSelector(inst.config.widgets, currentForm)}
-                        </div>
-
-                        <div class="form-group">
-                            <label>Prompt IA</label>
-                            <textarea class="form-control txt-inst-prompt" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Agent IA</label>
-                            <select class="form-control slc-inst-model">
-                                <option value="">-- Défaut --</option>
-                                ${availableModels.map(m => `<option value="${m.nom}" ${m.nom === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
+                        
+                        <div class="dlv-inputs-wrapper" style="${isCollapsed ? 'display:none;' : ''}">
+                            <select class="form-control slc-inst-scope">
+                                <option value="global" ${scopeType === 'global' ? 'selected' : ''}>Global (Tout l'audit)</option>
+                                <option value="chapter" ${scopeType === 'chapter' ? 'selected' : ''}>Par Chapitre / Sous-chapitre</option>
                             </select>
+
+                            ${this.#renderChapterSelector(scopeType, hierarchy, inst.config.scope.selection || [])}
+
+                            <div class="form-group" style="margin-top:1rem;">
+                                <label>Colonnes à inclure</label>
+                                ${this.#renderColumnSelector(inst.config.columns, currentForm)}
+                            </div>
+
+                            <div class="form-group" style="display:flex; align-items:center; margin-top:10px;">
+                                <input type="checkbox" class="chk-format-table" ${inst.config.isTable ? 'checked' : ''} id="chkTable_${idx}" style="margin-right:8px;">
+                                <label for="chkTable_${idx}" style="margin-bottom:0; cursor:pointer;">Tableau (Format de sortie)</label>
+                            </div>
+
+                            <div class="form-group" style="margin-top:10px;">
+                                <label>Widgets Dashboard (Export Document)</label>
+                                ${this.#renderWidgetSelector(inst.config.widgets, currentForm)}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Prompt IA</label>
+                                <textarea class="form-control txt-inst-prompt" rows="5">${Utils.escapeHtml(aiPrompt)}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Agent IA</label>
+                                <select class="form-control slc-inst-model">
+                                    <option value="">-- Défaut --</option>
+                                    ${availableModels.map(m => `<option value="${m.nom}" ${m.nom === aiModel ? 'selected' : ''}>${m.nom}</option>`).join('')}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="dlv-card-footer">
-                 <button class="btn-primary small btn-generate" style="width:100%;">Tester / Générer</button>
-                 <ezio-markdown-editor editor-id="dlv-editor-${idx}" min-height="300px" data-value="${Utils.escapeHtml(inst.result || '')}"></ezio-markdown-editor>
-            </div>
         `;
 
-        this.#bindEvents();
         this.#rendered = true;
+    }
+
+    connectedCallback() {
+        if (this.#eventsBound) return;
+        this.#bindEvents();
+        this.#eventsBound = true;
     }
 
     // --- Sub-renderers (migrated from DeliveriesRenderer) ---
@@ -255,16 +264,13 @@ export class EzioDeliveryCard extends HTMLElement {
             }
 
             // Toggle collapse
-            const btnCollapse = target.closest('.btn-toggle-collapse');
-            if (btnCollapse) {
-                const isCollapsed = this.#instance.config.collapsed;
-                this.#instance.config.collapsed = !isCollapsed;
+            const separator = target.closest('.dlv-card-separator');
+            
+            if (separator) {
+                const isCollapsedNow = this.#instance.config.collapsed;
+                this.#instance.config.collapsed = !isCollapsedNow;
 
-                // Direct DOM update (avoid full re-render)
-                const wrapper = this.querySelector('.dlv-inputs-wrapper');
-                if (wrapper) wrapper.style.display = !isCollapsed ? 'none' : 'block';
-                btnCollapse.innerText = !isCollapsed ? '▶' : '▼';
-
+                this.#render();
                 this.#emitConfigChange();
                 return;
             }

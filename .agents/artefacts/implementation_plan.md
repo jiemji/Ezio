@@ -1,30 +1,29 @@
-# Phase 6 — Stabilité & Finitions (Proposition)
+# Implementation Plan - Phase 2 (Fix): Editor Expansion
 
-## Objectif
-Finaliser le refactoring en s'attaquant aux derniers gros fichiers monolithiques et en améliorant la robustesse du typage (JSDoc).
+The goal is to fix the issue where the editor (footer) remains at its minimum width instead of expanding to its 1024px target. This is caused by the `fit-content` property on the card parent, which defaults to the minimum required width unless a larger base width is specified for children.
 
-## Axes Proposés
+## User Review Required
 
-### Axe 1 : Refactoring des Exports (`app_outputppt.js`)
-**Problème** : C'est le plus gros fichier restant (554 lignes). Il mélange orchestration, parsing Markdown v2, et dessin bas-niveau PptxGenJS.
-**Solution Appliquée** :
-#### [NEW] [PptSlideBuilders.js](file:///g:/devapps/Ezio/js/modules/PptSlideBuilders.js)
-- Contiendra `drawMasterElements`, `parseMarkdownToSlide`, `addPptTable`, `formatAndPushRuns`.
-- Sera l'unité spécialisée dans la conversion AST → Diapositives.
-#### [MODIFY] [app_outputppt.js](file:///g:/devapps/Ezio/js/modules/app_outputppt.js)
-- Ne conservera que `downloadDeliveryPpt` et `loadPptConfig`.
-- Deviendra un simple orchestrateur de 150-200 lignes.
+> [!IMPORTANT]
+> - **Width Overrides**: I will set an explicit `width: 1024px` and `flex-grow: 1` on the footer to force it to attempt its maximum size.
+> - **Responsiveness**: The `dlv-card` will be capped at `max-width: 100%` of the viewport to ensure it doesn't overflow on small screens while still allowing full expansion on large screens.
 
-### Axe 2 : Spécialisation de `DataUtils.js`
-**Problème** : `DataUtils.js` mélange le filtrage d'Audit, le calcul du Dashboard, et la préparation du contexte IA.
-**Solution** : Scinder en `DataUtils.js` (Pure logic) et `AIContextBuilder.js` (Logique spécifique aux prompts).
+## Proposed Changes
 
-### Axe 3 : Typage JSDoc (Axe 7 reporté)
-**Problème** : Les objets `currentForm` et `config` circulent sans définition de type, rendant le refactoring dangereux.
-**Solution** : Ajouter des définitions `@typedef` globales dans un fichier `types.d.ts` (virtuel via JSDoc) pour bénéficier de l'autocomplétion.
+### CSS Styles
+#### [MODIFY] [style_deliveries.css](file:///g:/devapps/Ezio/css/style_deliveries.css)
+- `.dlv-card`: Add `max-width: 100%;`.
+- `.dlv-card-content > .dlv-card-footer`:
+    - Add `width: 1024px;` (to provide a base for `fit-content` calculation).
+    - Ensure `flex: 1 1 1024px;`.
+    - Maintain `min-width: 500px` and `max-width: 1024px`.
 
-## Gains Attendus
-| Module | Lignes Actuelles | Cible |
-|---|---|---|
-| `app_outputppt.js` | 467 | ~300 |
-| `DataUtils.js` | 245 | ~150 |
+## Verification Plan
+
+### Automated Tests
+- **DISABLED** as per user request.
+
+### Manual Verification
+- Verify that on a large screen, the editor expands to 1024px.
+- Confirm that the whole card remains centered.
+- Check that the configuration panel still toggles correctly and the card shrinks accordingly.

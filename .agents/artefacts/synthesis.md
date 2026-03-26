@@ -118,9 +118,10 @@ Ezio/
 |---|---|---|
 | Phase 1 | ✅ | AST Markdown mutualisé, découplage Dashboard (MVC), Action Router livrables |
 | Phase 2 | ✅ | Store Pub/Sub, IOManager centralisé, UIFactory enrichie |
-| Phase 3 | ✅ Partielle | Error Boundaries ✅, Web Components ✅, JSDoc abandonné |
+| Phase 3 | ✅ | Error Boundaries ✅, Web Components ✅ |
 | Phase 4 | ✅ | `<ezio-markdown-editor>` WC, `<ezio-delivery-card>` WC, nettoyage Créateur |
 | Phase 5 | ✅ | `<ezio-report-editor>` WC, extraction `AuditSidebar.js` (-32% `app_audit.js`) |
 | Phase 6 | ✅ | Modularisation PPT (`PptSlideBuilders.js`), `AIContextBuilder.js`, `Types.js` |
+| Phase 7 | ✅ | Refonte Layout Livrables (Cartes verticales, 2 colonnes, footer horizontal) |
 
-Version actuelle : **v2.7.0** (26/03/2026)
+Version actuelle : **v2.8.0** (26/03/2026)
