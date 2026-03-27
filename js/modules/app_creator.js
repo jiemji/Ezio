@@ -30,23 +30,41 @@ export function initCreator() {
             }
 
             try {
-                const formData = await IOManager.readJSON(file);
+                let formData = await IOManager.readJSON(file);
+
+                // Handle flat array of objects (Source Data)
+                if (Array.isArray(formData)) {
+                    const headers = [];
+                    formData.forEach(obj => {
+                        Object.keys(obj).forEach(key => {
+                            if (!headers.includes(key)) headers.push(key);
+                        });
+                    });
+
+                    const rows = formData.map(obj => headers.map(h => (obj[h] !== undefined && obj[h] !== null) ? obj[h] : ""));
+                    
+                    formData = {
+                        name: file.name.replace(/\.[^/.]+$/, ""), // Filename without extension
+                        columns: headers.map(h => ({ label: h, type: 'question', visible: true })),
+                        rows: rows
+                    };
+                }
+
                 // Basic validation
-                if (!formData.name || !Array.isArray(formData.columns)) {
+                if (!formData || !formData.name || !Array.isArray(formData.columns)) {
                     throw new Error("Format de formulaire invalide.");
                 }
 
-                // Assuming creatorData needs to be populated from formData
-                // This part is a guess based on the original parseImportJSON logic
-                // and the new formData structure.
+                // Populate creatorData
                 creatorData.headers = formData.columns.map(c => c.label);
-                creatorData.rows = formData.rows || []; // Assuming rows might be part of formData
+                creatorData.rows = formData.rows || [];
                 creatorData.configs = formData.columns.map(col => ({
                     label: col.label,
                     visible: col.visible !== false,
                     type: col.type || 'question',
                     params: col.params || {}
                 }));
+
                 formData.columns.forEach((col, idx) => {
                     if (col.size) {
                         if (!creatorData.configs[idx].params) creatorData.configs[idx].params = {};
@@ -54,15 +72,17 @@ export function initCreator() {
                     }
                 });
 
-                renderCreatorTable(); // Assuming renderCreatorForm() is now renderCreatorTable()
+                renderCreatorTable();
                 const creatorConfigDiv = document.getElementById('creatorConfig');
                 if (creatorConfigDiv) creatorConfigDiv.classList.remove('hidden');
 
-                UI.showToast(`Formulaire "${formData.name}" importé avec succès.`, "success");
+                UI.showToast(`Données "${formData.name}" importées avec succès.`, "success");
 
             } catch (error) {
-                // Toast already shown by IOManager if JSON parse fails, but we can catch structural errors here
                 UI.showToast("Erreur d'import : " + error.message, "danger");
+            } finally {
+                // Clear input to allow re-importing the same file
+                csvInput.value = "";
             }
         });
     }
