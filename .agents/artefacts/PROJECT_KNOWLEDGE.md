@@ -115,7 +115,8 @@ graph TD
     *   **Optimisation** : Réutilise les instances `Chart.js` via `chart.update()` pour éviter le scintillement lors des rafraîchissements et de l'édition (⚙️).
 
 4.  **Module Créateur (`app_creator.js`)** :
-    *   Outil de configuration pour transformer un JSON plat importé en structure Ezio.
+    *   Outil de configuration pour transformer des **données sources (JSON plat)** ou une **configuration existante** en structure d'audit Ezio.
+    *   **Import Flexible** : Détection automatique du format (liste d'objets ou objet structuré) et extraction dynamique des en-têtes.
     *   Définition des types de colonnes, paramètres IA (prompts), schémas de couleurs.
     *   **Ajout dynamique de colonnes** : Possibilité d'étendre la structure existante directement depuis l'interface.
 
