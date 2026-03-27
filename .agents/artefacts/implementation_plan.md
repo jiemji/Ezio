@@ -1,29 +1,30 @@
-# Implementation Plan - Phase 2 (Fix): Editor Expansion
+# Implementation Plan - Fix JSON Import in Form Creator
 
-The goal is to fix the issue where the editor (footer) remains at its minimum width instead of expanding to its 1024px target. This is caused by the `fit-content` property on the card parent, which defaults to the minimum required width unless a larger base width is specified for children.
-
-## User Review Required
-
-> [!IMPORTANT]
-> - **Width Overrides**: I will set an explicit `width: 1024px` and `flex-grow: 1` on the footer to force it to attempt its maximum size.
-> - **Responsiveness**: The `dlv-card` will be capped at `max-width: 100%` of the viewport to ensure it doesn't overflow on small screens while still allowing full expansion on large screens.
+The "Générateur de Formulaire" (Form Creator) currently fails to import flat JSON arrays like `Tableau27001.json` because it strictly validates for a structured form object (containing `name` and `columns`). This plan updates the import logic to support both formats.
 
 ## Proposed Changes
 
-### CSS Styles
-#### [MODIFY] [style_deliveries.css](file:///g:/devapps/Ezio/css/style_deliveries.css)
-- `.dlv-card`: Add `max-width: 100%;`.
-- `.dlv-card-content > .dlv-card-footer`:
-    - Add `width: 1024px;` (to provide a base for `fit-content` calculation).
-    - Ensure `flex: 1 1 1024px;`.
-    - Maintain `min-width: 500px` and `max-width: 1024px`.
+### [Form Creator Logic] (file:///g:/devapps/Ezio/js/modules/app_creator.js)
+
+#### [MODIFY] [app_creator.js](file:///g:/devapps/Ezio/js/modules/app_creator.js)
+
+- Refactor the `csvInput` change listener to handle both **Source Data (flat JSON)** and **Form Configuration (structured JSON)**.
+- **Logic for Flat JSON Arrays (Source Data):**
+    - If `formData` is an array:
+        - Extract all unique keys from all objects in the array to build `creatorData.headers`.
+        - Map each object to an array of values based on these headers to build `creatorData.rows`.
+        - Automatically initialize `creatorData.configs` for each header (Visible=true, Type=question).
+- **Logic for Structured JSON (Form Configuration):**
+    - Maintain existing logic that expects `name` and `columns`.
+- Update the UI to show the `creatorConfig` section immediately after a successful import.
+- Add a check to clear previously selected files on the input to allow re-importing the same file if needed.
 
 ## Verification Plan
 
-### Automated Tests
-- **DISABLED** as per user request.
-
 ### Manual Verification
-- Verify that on a large screen, the editor expands to 1024px.
-- Confirm that the whole card remains centered.
-- Check that the configuration panel still toggles correctly and the card shrinks accordingly.
+1. Open the "Formulaires" page in the application.
+2. Click on "📂 Importer un fichier de données".
+3. Select `tools/Tableau27001.json`.
+4. Verify that the table appears with columns like "Pilier de sécurité", "Ref Objectifs", etc.
+5. Verify that the "Générer et Charger le JSON" button works and successfully loads the data into the "Audit" view.
+6. Repeat with a structured JSON like `templates/ISO27002.json` (or a previously exported `audit_config.json`) to ensure no regression.

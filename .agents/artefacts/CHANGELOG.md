@@ -2,6 +2,12 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.7.5] - 2026-03-27
+### Correction Import Générateur (Axe 10)
+- **Import Flexible (`app_creator.js`)** : Le bouton d'import dans le Générateur de Formulaire accepte désormais les fichiers JSON "plats" (liste d'objets) en plus des configurations structurées.
+- **Transformation Automatique** : Extraction dynamique des en-têtes et transformation des objets en lignes (arrays) lors de l'import de données sources, permettant de construire un audit à partir de n'importe quel JSON simple.
+- **Amélioration UX** : Réinitialisation automatique du champ de sélection de fichier après l'import pour permettre des imports successifs sans rechargement.
+
 ## [2.7.0] - 2026-03-26
 ### Refactorisation Finales & Stabilité (Phase 6)
 - **Modularisation PowerPoint (`PptSlideBuilders.js`)** : La logique titanesque de construction des slides, de pagination et de rendu des tableaux a été extraite de `app_outputppt.js`. Ce dernier est désormais un orchestrateur léger (-70% de lignes de code).
