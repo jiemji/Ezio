@@ -40,7 +40,7 @@ export const App = {
         initRouter();
 
         // 5. Subscribe to Store for Menu State
-        store.subscribe('menu', () => {
+        store.subscribe(() => {
             updateMenuState();
         });
         updateMenuState(); // Initial check
