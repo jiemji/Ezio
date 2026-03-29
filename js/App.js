@@ -96,7 +96,7 @@ function setupGlobalListeners() {
     DOM.btnShowDashboard?.addEventListener('click', () => window.location.hash = 'dashboard');
     DOM.btnShowModels?.addEventListener('click', () => window.location.hash = 'models');
     DOM.btnShowReports?.addEventListener('click', () => window.location.hash = 'reports');
-    DOM.btnShowDeliveries?.addEventListener('click', () => window.location.hash = 'deliveries');
+    DOM.btnShowDeliveries?.addEventListener('click', () => window.location.hash = 'deliveries_v2');
 
     // Sidebar
     // Sidebar

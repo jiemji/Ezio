@@ -6,6 +6,7 @@ export const DOM = {
     modelsView: document.getElementById('models-view'),
     reportsView: document.getElementById('reports-view'),
     deliveriesView: document.getElementById('deliveries-view'),
+    deliveriesV2View: document.getElementById('deliveries-v2-view'),
 
     // Boutons Show
     btnShowApp: document.getElementById('btnShowApp'),

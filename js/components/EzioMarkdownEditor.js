@@ -22,6 +22,8 @@ import { Utils } from '../core/Utils.js';
 import { MarkdownUtils } from '../core/MarkdownUtils.js';
 import { Modal } from '../ui/Modal.js';
 import { ApiService } from '../api/api_ia.js';
+import { currentForm } from '../core/State.js';
+import { AIContextBuilder } from '../core/AIContextBuilder.js';
 
 export class EzioMarkdownEditor extends HTMLElement {
     #editorEl = null;
@@ -342,6 +344,50 @@ export class EzioMarkdownEditor extends HTMLElement {
         if (!window.marked) return md;
 
         let parsed = window.marked.parse(md);
+
+        // Transformation des macros {{KPI:id}} en widgets visuels non-éditables complets
+        parsed = parsed.replace(/\{\{KPI:([^}]+)\}\}/g, (match, id) => {
+             return `<div contenteditable="false" style="margin: 20px 0; padding: 10px; background: var(--bg-secondary); border-radius: 8px; user-select: none; display: block; overflow: hidden; max-height: 450px;"><ezio-widget data-id="${id}" readonly="true"></ezio-widget></div>`;
+        });
+
+        // Transformation des macros {{DATATABLE:config}} en Tableaux non-éditables complets
+        parsed = parsed.replace(/\{\{DATATABLE:([A-Za-z0-9+/=]+)\}\}/g, (match, b64Config) => {
+             try {
+                 const configStr = decodeURIComponent(atob(b64Config));
+                 const config = JSON.parse(configStr);
+                 let mdTable = AIContextBuilder.buildTable(config.scope, config.columns, currentForm);
+                 let htmlTable = window.marked.parse(mdTable);
+                 // Nettoyage car marked.js peut rajouter des sauts de lignes inutiles
+                 htmlTable = htmlTable.replace(/>\n\s*</g, '><').trim();
+                 return `<div contenteditable="false" class="datatable-placeholder" data-config="${b64Config}" style="margin: 20px 0; border: 1px solid var(--border); background:var(--bg-secondary); padding:10px; border-radius:8px; max-height:450px; overflow-y:auto; overflow-x:auto;">
+                    <div style="font-weight:bold; color:var(--text-main); margin-bottom:10px;">📊 Table de données (${config.scope && config.scope.type === 'global' ? 'Global' : 'Par Chapitre'})</div>
+                    ${htmlTable}
+                 </div>`;
+             } catch(e) {
+                 return `<div contenteditable="false" class="datatable-placeholder" style="color:var(--danger); margin:10px 0; padding:10px; border:1px solid var(--danger);">[Table de données invalide]</div>`;
+             }
+        });
+
+        // Transformation des macros {{SYNTHESE:config}} en bloc IA non-éditable
+        parsed = parsed.replace(/\{\{SYNTHESE:([A-Za-z0-9+/=]+)\}\}/g, (match, b64Config) => {
+             try {
+                 const configStr = decodeURIComponent(atob(b64Config));
+                 const config = JSON.parse(configStr);
+                 let htmlResult = window.marked.parse(config.result || "Aucun résultat généré.");
+                 return `<div contenteditable="false" class="synthese-placeholder" data-config="${b64Config}" style="margin: 20px 0; border: 2px solid var(--primary-color); border-left-width: 6px; background:var(--bg-color); padding:15px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border);">
+                        <span style="font-weight:bold; color:var(--primary-color); font-size:1.1em;">✨ Synthèse IA</span>
+                        <span style="font-size:0.8em; color:var(--text-muted); background:var(--bg-secondary); padding:2px 8px; border-radius:12px;">Modèle : ${Utils.escapeHtml(config.model)}</span>
+                    </div>
+                    <div class="synthese-content" style="color:var(--text-main); opacity:0.9;">
+                        ${htmlResult}
+                    </div>
+                 </div>`;
+             } catch(e) {
+                 return `<div contenteditable="false" class="synthese-placeholder" style="color:var(--danger); margin:10px 0; padding:10px; border:1px solid var(--danger);">[Bloc Synthèse invalide]</div>`;
+             }
+        });
+
         // Clean up visual line breaks injected by marked.js
         parsed = parsed.replace(/>\n\s*</g, '><').trim();
         parsed = parsed.replace(/\n<\/p>/g, '</p>').replace(/<br>\n/g, '<br>');

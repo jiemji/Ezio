@@ -12,6 +12,9 @@ export class EzioWidget extends HTMLElement {
 
     // Called when the element is inserted into the DOM
     connectedCallback() {
+        if (!this.widgetDef && this.dataset.id && currentForm && currentForm.statics) {
+            this.widgetDef = currentForm.statics.find(w => w.id === this.dataset.id);
+        }
         if (!this.widgetDef) return;
         this.render();
     }
@@ -52,29 +55,41 @@ export class EzioWidget extends HTMLElement {
             this.chartInitialized = false;
         }
 
+        const isReadonly = this.hasAttribute('readonly');
+
         // We use innerHTML but it's isolated to this component's logic
-        this.innerHTML = `
-            <div class="widget-header">
-                <h3>${this.escapeHtml(this.widgetDef.title)}</h3>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-icon btn-edit" title="Modifier">⚙️</button>
-                    <button class="btn-icon danger btn-delete" title="Supprimer">🗑️</button>
+        if (isReadonly) {
+            this.innerHTML = `
+                <div class="widget-header" style="pointer-events: none;">
+                    <h3 style="margin:0; font-size:1rem;">${this.escapeHtml(this.widgetDef.title)}</h3>
                 </div>
-            </div>
-            <div class="canvas-container" style="flex: 1; position: relative; min-height: ${this.classList.contains('widget-wide') ? '350px' : '250px'}; padding: 10px;">
-                <canvas></canvas>
-            </div>
-        `;
+                <div class="canvas-container" style="position: relative; height: ${this.classList.contains('widget-wide') ? '350px' : '250px'}; padding: 10px; pointer-events: none;">
+                    <canvas></canvas>
+                </div>
+            `;
+        } else {
+            this.innerHTML = `
+                <div class="widget-header">
+                    <h3>${this.escapeHtml(this.widgetDef.title)}</h3>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-icon btn-edit" title="Modifier">⚙️</button>
+                        <button class="btn-icon danger btn-delete" title="Supprimer">🗑️</button>
+                    </div>
+                </div>
+                <div class="canvas-container" style="flex: 1; position: relative; min-height: ${this.classList.contains('widget-wide') ? '350px' : '250px'}; padding: 10px;">
+                    <canvas></canvas>
+                </div>
+            `;
 
-        // Bind Events
-        this.querySelector('.btn-edit').addEventListener('click', () => {
-            // Dispatch a standard custom event that app_dashboard can listen to
-            this.dispatchEvent(new CustomEvent('edit-widget', { detail: { id: this.widgetDef.id }, bubbles: true }));
-        });
+            // Bind Events only if not readonly
+            this.querySelector('.btn-edit').addEventListener('click', () => {
+                this.dispatchEvent(new CustomEvent('edit-widget', { detail: { id: this.widgetDef.id }, bubbles: true }));
+            });
 
-        this.querySelector('.btn-delete').addEventListener('click', () => {
-            this.dispatchEvent(new CustomEvent('delete-widget', { detail: { id: this.widgetDef.id }, bubbles: true }));
-        });
+            this.querySelector('.btn-delete').addEventListener('click', () => {
+                this.dispatchEvent(new CustomEvent('delete-widget', { detail: { id: this.widgetDef.id }, bubbles: true }));
+            });
+        }
 
         // Initialize Chart.js safely using the existing external Renderer module
         // We pass 'this' as the card container

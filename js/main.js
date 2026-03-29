@@ -5,6 +5,7 @@ import { initDashboard } from './modules/app_dashboard.js';
 import { initModels } from './modules/app_models.js';
 import { initReports } from './modules/app_reports.js';
 import { initDeliveries } from './modules/app_deliveries.js';
+import { initDeliveriesV2 } from './modules/app_deliveries_v2.js';
 import { initExport } from './modules/app_export.js';
 
 // Initialize all modules
@@ -14,6 +15,7 @@ initDashboard();
 initModels();
 initReports();
 initDeliveries();
+initDeliveriesV2();
 initExport();
 
 // Start App
