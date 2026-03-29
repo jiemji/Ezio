@@ -52,7 +52,13 @@ export const MarkdownUtils = {
                         case 'h6': md += '\n###### ' + parseNodeToMd(child, listLevel, false, counter, true) + '\n\n'; break;
                         case 'p':
                         case 'div':
-                            md += '\n' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '\n';
+                            if (child.classList && child.classList.contains('datatable-placeholder') && child.dataset.config) {
+                                md += `\n{{DATATABLE:${child.dataset.config}}}\n`;
+                            } else if (child.classList && child.classList.contains('synthese-placeholder') && child.dataset.config) {
+                                md += `\n{{SYNTHESE:${child.dataset.config}}}\n`;
+                            } else {
+                                md += '\n' + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading) + '\n';
+                            }
                             break;
                         case 'br':
                             md += '<br>\n';
@@ -88,6 +94,18 @@ export const MarkdownUtils = {
                             const indent = '  '.repeat(Math.max(0, listLevel - 1));
                             const bullet = isOrdered ? `${counter.val++}. ` : '- ';
                             md += '\n' + indent + bullet + parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
+                            break;
+                        case 'span':
+                            if (child.classList.contains('kpi-placeholder')) {
+                                md += `{{KPI:${child.dataset.id}}}`;
+                            } else {
+                                md += parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);
+                            }
+                            break;
+                        case 'ezio-widget':
+                            if (child.dataset.id) {
+                                md += `\n{{KPI:${child.dataset.id}}}\n`;
+                            }
                             break;
                         default:
                             md += parseNodeToMd(child, listLevel, isOrdered, counter, inHeading);

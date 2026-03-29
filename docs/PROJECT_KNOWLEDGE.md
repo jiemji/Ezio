@@ -130,14 +130,15 @@ graph TD
     *   Architecture **MVC** : `ReportsRenderer.js` construit toute l'interface HTML et gère la "délégation d'événements", tandis que `app_reports.js` conserve l'état métier.
     *   *Note :* Ce module ne génère plus de contenu direct, il sert uniquement à définir des structures réutilisables.
 
-7.  **Module Livrables (`app_deliveries.js`)** :
+7.  **Module Livrables (`app_deliveries_v2.js`)** :
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
-    *   **Workflow Moderne** : Utilise `async/await` pour la gestion fluide des flux IA.
-    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`MarkdownEditor.js`) avec barre d'outils visuelle ciblée (Niveaux de Titres `N`/`T3`/`T4`/`T5`, Gras `G`, Souligné `S`, Listes, Outils IA) convertissant le HTML en Markdown. Comprend une fenêtre modale d'**Outils IA** permettant des traitements contextuels rapides (ex: traduction, correction) via les modèles configurés comme "outils".
-    *   **Robustesse Markdown** : Le convertisseur interne (`MarkdownUtils.htmlToMarkdown`) est finement optimisé pour ignorer les sauts de ligne "esthétiques" du HTML tout en préservant les sauts de ligne manuels de l'utilisateur (`<br>`). Il permet également l'annulation dynamique des balises Markdown en ligne (`**`, `*`) lors de la conversion d'un texte en Titre pour déléguer le contrôle visuel aux modèles Word/PPT finaux.
-    *   **Performance** : Sauvegarde des entrées texte temporisée (**Debounce**).
-    *   **Fonctionnalités** : Configuration du Scope, Prompt, Modèle IA, Widgets à exporter, et option Tableau furtive (greffée à l'export).
-    *   **Persistance** : Stockage dans l'objet `reports` du fichier d'audit.
+    *   **Architecture par Blocs (V2)** : Abandon de l'éditeur monolithique en faveur d'un système de blocs modulaires ordonnés (Texte, KPI, Synthèse IA, Table de données) encapsulés dans des Web Components (`<ezio-delivery-block>`).
+    *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`<ezio-markdown-editor>`) spécifique aux blocs "Texte".
+    *   **Ergonomie Visuelle** : L'interface d'édition dispose d'une largeur maximale basculable (Mode Droit 1050px / Mode Allongé 1550px) pour un meilleur contrôle du ratio d'affichage.
+    *   **Graphiques Avancés** : Le bloc KPI permet l'insertion de multiples graphiques simultanés qui s'adaptent de la largeur de la page via Flexbox (responsive).
+    *   **Tableaux Actifs** : Le bloc Données génère des tableaux auto-adaptatifs (selon la longueur du texte des cellules) et intègre un système de redimensionnement manuel en temps réel (glisser-déposer sur bordures) avec mémorisation d'état strict pour préserver la mise en page.
+    *   **Robustesse Export** : L'assemblage final du rapport (.md, .docx, .pptx) itère sur la liste ordonnée de blocs, extrayant le contenu Markdown pur (textes WYSIWYG convertis, grilles converties en tableaux MD, balises pour les KPI).
+    *   **Persistance** : Stockage de la hiérarchie de blocs dans l'objet `reports` du fichier d'audit.
 
 8.  **Module Export (Data) (`app_export.js`)** :
     *   Gestion de l'export des données brutes (JSON d'état complet, CSV pour Excel).

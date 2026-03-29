@@ -38,7 +38,7 @@ export function switchView(view, fromRouter = false) {
     }
 
     // 1. Masquer toutes les VUES
-    [DOM.auditView, DOM.creatorView, DOM.dashboardView, DOM.modelsView, DOM.reportsView, DOM.deliveriesView]
+    [DOM.auditView, DOM.creatorView, DOM.dashboardView, DOM.modelsView, DOM.reportsView, DOM.deliveriesView, DOM.deliveriesV2View]
         .forEach(el => el && el.classList.add('hidden'));
 
     // 2. Boutons d'action : Désormais dans le menu global, ils ne doivent plus être masqués par vue.
@@ -83,6 +83,12 @@ export function switchView(view, fromRouter = false) {
             if (DOM.deliveriesView) DOM.deliveriesView.classList.remove('hidden');
             if (DOM.btnShowDeliveries) DOM.btnShowDeliveries.classList.add('btn-active-view');
             moduleInits.deliveries && moduleInits.deliveries();
+            break;
+
+        case 'deliveries_v2':
+            if (DOM.deliveriesV2View) DOM.deliveriesV2View.classList.remove('hidden');
+            if (DOM.btnShowDeliveries) DOM.btnShowDeliveries.classList.add('btn-active-view');
+            moduleInits.deliveries_v2 && moduleInits.deliveries_v2();
             break;
 
         case 'app':

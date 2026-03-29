@@ -1,0 +1,180 @@
+/* EZIO - MODULE LIVRABLES V2 */
+
+/* Global container overrides if needed */
+#deliveries-v2-view .deliveries-container {
+    display: flex;
+    height: 100%;
+}
+
+/* Sidebar V2 - Accordion Style */
+.dlv2-sidebar-group {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dlv2-group-header {
+    background: var(--card-bg);
+    padding: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dlv2-group-header:hover {
+    background: var(--bg-secondary);
+}
+
+.dlv2-group-modules {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: var(--bg-color);
+}
+
+.dlv2-module-item {
+    padding: 8px 10px 8px 25px;
+    cursor: pointer;
+    border-top: 1px solid var(--border);
+    font-size: 0.9em;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.dlv2-module-item::before {
+    content: "•";
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+}
+
+.dlv2-module-item:hover {
+    background: var(--menu-hover);
+}
+
+.dlv2-module-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+body.dark-mode .dlv2-module-item.active {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+}
+
+/* Main Area Layout */
+.dlv2-main-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.dlv2-header-bar {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-color);
+}
+
+.dlv2-editor-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+
+/* Internal Editor Area including title and Navigation */
+.dlv2-module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.dlv2-module-title {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.dlv2-navigation-layout {
+    display: flex; /* row */
+    align-items: stretch;
+    flex: 1;
+    gap: 15px;
+    overflow: hidden; /* Prevent body scroll, let editor scroll */
+}
+
+/* Nav Arrows */
+.dlv2-nav-btn {
+    flex: 0 0 50px;
+    background: transparent;
+    border: none;
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    border-radius: 8px;
+}
+
+.dlv2-nav-btn:hover:not(:disabled) {
+    background: var(--card-bg);
+    color: var(--primary);
+    transform: scale(1.05);
+}
+
+.dlv2-nav-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+/* Inner Editor Container */
+.dlv2-editor-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 0 auto;
+    width: 100%;
+    transition: max-width 0.3s ease;
+}
+
+.dlv2-editor-wrapper ezio-markdown-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Crucial pour empêcher le débordement flex */
+}
+
+/* Forcer la zone de texte à prendre le reste de l'espace et scroller localement */
+.dlv2-editor-wrapper ezio-markdown-editor .dlv-card-result {
+    flex: 1;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Ajouter de l'espace (padding) à gauche et à droite de la barre d'outils */
+.dlv2-editor-wrapper ezio-markdown-editor .dlv-md-toolbar {
+    padding: 5px 10px;
+}

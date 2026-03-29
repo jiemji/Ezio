@@ -13,6 +13,9 @@ export const AIContextBuilder = {
     buildTable: (scope, columnsIds, data) => {
         if (!data || !data.rows || !data.columns) return "";
 
+        // Si non défini, on prend toutes les colonnes par défaut
+        if (!columnsIds) columnsIds = data.columns.map(c => c.id);
+
         // 1. Filter columns
         const colsToInclude = [];
         data.columns.forEach((col, idx) => {
