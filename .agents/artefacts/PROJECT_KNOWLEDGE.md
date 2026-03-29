@@ -134,6 +134,9 @@ graph TD
     *   **Moteur de Génération** : Instancie un modèle de rapport pour créer un livrable unique.
     *   **Architecture par Blocs (V2)** : Abandon de l'éditeur monolithique en faveur d'un système de blocs modulaires ordonnés (Texte, KPI, Synthèse IA, Table de données) encapsulés dans des Web Components (`<ezio-delivery-block>`).
     *   **UX / WYSIWYG** : Éditeur de texte enrichi intégré (`<ezio-markdown-editor>`) spécifique aux blocs "Texte".
+    *   **Ergonomie Visuelle** : L'interface d'édition dispose d'une largeur maximale basculable (Mode Droit 1050px / Mode Allongé 1550px) pour un meilleur contrôle du ratio d'affichage.
+    *   **Graphiques Avancés** : Le bloc KPI permet l'insertion de multiples graphiques simultanés qui s'adaptent de la largeur de la page via Flexbox (responsive).
+    *   **Tableaux Actifs** : Le bloc Données génère des tableaux auto-adaptatifs (selon la longueur du texte des cellules) et intègre un système de redimensionnement manuel en temps réel (glisser-déposer sur bordures) avec mémorisation d'état strict pour préserver la mise en page.
     *   **Robustesse Export** : L'assemblage final du rapport (.md, .docx, .pptx) itère sur la liste ordonnée de blocs, extrayant le contenu Markdown pur (textes WYSIWYG convertis, grilles converties en tableaux MD, balises pour les KPI).
     *   **Persistance** : Stockage de la hiérarchie de blocs dans l'objet `reports` du fichier d'audit.
 
