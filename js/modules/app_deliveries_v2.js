@@ -377,9 +377,12 @@ export async function downloadDeliveryReport(delivery) {
                      const t = AIContextBuilder.buildTable(block.config.scope, block.config.columns, currentForm);
                      if (t) mdContent += `${t} \n\n`;
                 } else if (block.type === 'kpi') {
-                     const widgetDef = (currentForm.statics || []).find(w => w.id === block.widgetId);
-                     const wName = widgetDef ? widgetDef.title : 'Graphique';
-                     mdContent += `*[📊 Graphique à insérer : ${wName}]* \n\n`;
+                     const ids = block.widgetIds || (block.widgetId ? [block.widgetId] : []);
+                     ids.forEach(id => {
+                         const widgetDef = (currentForm.statics || []).find(w => w.id === id);
+                         const wName = widgetDef ? widgetDef.title : 'Graphique inconnu';
+                         mdContent += `*[📊 Graphique à insérer : ${wName}]* \n\n`;
+                     });
                 }
             }
         } else if (inst.result) {
@@ -451,34 +454,59 @@ function showModalKPI(existingBlock, currentModule) {
     const kpis = currentForm.statics || [];
     if (kpis.length === 0) return UI.showToast("Aucun graphique KPI n'a été créé dans l'onglet Tableau de bord.", "warning");
 
-    const itemsHtml = kpis.map(k => `
-        <button class="menu-btn kpi-insert-btn" data-id="${k.id}" data-title="${Utils.escapeHtml(k.title)}" style="text-align:left; width:100%; padding:10px; margin-bottom:5px; border:1px solid var(--border); background:var(--bg-secondary); border-radius:4px; cursor:pointer; color:var(--text-main);">
-            <b>📊 ${Utils.escapeHtml(k.title)}</b><br>
-            <small style="color:var(--text-muted);">${k.vizType}</small>
-        </button>
-    `).join('');
+    let currentIds = [];
+    if (existingBlock) {
+        currentIds = existingBlock.widgetIds || [];
+        if (currentIds.length === 0 && existingBlock.widgetId) {
+            currentIds = [existingBlock.widgetId];
+        }
+    }
 
-    const m = new Modal('kpiInsertModal', existingBlock ? 'Changer le graphique' : 'Insérer un graphique', `<div>${itemsHtml}</div>`, [
-        { label: 'Annuler', class: 'btn-secondary', onClick: (e, modal) => modal.close() }
-    ]);
-    m.render();
+    const itemsHtml = kpis.map(k => {
+        const isChecked = currentIds.includes(k.id) ? 'checked' : '';
+        return `
+        <label class="kpi-checkbox-item" style="display:flex; align-items:center; width:100%; padding:10px; margin-bottom:5px; border:1px solid var(--border); background:var(--bg-secondary); border-radius:4px; cursor:pointer;">
+            <input type="checkbox" value="${k.id}" ${isChecked} style="margin-right:15px; transform:scale(1.2);">
+            <div>
+                <b style="color:var(--text-main);">📊 ${Utils.escapeHtml(k.title)}</b><br>
+                <small style="color:var(--text-muted);">${k.vizType}</small>
+            </div>
+        </label>
+        `;
+    }).join('');
 
-    document.querySelectorAll('#kpiInsertModal .kpi-insert-btn').forEach(b => {
-        b.addEventListener('click', () => {
+    const m = new Modal('kpiInsertModal', existingBlock ? 'Changer les graphiques' : 'Insérer des graphiques', `
+        <div style="max-height: 400px; overflow-y: auto; padding: 5px;">
+            <p style="margin-bottom:15px; color:var(--text-muted);">Sélectionnez un ou plusieurs graphiques à inclure ensemble sur la largeur du document.</p>
+            ${itemsHtml}
+        </div>
+    `, [
+        { label: 'Annuler', class: 'btn-secondary', onClick: (e, modal) => modal.close() },
+        { label: existingBlock ? 'Enregistrer' : 'Insérer', class: 'btn-primary', onClick: (e, modal) => {
+            const selectedBoxes = Array.from(document.querySelectorAll('#kpiInsertModal input[type="checkbox"]:checked'));
+            const selectedIds = selectedBoxes.map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                 UI.showToast("Sélectionnez au moins un graphique.", "warning");
+                 return;
+            }
+            
             if (existingBlock) {
-                existingBlock.widgetId = b.dataset.id;
+                existingBlock.widgetIds = selectedIds;
+                delete existingBlock.widgetId; // migration propre
             } else {
                 currentModule.blocks.push({
                     id: 'blk_' + Date.now(),
                     type: 'kpi',
-                    widgetId: b.dataset.id
+                    widgetIds: selectedIds
                 });
             }
             store.save(); store.notify('deliveries_v2');
             renderMainView();
-            m.close();
-        });
-    });
+            modal.close();
+        }}
+    ]);
+    m.render();
 }
 
 function showModalSynthese(existingBlock, currentModule) {

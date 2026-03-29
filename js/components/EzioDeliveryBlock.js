@@ -59,13 +59,24 @@ export class EzioDeliveryBlock extends HTMLElement {
             titleBlock = titleBlock !== 'Bloc' ? titleBlock : 'Texte Libre';
             bodyHtml = `<ezio-markdown-editor id="md-${id}" editor-id="ed-${id}" toolbar-position="left" min-height="200px" style="display:block; width:100%;"></ezio-markdown-editor>`;
         } else if (type === 'kpi') {
-            const widgetDef = currentForm.statics?.find(w => w.id === widgetId);
-            titleBlock = titleBlock !== 'Bloc' ? titleBlock : (widgetDef ? `Graphique : ${widgetDef.title}` : 'Graphique inconnu');
-            if (widgetDef) {
-                // Ensure proper height for KPI cards
-                bodyHtml = `<div style="height: 350px; position:relative; padding:10px; box-sizing:border-box;"><ezio-widget data-id="${widgetId}" readonly="true"></ezio-widget></div>`;
+            let ids = this.#data.widgetIds || [];
+            if (ids.length === 0 && widgetId) ids = [widgetId]; // backward compatibility
+            
+            titleBlock = titleBlock !== 'Bloc' ? titleBlock : 'Graphiques (KPI)';
+            
+            if (ids.length === 0) {
+                bodyHtml = `<div style="padding:20px; color:var(--danger); text-align:center;">Aucun graphique sélectionné.</div>`;
             } else {
-                bodyHtml = `<div style="padding:20px; color:var(--danger); text-align:center;">Graphique introuvable ou supprimé.</div>`;
+                bodyHtml = `<div style="display:flex; flex-wrap:wrap; gap:20px; padding:10px; box-sizing:border-box;">`;
+                ids.forEach(id => {
+                    const wDef = currentForm.statics?.find(w => w.id === id);
+                    if (wDef) {
+                         bodyHtml += `<div style="flex: 1 1 350px; height: 350px; position:relative; min-width:300px; box-sizing:border-box;"><ezio-widget data-id="${id}" readonly="true"></ezio-widget></div>`;
+                    } else {
+                         bodyHtml += `<div style="flex: 1 1 350px; height: 350px; display:flex; align-items:center; justify-content:center; color:var(--danger); border:1px dashed var(--danger);">Graphique introuvable ou supprimé.</div>`;
+                    }
+                });
+                bodyHtml += `</div>`;
             }
         } else if (type === 'synthese') {
             titleBlock = titleBlock !== 'Bloc' ? titleBlock : '✨ Synthèse IA';
@@ -78,8 +89,48 @@ export class EzioDeliveryBlock extends HTMLElement {
             if (mdTable) {
                 let htmlTable = window.marked ? window.marked.parse(mdTable) : mdTable;
                 htmlTable = htmlTable.replace(/>\n\s*</g, '><').trim();
-                htmlTable = htmlTable.replace(/<table/g, '<table style="width: 100%;"');
-                bodyHtml = `<div class="block-datatable" style="max-height:400px; overflow:auto; border:1px solid var(--border); border-radius:4px; margin-top:10px;">${htmlTable}</div>`;
+                
+                htmlTable = htmlTable.replace(/<table/g, '<table class="ezio-datatable"');
+                
+                let colgroupStr = '';
+                if (config && config.columnWidths) {
+                    colgroupStr = '<colgroup>\n';
+                    const colCount = config.columns ? config.columns.length : Object.keys(config.columnWidths).length;
+                    for (let i = 0; i < colCount; i++) {
+                        let w = config.columnWidths[i];
+                        colgroupStr += `<col style="width: ${w ? w + 'px' : 'auto'}; min-width: 50px;">\n`;
+                    }
+                    colgroupStr += '</colgroup>';
+                    htmlTable = htmlTable.replace(/(<table[^>]*>)/, `$1\n${colgroupStr}`);
+                }
+                
+                // Add resize handles to th elements
+                htmlTable = htmlTable.replace(/(<th[^>]*>)(.*?)(<\/th>)/gi, '$1$2<div class="ezio-col-resizer"></div>$3');
+
+                let styleStr = `<style>
+                    .bd-${id} .ezio-datatable { width: 100%; table-layout: ${config?.columnWidths ? 'fixed' : 'auto'}; border-collapse: collapse; }
+                    .bd-${id} .ezio-datatable th, .bd-${id} .ezio-datatable td { 
+                        position: relative;
+                        border: 1px solid var(--border); 
+                        padding: 8px; 
+                        max-width: ${config?.columnWidths ? 'none' : '300px'}; 
+                        word-wrap: break-word; 
+                        overflow-wrap: break-word; 
+                        white-space: normal; 
+                        text-align: left;
+                    }
+                    .bd-${id} .ezio-datatable th { background: var(--bg-secondary); }
+                    .bd-${id} .ezio-col-resizer {
+                        position: absolute;
+                        top: 0; right: 0; width: 5px; height: 100%;
+                        cursor: col-resize; user-select: none; z-index: 10;
+                    }
+                    .bd-${id} .ezio-col-resizer:hover, .bd-${id} .ezio-col-resizer.resizing {
+                        background-color: var(--primary); opacity: 0.5;
+                    }
+                </style>`;
+                
+                bodyHtml = styleStr + `<div class="bd-${id}" style="max-height:400px; overflow:auto; margin-top:10px; border:1px solid var(--border); border-radius:4px;">${htmlTable}</div>`;
             } else {
                 bodyHtml = `<div style="padding:20px; color:var(--text-muted); text-align:center;">Tableau vide. Vérifiez la configuration.</div>`;
             }
@@ -136,6 +187,20 @@ export class EzioDeliveryBlock extends HTMLElement {
         if (btnConfig) btnConfig.addEventListener('click', () => this.dispatchEvent(new CustomEvent('block-config', { detail: { id: this.#data.id } })));
         if (btnRefresh) btnRefresh.addEventListener('click', () => this.dispatchEvent(new CustomEvent('block-refresh', { detail: { id: this.#data.id } })));
 
+        if (this.#data.type === 'datatable') {
+            const tableContainer = this.querySelector(`.bd-${this.#data.id}`);
+            if (tableContainer) {
+                const resizers = tableContainer.querySelectorAll('.ezio-col-resizer');
+                resizers.forEach((resizer, index) => {
+                    if (index === resizers.length - 1) {
+                         resizer.style.display = 'none'; // Pas de redimensionnement sur le bord extrême droit
+                         return;
+                    }
+                    resizer.addEventListener('mousedown', (e) => this.#initResize(e, index, resizer.parentElement));
+                });
+            }
+        }
+
         if (this.#data.type === 'text' || this.#data.type === 'synthese') {
             const editorEl = this.querySelector(`#md-${this.#data.id}`);
             if (editorEl) {
@@ -151,6 +216,79 @@ export class EzioDeliveryBlock extends HTMLElement {
                 });
             }
         }
+    }
+
+    #initResize(e, colIndex, thEl) {
+        e.preventDefault();
+        const startX = e.pageX;
+        const tableEl = thEl.closest('table');
+        
+        tableEl.style.tableLayout = 'fixed';
+        
+        const ths = Array.from(tableEl.querySelectorAll('th'));
+        let colgroup = tableEl.querySelector('colgroup');
+        if (!colgroup) {
+            colgroup = document.createElement('colgroup');
+            ths.forEach(th => {
+                const col = document.createElement('col');
+                col.style.width = th.offsetWidth + 'px';
+                col.style.minWidth = '50px';
+                colgroup.appendChild(col);
+                th.style.maxWidth = 'none'; // release constraints uniformly
+            });
+            tableEl.prepend(colgroup);
+        }
+        
+        const cols = colgroup.querySelectorAll('col');
+        if (!cols[colIndex] || !cols[colIndex + 1]) return; // Sécurité
+        
+        // Figer toutes les colonnes à leur largeur exacte au pixel près
+        Array.from(cols).forEach((col, idx) => {
+            col.style.width = ths[idx].offsetWidth + 'px';
+        });
+        
+        ths.forEach(th => th.style.maxWidth = 'none'); // Override CSS max-width
+        
+        const startWidthLeft = ths[colIndex].offsetWidth;
+        const startWidthRight = ths[colIndex + 1].offsetWidth;
+
+        const resizerDiv = e.target;
+        resizerDiv.classList.add('resizing');
+
+        const onMouseMove = (moveEvent) => {
+            const diff = moveEvent.pageX - startX;
+            
+            // diff > 0 : gauche s'élargit, droite rétrécit
+            // diff < 0 : gauche rétrécit, droite s'élargit
+            const maxDiff = startWidthRight - 50;
+            const minDiff = -(startWidthLeft - 50);
+            
+            const boundedDiff = Math.max(minDiff, Math.min(diff, maxDiff));
+            
+            cols[colIndex].style.width = (startWidthLeft + boundedDiff) + 'px';
+            cols[colIndex + 1].style.width = (startWidthRight - boundedDiff) + 'px';
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            resizerDiv.classList.remove('resizing');
+            
+            if (!this.#data.config.columnWidths) {
+                this.#data.config.columnWidths = {};
+            }
+            
+            Array.from(cols).forEach((col, idx) => {
+                if (col.style.width) {
+                    this.#data.config.columnWidths[idx] = parseInt(col.style.width, 10);
+                }
+            });
+            
+            this.dispatchEvent(new CustomEvent('block-change', { detail: { id: this.#data.id } }));
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     }
 }
 
