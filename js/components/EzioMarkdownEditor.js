@@ -32,7 +32,7 @@ export class EzioMarkdownEditor extends HTMLElement {
     #pendingExtraToolbar = '';
 
     static get observedAttributes() {
-        return ['editor-id', 'compact', 'min-height', 'data-value'];
+        return ['editor-id', 'compact', 'min-height', 'data-value', 'toolbar-position'];
     }
 
     constructor() {
@@ -109,12 +109,25 @@ export class EzioMarkdownEditor extends HTMLElement {
         const editorId = this.getAttribute('editor-id') || `ezio-md-${Date.now()}`;
         const compact = this.hasAttribute('compact');
         const minHeight = this.getAttribute('min-height') || '300px';
+        const toolbarPos = this.getAttribute('toolbar-position') || 'top';
+        const isVertical = toolbarPos === 'left' || toolbarPos === 'right';
 
         const btnStyle = compact
             ? 'padding: 2px 4px; font-size: 0.75rem; border-radius: 2px;'
             : 'padding: 4px 6px; font-size: 0.85rem; border-radius: 3px;';
         const iconStyle = compact ? 'font-size: 0.85em;' : '';
         const toolbarMargin = compact ? '5px' : '15px';
+
+        const containerStyle = isVertical 
+            ? `display: flex; flex-direction: ${toolbarPos === 'left' ? 'row' : 'row-reverse'}; gap: 10px; height: 100%;` 
+            : ``;
+            
+        const toolbarStyle = isVertical
+            ? `display: flex; flex-direction: column; gap: 5px; margin-top: 5px;`
+            : `margin-top: ${toolbarMargin}; display: flex; gap: 5px; flex-wrap: wrap; align-items: center;`;
+
+        const minHeightStyle = isVertical ? 'min-height: 100%; height: 100%;' : `min-height: ${minHeight}; height: ${minHeight};`;
+        const separator = isVertical ? '<div style="height:5px;"></div>' : '<div class="separator-vertical" style="height: 18px; margin: 0 2px;"></div>';
 
         // Preserve current content if re-rendering
         const previousContent = this.#editorEl ? this.#editorEl.innerHTML : null;
@@ -125,22 +138,24 @@ export class EzioMarkdownEditor extends HTMLElement {
                 #${editorId} h4 { font-weight: bold; }
                 #${editorId} h5 { font-size: inherit; font-weight: normal; text-decoration: underline; }
             </style>
-            <div class="dlv-md-toolbar" style="margin-top: ${toolbarMargin}; display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
-                 ${this.#pendingExtraToolbar}
-                 <button class="btn-secondary small btn-md-ai-tool" title="Outils IA" style="${btnStyle} color: var(--primary); border-color: var(--primary);"><i class="fas fa-magic" style="${iconStyle}"></i></button>
-                 <div class="separator-vertical" style="height: 18px; margin: 0 2px;"></div>
-                 <button class="btn-secondary small btn-md-format" data-action="p" title="Paragraphe normal" style="${btnStyle}"><b>N</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h3" title="Titre 3" style="${btnStyle}"><b>T3</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h4" title="Titre 4" style="${btnStyle}"><b>T4</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="h5" title="Titre 5" style="${btnStyle}"><b>T5</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="indent-down" title="Désindenter" style="${btnStyle}"><i class="fas fa-outdent" style="${iconStyle}"></i></button>
-                 <button class="btn-secondary small btn-md-format" data-action="indent-up" title="Indenter" style="${btnStyle}"><i class="fas fa-indent" style="${iconStyle}"></i></button>
-                 <button class="btn-secondary small btn-md-format" data-action="list-num" title="Liste numérotée" style="${btnStyle}"><i class="fas fa-list-ol" style="${iconStyle}"></i></button>
-                 <button class="btn-secondary small btn-md-format" data-action="bold" title="Gras" style="${btnStyle}"><b>G</b></button>
-                 <button class="btn-secondary small btn-md-format" data-action="underline" title="Souligné" style="${btnStyle}"><u>S</u></button>
+            <div class="dlv-md-container" style="${containerStyle}">
+                <div class="dlv-md-toolbar" style="${toolbarStyle}">
+                     ${this.#pendingExtraToolbar}
+                     <button class="btn-secondary small btn-md-ai-tool" title="Outils IA" style="${btnStyle} color: var(--primary); border-color: var(--primary);"><i class="fas fa-magic" style="${iconStyle}"></i></button>
+                     ${separator}
+                     <button class="btn-secondary small btn-md-format" data-action="p" title="Paragraphe normal" style="${btnStyle}"><b>N</b></button>
+                     <button class="btn-secondary small btn-md-format" data-action="h3" title="Titre 3" style="${btnStyle}"><b>T3</b></button>
+                     <button class="btn-secondary small btn-md-format" data-action="h4" title="Titre 4" style="${btnStyle}"><b>T4</b></button>
+                     <button class="btn-secondary small btn-md-format" data-action="h5" title="Titre 5" style="${btnStyle}"><b>T5</b></button>
+                     <button class="btn-secondary small btn-md-format" data-action="indent-down" title="Désindenter" style="${btnStyle}"><i class="fas fa-outdent" style="${iconStyle}"></i></button>
+                     <button class="btn-secondary small btn-md-format" data-action="indent-up" title="Indenter" style="${btnStyle}"><i class="fas fa-indent" style="${iconStyle}"></i></button>
+                     <button class="btn-secondary small btn-md-format" data-action="list-num" title="Liste numérotée" style="${btnStyle}"><i class="fas fa-list-ol" style="${iconStyle}"></i></button>
+                     <button class="btn-secondary small btn-md-format" data-action="bold" title="Gras" style="${btnStyle}"><b>G</b></button>
+                     <button class="btn-secondary small btn-md-format" data-action="underline" title="Souligné" style="${btnStyle}"><u>S</u></button>
+                </div>
+                <div class="dlv-card-result form-control markdown-editor-content" id="${editorId}" contenteditable="true"
+                     style="${minHeightStyle} flex: 1; box-sizing: border-box; overflow-y: auto; overflow-x: auto; margin-top: 5px; text-align: left; resize: vertical; outline: none; border: 1px solid var(--border); border-radius: 4px; padding: 10px;"></div>
             </div>
-            <div class="dlv-card-result form-control markdown-editor-content" id="${editorId}" contenteditable="true"
-                 style="min-height: ${minHeight}; height: ${minHeight}; box-sizing: border-box; overflow-y: auto; overflow-x: auto; margin-top: 5px; text-align: left; resize: vertical; outline: none; border: 1px solid var(--border); border-radius: 4px; padding: 10px;"></div>
         `;
 
         this.#editorEl = this.querySelector(`#${editorId}`);

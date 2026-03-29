@@ -2,6 +2,16 @@
 
 Ce document retrace l'évolution du projet Ezio, les nouvelles fonctionnalités, les corrections de bugs et les refontes techniques.
 
+## [2.8.0] - 2026-03-29
+### Refonte Deliveries V2 (Cartes / Blocs)
+- **Architecture par Blocs** : Migration de l'éditeur Markdown monolithique (`result`) vers un système de liste de blocs ordonnés (`blocks`). Les rapports sont désormais construits par l'assemblage de composants modulaires (Texte, KPI, Synthèses IA, Table de données).
+- **Web Component `<ezio-delivery-block>`** : Création d'un nouveau composant contenant l'interface universelle (titre, boutons ⚙️, 🗑️, ↻) pour l'encapsulation de chaque bloc du rapport.
+- **Barre d'outils Globale** : Ajout d'une barre flottante (`dlv2-global-toolbar`) permettant l'ajout intuitif de composants dans le document.
+- **Refonte des Modales et Export** :
+  - L'insertion de contenu via `document.execCommand` a été remplacée par la manipulation pure d'un tableau d'états `currentModule.blocks`.
+  - Le générateur Markdown (`downloadDeliveryReport`) a été réécrit pour itérer sur la liste des blocs et recomposer dynamiquement le contenu final (génération des tableaux et inclusion des textes de l'IA).
+- **Fix AIContextBuilder** : Protection contre les références nulles lorsque aucune colonne n'est spécifiée, garantissant la fiabilité des Synthèses IA globales.
+
 ## [2.7.5] - 2026-03-27
 ### Correction Import Générateur (Axe 10)
 - **Import Flexible (`app_creator.js`)** : Le bouton d'import dans le Générateur de Formulaire accepte désormais les fichiers JSON "plats" (liste d'objets) en plus des configurations structurées.
