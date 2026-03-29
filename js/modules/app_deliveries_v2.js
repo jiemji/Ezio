@@ -13,7 +13,7 @@ let availableTemplates = [];
 let availableModels = [];
 let availableModules = [];
 let selection = { id: null, moduleIndex: 0 };
-let editorMaxWidth = '1024px'; // Par défaut : format A4 debout
+let editorMaxWidth = '1050px'; // Par défaut : format A4 debout
 
 const els = {
     container: null,
@@ -165,9 +165,14 @@ function renderMainView() {
     const currentModule = (delivery.structure && moduleCount > 0) ? delivery.structure[selection.moduleIndex] : null;
 
     const headerHTML = `
-        <div class="dlv2-header-bar">
+        <div class="dlv2-header-bar" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
             <input type="text" id="inpDlvName-v2" class="form-control" style="font-size: 1.2rem; font-weight: bold; width: 300px; border:none; background:transparent;" value="${Utils.escapeHtml(delivery.name)}">
-            <div class="dlv-actions">
+            <div class="dlv-actions" style="display:flex; align-items:center;">
+                <button id="btnToggleWidth-v2" class="btn-icon" title="Basculer l'affichage" style="margin-right:15px; display:flex; align-items:center; justify-content:center; width:34px; height:34px;">
+                    ${editorMaxWidth === '1550px' 
+                        ? '<div style="width:20px; height:12px; border:2px solid currentColor; border-radius:2px;" title="Mode Allongé Actif"></div>' 
+                        : '<div style="width:12px; height:20px; border:2px solid currentColor; border-radius:2px;" title="Mode Droit Actif"></div>'}
+                </button>
                 <button id="btnDownloadReport-v2" class="btn-secondary small" style="margin-right:10px;">📥 Télécharger (MD)</button>
                 <button id="btnImpression-v2" class="btn-primary small" style="margin-right:10px;">Impression</button>
                 <button id="btnDeleteDelivery-v2" class="btn-danger small">Supprimer</button>
@@ -206,8 +211,8 @@ function renderMainView() {
             <div class="dlv2-navigation-layout" style="flex:1; display:flex; padding-bottom: 70px;">
                 <button id="btnPrevMod-v2" class="dlv2-nav-btn" ${!canPrev ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
                 
-                <div class="dlv2-editor-wrapper" style="flex:1; overflow-y:auto; padding: 20px;">
-                    <div id="dlv2-blocks-container" style="display:flex; flex-direction:column; gap:20px;"></div>
+                <div class="dlv2-editor-wrapper" style="flex:1; overflow-y:auto; padding: 20px; display:flex; flex-direction:column; align-items:center;">
+                    <div id="dlv2-blocks-container" style="display:flex; flex-direction:column; gap:20px; width:100%; max-width:${editorMaxWidth}; transition: max-width 0.3s ease;"></div>
                     <div style="height: 60px;"></div>
                 </div>
                 
@@ -257,6 +262,11 @@ function bindMainHeaderEvents(delivery) {
         btn.disabled = true;
         try { await downloadDeliveryReport(delivery); } 
         finally { btn.innerHTML = oldText; btn.disabled = false; }
+    });
+
+    document.getElementById('btnToggleWidth-v2')?.addEventListener('click', () => {
+        editorMaxWidth = editorMaxWidth === '1550px' ? '1050px' : '1550px';
+        renderMainView(); // Re-render to update the flex constraints and icon
     });
 
     document.getElementById('btnImpression-v2')?.addEventListener('click', () => {

@@ -78,6 +78,7 @@ export class EzioDeliveryBlock extends HTMLElement {
             if (mdTable) {
                 let htmlTable = window.marked ? window.marked.parse(mdTable) : mdTable;
                 htmlTable = htmlTable.replace(/>\n\s*</g, '><').trim();
+                htmlTable = htmlTable.replace(/<table/g, '<table style="width: 100%;"');
                 bodyHtml = `<div class="block-datatable" style="max-height:400px; overflow:auto; border:1px solid var(--border); border-radius:4px; margin-top:10px;">${htmlTable}</div>`;
             } else {
                 bodyHtml = `<div style="padding:20px; color:var(--text-muted); text-align:center;">Tableau vide. Vérifiez la configuration.</div>`;
